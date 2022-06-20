@@ -4,7 +4,6 @@
  */
 package com.jun0rr.dodge.http.metrics;
 
-import com.jun0rr.dodge.DodgeConfig;
 import io.netty.buffer.PooledByteBufAllocatorMetric;
 import java.time.Duration;
 import java.time.Instant;

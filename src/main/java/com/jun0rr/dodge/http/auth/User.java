@@ -51,9 +51,9 @@ public class User {
   }
   
   public void validateEmail() {
-    if(email == null || email.isBlank() || !email.matches(EMAIL_REGEX)) {
-      throw new IllegalStateException("Bad e-mail format: " + email);
-    }
+    Match.notEmpty(email)
+        .and(e->e.matches(EMAIL_REGEX))
+        .failIfNotMatch("Bad e-mail format: %s", email);
   }
   
   @Override

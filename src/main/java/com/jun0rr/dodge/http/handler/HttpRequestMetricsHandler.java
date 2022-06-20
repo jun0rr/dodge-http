@@ -4,7 +4,7 @@
  */
 package com.jun0rr.dodge.http.handler;
 
-import com.jun0rr.dodge.http.Http;
+import com.jun0rr.dodge.http.HttpServer;
 import com.jun0rr.dodge.http.metrics.Metrics;
 import com.jun0rr.util.match.Match;
 import io.netty.buffer.ByteBuf;
@@ -34,9 +34,9 @@ public class HttpRequestMetricsHandler extends ChannelInboundHandlerAdapter {
   
   private static final Logger logger = LoggerFactory.getLogger(HttpRequestMetricsHandler.class);
   
-  private final Http config;
+  private final HttpServer config;
   
-  public HttpRequestMetricsHandler(Http cfg) {
+  public HttpRequestMetricsHandler(HttpServer cfg) {
     this.config = Match.notNull(cfg).getOrFail();
   }
 

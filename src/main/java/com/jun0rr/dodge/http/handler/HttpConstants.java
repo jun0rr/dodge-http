@@ -4,13 +4,12 @@
  */
 package com.jun0rr.dodge.http.handler;
 
-import com.jun0rr.dodge.http.Http;
+import com.jun0rr.dodge.http.HttpClient;
 import com.jun0rr.util.match.Match;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -145,14 +144,14 @@ public abstract class HttpConstants {
     return isHttpRequest(o) && ((HttpRequest)o).method() == HttpMethod.PUT;
   }
   
-  public static HttpHeaders adduserAgentAndProxyAuth(HttpHeaders hds, Http conf) {
+  public static HttpHeaders adduserAgentAndProxyAuth(HttpHeaders hds, HttpClient cli) {
     hds.add(HttpHeaderNames.USER_AGENT, USER_AGENT_VALUE);
-    if(conf.getProxyAddress() != null
-        && conf.getProxyUser() != null
-        && !conf.getProxyUser().isBlank()
-        && conf.getProxyPassword() != null
-        && !conf.getProxyPassword().isBlank()) {
-      hds.add(new ProxyAuthorizationHeader(conf.getProxyUser(), conf.getProxyPassword()));
+    if(cli.getProxyAddress() != null
+        && cli.getProxyUser() != null
+        && !cli.getProxyUser().isBlank()
+        && cli.getProxyPassword() != null
+        && !cli.getProxyPassword().isBlank()) {
+      hds.add(new ProxyAuthorizationHeader(cli.getProxyUser(), cli.getProxyPassword()));
     }
     return hds;
   }

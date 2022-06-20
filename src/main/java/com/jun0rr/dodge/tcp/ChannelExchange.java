@@ -19,6 +19,8 @@ import java.util.Optional;
  */
 public interface ChannelExchange<T> {
   
+  public TcpChannel tcpChannel();
+  
   public ChannelHandlerContext context();
   
   public T message();
@@ -37,17 +39,17 @@ public interface ChannelExchange<T> {
   
   public void read(Object o);
   
-  public void write(Object o);
+  public FutureEvent write(Object o);
   
-  public void writeAndFlush(Object o);
+  public FutureEvent writeAndFlush(Object o);
   
   
-  public static <U> ChannelExchange of(ChannelEvent evt, ChannelHandlerContext ctx, U msg, Map<String,Object> attrs, ChannelPromise prom) {
-    return new ChannelExchangeImpl(evt, ctx, msg, attrs, prom);
+  public static <U> ChannelExchange of(TcpChannel ch, ChannelEvent evt, ChannelHandlerContext ctx, U msg, Map<String,Object> attrs, ChannelPromise prom) {
+    return new ChannelExchangeImpl(ch, evt, ctx, msg, attrs, prom);
   }
   
-  public static <U> ChannelExchange of(ChannelEvent evt, ChannelHandlerContext ctx, U msg, Map<String,Object> attrs) {
-    return new ChannelExchangeImpl(evt, ctx, msg, attrs);
+  public static <U> ChannelExchange of(TcpChannel ch, ChannelEvent evt, ChannelHandlerContext ctx, U msg, Map<String,Object> attrs) {
+    return new ChannelExchangeImpl(ch, evt, ctx, msg, attrs);
   }
   
   
@@ -55,6 +57,8 @@ public interface ChannelExchange<T> {
   
   
   static class ChannelExchangeImpl<T> implements ChannelExchange<T> {
+    
+    private final TcpChannel tcp;
     
     private final ChannelHandlerContext context;
     
@@ -66,7 +70,8 @@ public interface ChannelExchange<T> {
     
     private final Map<String,Object> attrs;
     
-    public ChannelExchangeImpl(ChannelEvent evt, ChannelHandlerContext ctx, T msg, Map<String,Object> attrs, ChannelPromise prom) {
+    public ChannelExchangeImpl(TcpChannel ch, ChannelEvent evt, ChannelHandlerContext ctx, T msg, Map<String,Object> attrs, ChannelPromise prom) {
+      this.tcp = Match.notNull(ch).getOrFail("Bad null TcpChannel");
       this.event = Match.notNull(evt).getOrFail("Bad null ChannelEvent");
       this.context = Match.notNull(ctx).getOrFail("Bad null ChannelHandlerContext");
       this.message = msg;
@@ -74,10 +79,15 @@ public interface ChannelExchange<T> {
       this.promise = Optional.ofNullable(prom).orElse(context.newPromise());
     }
     
-    public ChannelExchangeImpl(ChannelEvent evt, ChannelHandlerContext ctx, T msg, Map<String,Object> attrs) {
-      this(evt, ctx, msg, attrs, null);
+    public ChannelExchangeImpl(TcpChannel ch, ChannelEvent evt, ChannelHandlerContext ctx, T msg, Map<String,Object> attrs) {
+      this(ch, evt, ctx, msg, attrs, null);
     }
 
+    @Override
+    public TcpChannel tcpChannel() {
+      return tcp;
+    }
+    
     @Override
     public ChannelHandlerContext context() {
       return context;
@@ -147,13 +157,13 @@ public interface ChannelExchange<T> {
     }
     
     @Override
-    public void write(Object o) {
-      context.write(o, promise);
+    public FutureEvent write(Object o) {
+      return FutureEvent.of(tcp, context.write(o, promise));
     }
   
     @Override
-    public void writeAndFlush(Object o) {
-      context.writeAndFlush(o, promise);
+    public FutureEvent writeAndFlush(Object o) {
+      return FutureEvent.of(tcp, context.writeAndFlush(o, promise));
     }
     
     @Override

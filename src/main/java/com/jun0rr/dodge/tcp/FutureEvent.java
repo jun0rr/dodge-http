@@ -49,16 +49,12 @@ public interface FutureEvent {
     return applyNext(f->f.channel().writeAndFlush(o));
   }
   
-  public EventLoopGroup masterGroup();
-  
-  public EventLoopGroup workerGroup();
-  
   public default FutureEvent shutdownMasterGroup() {
-    return applyNext(f->f.masterGroup().shutdownGracefully());
+    return applyNext(f->f.tcpChannel().getMasterGroup().shutdownGracefully());
   }
   
   public default FutureEvent shutdownWorkerGroup() {
-    return applyNext(f->f.workerGroup().shutdownGracefully());
+    return applyNext(f->f.tcpChannel().getWorkerGroup().shutdownGracefully());
   }
   
   public default FutureEvent syncUninterruptibly() {
@@ -95,16 +91,11 @@ public interface FutureEvent {
   
   public static FutureEvent of(TcpChannel ch, ChannelFuture cf) {
     EventLoopGroup g = cf.channel().eventLoop().parent();
-    return new FutureEventImpl(ch, cf, cf.channel(), g, g);
+    return new FutureEventImpl(ch, cf, cf.channel());
   }
   
-  public static FutureEvent of(TcpChannel ch, ChannelFuture cf, EventLoopGroup g) {
-    EventLoopGroup m = cf.channel().eventLoop().parent();
-    return new FutureEventImpl(ch, cf, cf.channel(), m, g);
-  }
-  
-  public static FutureEvent of(TcpChannel ch, Future f, Channel c, EventLoopGroup m, EventLoopGroup w) {
-    return new FutureEventImpl(ch, f, c, m, w);
+  public static FutureEvent of(TcpChannel ch, Future f, Channel c) {
+    return new FutureEventImpl(ch, f, c);
   }
   
   
@@ -119,16 +110,10 @@ public interface FutureEvent {
     
     private final Future future;
     
-    private final EventLoopGroup master;
-    
-    private final EventLoopGroup worker;
-    
-    public FutureEventImpl(TcpChannel ch, Future f, Channel c, EventLoopGroup m, EventLoopGroup w) {
+    public FutureEventImpl(TcpChannel ch, Future f, Channel c) {
       this.tcp = Match.notNull(ch).getOrFail("Bad null TcpChannel");
       this.future = Match.notNull(f).getOrFail("Bad null Future");
       this.channel = Match.notNull(c).getOrFail("Bad null Channel");
-      this.master = Match.notNull(m).getOrFail("Bad null master EventLoopGroup");
-      this.worker = Match.notNull(w).getOrFail("Bad null worker EventLoopGroup");
     }
     
     public TcpChannel tcpChannel() {
@@ -146,18 +131,8 @@ public interface FutureEvent {
     }
 
     @Override
-    public EventLoopGroup masterGroup() {
-      return master;
-    }
-
-    @Override
-    public EventLoopGroup workerGroup() {
-      return worker;
-    }
-
-    @Override
     public FutureEvent with(Future f) {
-      return new FutureEventImpl(tcp, f, channel, master, worker);
+      return new FutureEventImpl(tcp, f, channel);
     }
   
   }

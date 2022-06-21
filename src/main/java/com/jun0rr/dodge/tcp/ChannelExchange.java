@@ -29,11 +29,7 @@ public interface ChannelExchange<T> {
   
   public ChannelEvent event();
   
-  public void putAttr(String key, Object val);
-  
-  public <O> Optional<O> getAttr(String key);
-  
-  public <O> Optional<O> rmAttr(String key);
+  public Attributes attributes();
   
   public void forwardMessage();
   
@@ -44,11 +40,11 @@ public interface ChannelExchange<T> {
   public FutureEvent writeAndFlush(Object o);
   
   
-  public static <U> ChannelExchange of(TcpChannel ch, ChannelEvent evt, ChannelHandlerContext ctx, U msg, Map<String,Object> attrs, ChannelPromise prom) {
+  public static <U> ChannelExchange of(TcpChannel ch, ChannelEvent evt, ChannelHandlerContext ctx, U msg, Attributes attrs, ChannelPromise prom) {
     return new ChannelExchangeImpl(ch, evt, ctx, msg, attrs, prom);
   }
   
-  public static <U> ChannelExchange of(TcpChannel ch, ChannelEvent evt, ChannelHandlerContext ctx, U msg, Map<String,Object> attrs) {
+  public static <U> ChannelExchange of(TcpChannel ch, ChannelEvent evt, ChannelHandlerContext ctx, U msg, Attributes attrs) {
     return new ChannelExchangeImpl(ch, evt, ctx, msg, attrs);
   }
   
@@ -68,9 +64,9 @@ public interface ChannelExchange<T> {
     
     private final ChannelEvent event;
     
-    private final Map<String,Object> attrs;
+    private final Attributes attrs;
     
-    public ChannelExchangeImpl(TcpChannel ch, ChannelEvent evt, ChannelHandlerContext ctx, T msg, Map<String,Object> attrs, ChannelPromise prom) {
+    public ChannelExchangeImpl(TcpChannel ch, ChannelEvent evt, ChannelHandlerContext ctx, T msg, Attributes attrs, ChannelPromise prom) {
       this.tcp = Match.notNull(ch).getOrFail("Bad null TcpChannel");
       this.event = Match.notNull(evt).getOrFail("Bad null ChannelEvent");
       this.context = Match.notNull(ctx).getOrFail("Bad null ChannelHandlerContext");
@@ -79,7 +75,7 @@ public interface ChannelExchange<T> {
       this.promise = Optional.ofNullable(prom).orElse(context.newPromise());
     }
     
-    public ChannelExchangeImpl(TcpChannel ch, ChannelEvent evt, ChannelHandlerContext ctx, T msg, Map<String,Object> attrs) {
+    public ChannelExchangeImpl(TcpChannel ch, ChannelEvent evt, ChannelHandlerContext ctx, T msg, Attributes attrs) {
       this(ch, evt, ctx, msg, attrs, null);
     }
 
@@ -109,38 +105,10 @@ public interface ChannelExchange<T> {
     }
     
     @Override
-    public void putAttr(String key, Object val) {
-      if(key != null && val != null) {
-        attrs.put(String.format("%s.%s", context.channel().id().asShortText(), key), val);
-      }
+    public Attributes attributes() {
+      return attrs;
     }
-
-    @Override
-    public <O> Optional<O> getAttr(String key) {
-      if(key == null || key.isBlank()) return Optional.empty();
-      try {
-        return Optional.ofNullable(attrs.get(
-            String.format("%s.%s", context.channel().id().asShortText(), key))
-        ).map(o->(O)o);
-      }
-      catch(ClassCastException e) {
-        return Optional.empty();
-      }
-    }
-
-    @Override
-    public <O> Optional<O> rmAttr(String key) {
-      if(key == null || key.isBlank()) return Optional.empty();
-      try {
-        return Optional.ofNullable(attrs.remove(
-            String.format("%s.%s", context.channel().id().asShortText(), key))
-        ).map(o->(O)o);
-      }
-      catch(ClassCastException e) {
-        return Optional.empty();
-      }
-    }
-  
+    
     @Override
     public void forwardMessage() {
       if(ChannelEvent.Inbound.READ == event) {

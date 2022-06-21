@@ -74,7 +74,7 @@ public interface TcpChannel {
 
   public TcpChannel addHandler(Supplier<ChannelHandler> cih);
   
-  public Map<String,Object> attributes();
+  public Attributes attributes();
 
   public ChannelInitializer<SocketChannel> createInitializer();
   

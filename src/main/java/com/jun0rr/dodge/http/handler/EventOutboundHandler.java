@@ -4,6 +4,7 @@
  */
 package com.jun0rr.dodge.http.handler;
 
+import com.jun0rr.dodge.tcp.Attributes;
 import com.jun0rr.dodge.tcp.ChannelEvent;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import com.jun0rr.dodge.tcp.ConsumerType;
@@ -13,7 +14,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import java.net.SocketAddress;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,13 +27,13 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
   
   private final TcpChannel tcp;
   
-  private final Map<String,Object> attrs;
+  private final Attributes attrs;
   
   private final ChannelEvent.Outbound event;
   
   private final ConsumerType cons;
   
-  public EventOutboundHandler(TcpChannel ch, Map<String,Object> attrs, ChannelEvent.Outbound evt, ConsumerType consumer) {
+  public EventOutboundHandler(TcpChannel ch, Attributes attrs, ChannelEvent.Outbound evt, ConsumerType consumer) {
     this.tcp = Match.notNull(ch).getOrFail("Bad null TcpChannel");
     this.attrs = Match.notNull(attrs).getOrFail("Bad null attributes Map");
     this.cons = Match.notNull(consumer).getOrFail("Bad null handler Consumer");
@@ -43,7 +43,7 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
   @Override
   public void bind(ChannelHandlerContext chc, SocketAddress sa, ChannelPromise cp) throws Exception {
     if(ChannelEvent.Outbound.BIND == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, sa, attrs, cp));
+      cons.accept(ChannelExchange.of(tcp, event, chc, sa, attrs.channelAttrs(chc.channel()), cp));
     }
     chc.bind(sa, cp);
   }
@@ -51,7 +51,7 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
   @Override
   public void connect(ChannelHandlerContext chc, SocketAddress sa, SocketAddress sa1, ChannelPromise cp) throws Exception {
     if(ChannelEvent.Outbound.CONNECT == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, sa, attrs, cp));
+      cons.accept(ChannelExchange.of(tcp, event, chc, sa, attrs.channelAttrs(chc.channel()), cp));
     }
     chc.connect(sa, sa1, cp);
   }
@@ -59,7 +59,7 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
   @Override
   public void disconnect(ChannelHandlerContext chc, ChannelPromise cp) throws Exception {
     if(ChannelEvent.Outbound.DISCONNECT == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs, cp));
+      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel()), cp));
     }
     chc.disconnect(cp);
   }
@@ -67,7 +67,7 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
   @Override
   public void close(ChannelHandlerContext chc, ChannelPromise cp) throws Exception {
     if(ChannelEvent.Outbound.CLOSE == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs, cp));
+      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel()), cp));
     }
     chc.close(cp);
   }
@@ -75,7 +75,7 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
   @Override
   public void deregister(ChannelHandlerContext chc, ChannelPromise cp) throws Exception {
     if(ChannelEvent.Outbound.DEREGISTER == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs, cp));
+      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel()), cp));
     }
     chc.deregister(cp);
   }
@@ -83,7 +83,7 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
   @Override
   public void read(ChannelHandlerContext chc) throws Exception {
     if(ChannelEvent.Outbound.READ == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs));
+      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
     }
     chc.read();
   }
@@ -91,7 +91,7 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
   @Override
   public void write(ChannelHandlerContext chc, Object o, ChannelPromise cp) throws Exception {
     if(ChannelEvent.Outbound.WRITE == event && cons.isTypeOf(o.getClass())) {
-      cons.cast(o).ifPresent(m->cons.accept(ChannelExchange.of(tcp, event, chc, m, attrs, cp)));
+      cons.cast(o).ifPresent(m->cons.accept(ChannelExchange.of(tcp, event, chc, m, attrs.channelAttrs(chc.channel()), cp)));
     }
     else {
       chc.write(o, cp);
@@ -101,7 +101,7 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
   @Override
   public void flush(ChannelHandlerContext chc) throws Exception {
     if(ChannelEvent.Outbound.FLUSH == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs));
+      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
     }
     chc.flush();
   }

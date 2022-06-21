@@ -27,7 +27,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.slf4j.LoggerFactory;
@@ -66,11 +65,11 @@ public class DefaultTcpChannel implements TcpChannel {
   
   protected final List<Supplier<ChannelHandler>> handlers;
   
-  protected final Map<String,Object> attrs;
+  protected final Attributes attrs;
   
   public DefaultTcpChannel() {
     this.handlers = new LinkedList<>();
-    this.attrs = new ConcurrentHashMap<>();
+    this.attrs = new Attributes();
   }
   
   @Override
@@ -242,7 +241,7 @@ public class DefaultTcpChannel implements TcpChannel {
   }
   
   @Override
-  public Map<String,Object> attributes() {
+  public Attributes attributes() {
     return attrs;
   }
 
@@ -301,13 +300,13 @@ public class DefaultTcpChannel implements TcpChannel {
   public FutureEvent startClient() {
     Match.notNull(getAddress()).failIfNotMatch("Bad null Host address");
     ChannelFuture f = bootstrap().connect(getAddress().toSocketAddr());
-    return FutureEvent.of(this, f, getMasterGroup());
+    return FutureEvent.of(this, f);
   }
   
   @Override
   public FutureEvent startServer() {
     ChannelFuture cf = serverBootstrap().bind(getAddress().toSocketAddr());
-    return FutureEvent.of(this, cf, cf.channel(), getMasterGroup(), getWorkerGroup())
+    return FutureEvent.of(this, cf, cf.channel())
         .acceptNext(f->logger.debug("Listening on {}", f.channel().localAddress()));
   }
   

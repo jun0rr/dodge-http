@@ -5,8 +5,10 @@
 package com.jun0rr.dodge.http.auth;
 
 import com.jun0rr.util.match.Match;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -19,20 +21,24 @@ public class Persistence {
   
   public List<Role> roles;
   
-  public Persistence(List<User> users, List<Role> roles) {
+  public Map<String,Object> map;
+  
+  public Persistence(List<User> users, List<Role> roles, Map<String,Object> map) {
     this.users = Match.notNull(users).getOrFail("Bad null User List");
     this.roles = Match.notNull(roles).getOrFail("Bad null Role List");
+    this.map = Match.notNull(map).getOrFail("Bad null Map<String,Object>");
   }
   
   public Persistence() {
-    this(new LinkedList<>(), new LinkedList<>());
+    this(new LinkedList<>(), new LinkedList<>(), new HashMap<>());
   }
 
   @Override
   public int hashCode() {
     int hash = 7;
-    hash = 71 * hash + Objects.hashCode(this.users);
-    hash = 71 * hash + Objects.hashCode(this.roles);
+    hash = 59 * hash + Objects.hashCode(this.users);
+    hash = 59 * hash + Objects.hashCode(this.roles);
+    hash = 59 * hash + Objects.hashCode(this.map);
     return hash;
   }
 
@@ -51,12 +57,15 @@ public class Persistence {
     if (!Objects.equals(this.users, other.users)) {
       return false;
     }
-    return Objects.equals(this.roles, other.roles);
+    if (!Objects.equals(this.roles, other.roles)) {
+      return false;
+    }
+    return Objects.equals(this.map, other.map);
   }
 
   @Override
   public String toString() {
-    return "Persistence{" + "users=" + users + ", roles=" + roles + '}';
+    return "Persistence{" + "users=" + users + ", roles=" + roles + ", map=" + map + '}';
   }
-  
+
 }

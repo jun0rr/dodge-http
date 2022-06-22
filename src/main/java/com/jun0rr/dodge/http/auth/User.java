@@ -19,17 +19,17 @@ public class User {
   
   public static final String EMAIL_REGEX = "[a-zA-Z0-9_.]+@[a-zA-Z0-9_]+\\.[a-zA-Z0-9_.]+";
   
-  public String name;
+  private String name;
   
-  public String email;
+  private String email;
   
-  public Password password;
+  private Password password;
   
-  public LocalDate birthday;
+  private LocalDate birthday;
   
-  public List<Group> groups;
+  private List<Group> groups;
   
-  public Instant created;
+  private Instant created;
   
   public User() {
     this.groups = new LinkedList<>();
@@ -40,20 +40,78 @@ public class User {
     this(name, email, password, null, new LinkedList<>());
   }
   
+  public User(String name, String email, Password password, LocalDate birthday) {
+    this(name, email, password, null, new LinkedList<>());
+  }
+  
   public User(String name, String email, Password password, LocalDate birthday, List<Group> groups) {
     this.name = Match.notEmpty(name).getOrFail("Bad null/empty name");
-    this.email = email;
-    validateEmail();
+    setEmail(email);
     this.password = Match.notNull(password).getOrFail("Bad null Password");
     this.birthday = birthday;
     this.groups = Match.notNull(groups).getOrFail("Bad null Groups List");
     this.created = Instant.now();
   }
-  
-  public void validateEmail() {
-    Match.notEmpty(email)
+
+  public String getName() {
+    return name;
+  }
+
+  public User setName(String name) {
+    this.name = name;
+    return this;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public User setEmail(String email) {
+    this.email = Match.notEmpty(email)
         .and(e->e.matches(EMAIL_REGEX))
-        .failIfNotMatch("Bad e-mail format: %s", email);
+        .getOrFail("Bad e-mail format: %s", email);
+    return this;
+  }
+
+  public Password getPassword() {
+    return password;
+  }
+
+  public User setPassword(Password password) {
+    this.password = password;
+    return this;
+  }
+
+  public LocalDate getBirthday() {
+    return birthday;
+  }
+
+  public User setBirthday(LocalDate birthday) {
+    this.birthday = birthday;
+    return this;
+  }
+
+  public List<Group> getGroups() {
+    return groups;
+  }
+
+  public User setGroups(List<Group> groups) {
+    this.groups = Match.notNull(groups).getOrFail("Bad null Groups List");
+    return this;
+  }
+  
+  public User add(Group g) {
+    this.groups.add(Match.notNull(g).getOrFail("Bad null Group"));
+    return this;
+  }
+
+  public Instant getCreated() {
+    return created;
+  }
+
+  public User setCreated(Instant created) {
+    this.created = Match.notNull(created).getOrFail("Bad null Instant");
+    return this;
   }
   
   @Override

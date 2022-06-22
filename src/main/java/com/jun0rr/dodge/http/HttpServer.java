@@ -4,7 +4,7 @@
  */
 package com.jun0rr.dodge.http;
 
-import com.jun0rr.dodge.http.auth.Persistence;
+import com.jun0rr.dodge.http.auth.Storage;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.handler.HttpRouteHandler;
 import com.jun0rr.dodge.tcp.ChannelEvent;
@@ -28,8 +28,6 @@ public class HttpServer extends Http {
   
   private EmbeddedStorageManager storageManager;
   
-  private final Persistence persistence = new Persistence();
-  
   public HttpServer() {
     super();
   }
@@ -43,16 +41,16 @@ public class HttpServer extends Http {
     return this;
   }
   
-  public EmbeddedStorageManager getStorageManager() {
-    if(storageManager == null) {
-      storageManager = EmbeddedStorage.start(persistence, storageDir);
-    }
-    return storageManager;
-  }
-  
-  public Persistence getPersistence() {
-    return persistence;
-  }
+  //public EmbeddedStorageManager getStorageManager() {
+    //if(storageManager == null) {
+      //storageManager = EmbeddedStorage.start(persistence, storageDir);
+    //}
+    //return storageManager;
+  //}
+//  
+  //public Storage getPersistence() {
+    //return persistence;
+  //}
   
   public HttpServer addRoute(HttpRoute route, Supplier<Consumer<ChannelExchange<HttpRequest>>> sup) {
     addHandler(ChannelEvent.Inbound.READ, HttpRequest.class, ()->new HttpRouteHandler(route, sup.get()));

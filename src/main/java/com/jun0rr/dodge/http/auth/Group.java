@@ -14,21 +14,35 @@ import java.util.Objects;
  */
 public class Group {
   
-  public String name;
+  private String name;
   
-  public Instant created;
+  private Instant created;
   
   public Group(String name, Instant created) {
     this.name = Match.notEmpty(name).getOrFail("Bad null/empty Group name");
     this.created = Match.notNull(created).getOrFail("Bad null created Instant");
   }
   
-  public static Group of(String name, Instant created) {
-    return new Group(name, created);
+  public Group(String name) {
+    this(name, Instant.now());
   }
-  
-  public static Group of(String name) {
-    return new Group(name, Instant.now());
+
+  public String getName() {
+    return name;
+  }
+
+  public Group setName(String name) {
+    this.name = name;
+    return this;
+  }
+
+  public Instant getCreated() {
+    return created;
+  }
+
+  public Group setCreated(Instant created) {
+    this.created = created;
+    return this;
   }
   
   @Override

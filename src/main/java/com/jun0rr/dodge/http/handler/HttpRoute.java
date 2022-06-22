@@ -35,7 +35,7 @@ public class HttpRoute implements Predicate<HttpRequest> {
   
   private final List<HttpMethod> methods;
   
-  private final Predicate<String> matcher;
+  private final transient Predicate<String> matcher;
   
   public HttpRoute(String ptrn, List<HttpMethod> meths) {
     this.pattern = Match.notEmpty(ptrn).getOrFail("Bad empty pattern");

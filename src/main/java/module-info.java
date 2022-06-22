@@ -15,4 +15,5 @@ module jun0rr.dodge {
   requires logback.classic;
   requires microstream.storage;
   requires microstream.storage.embedded;
+  exports com.jun0rr.dodge.http.auth;
 }

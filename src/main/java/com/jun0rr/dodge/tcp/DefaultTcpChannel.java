@@ -306,7 +306,7 @@ public class DefaultTcpChannel implements TcpChannel {
   @Override
   public FutureEvent startServer() {
     ChannelFuture cf = serverBootstrap().bind(getAddress().toSocketAddr());
-    return FutureEvent.of(this, cf, cf.channel())
+    return FutureEvent.of(this, cf)
         .acceptNext(f->logger.debug("Listening on {}", f.channel().localAddress()));
   }
   

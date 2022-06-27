@@ -4,7 +4,14 @@
  */
 package com.jun0rr.dodge.http;
 
+import com.jun0rr.dodge.http.handler.HttpMessageLogger;
+import com.jun0rr.dodge.http.handler.ProxyAuthOutboundHandler;
 import com.jun0rr.util.Host;
+import com.jun0rr.util.match.Match;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import java.util.Objects;
 
 /**
@@ -48,6 +55,35 @@ public class HttpClient extends Http {
   public HttpClient setProxyPassword(String proxyPass) {
     this.proxyPass = proxyPass;
     return this;
+  }
+  
+  public boolean isProxyAuthEnabled() {
+    return getProxyUser() != null 
+        && getProxyPassword() != null 
+        && !getProxyUser().isBlank() 
+        && !getProxyPassword().isBlank();
+  }
+  
+  @Override
+  public ChannelInitializer<SocketChannel> createInitializer() {
+    Match.notEmpty(handlers).failIfNotMatch("Bad empty ChannelHandler List");
+    return new ChannelInitializer<>() {
+      @Override
+      protected void initChannel(SocketChannel c) throws Exception {
+        initSslHandler(c);
+        c.pipeline().addLast(new HttpClientCodec());
+        if(isFullHttpMessageEnabled()) {
+          c.pipeline().addLast(new HttpObjectAggregator(getBufferSize()));
+        }
+        if(isHttpMessageLoggerEnabled()) {
+          c.pipeline().addLast(new HttpMessageLogger());
+        }
+        if(isProxyAuthEnabled()) {
+          c.pipeline().addLast(new ProxyAuthOutboundHandler(getProxyUser(), getProxyPassword()));
+        }
+        initHandlers(c);
+      }
+    };
   }
 
   @Override

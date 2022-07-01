@@ -5,13 +5,19 @@
 package com.jun0rr.dodge.tcp;
 
 import com.jun0rr.util.Host;
+import io.netty.bootstrap.AbstractBootstrap;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,13 +84,39 @@ public interface TcpChannel {
 
   public ChannelInitializer<SocketChannel> createInitializer();
   
-  public FutureEvent startClient();
-  
-  public FutureEvent startServer();
+  public FutureEvent start();
   
   
-  public static TcpChannel newChannel() {
-    return new DefaultTcpChannel();
+  private static Function<TcpChannel,AbstractBootstrap> serverBootstrap() {
+    return c->{
+      return new ServerBootstrap()
+          .group(c.getMasterGroup(), c.getWorkerGroup())  
+          .channel(NioServerSocketChannel.class)
+          .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
+          .childOption(ChannelOption.AUTO_CLOSE, Boolean.TRUE)
+          .childOption(ChannelOption.AUTO_READ, Boolean.TRUE)
+          .childHandler(c.createInitializer());
+    };
+  }
+  
+  private static Function<TcpChannel,AbstractBootstrap> bootstrap() {
+    return c->{
+      return new Bootstrap()
+          .group(c.getMasterGroup())
+          .channel(NioSocketChannel.class)
+          .option(ChannelOption.TCP_NODELAY, true)
+          .option(ChannelOption.AUTO_CLOSE, Boolean.TRUE)
+          .option(ChannelOption.AUTO_READ, Boolean.TRUE)
+          .handler(c.createInitializer());
+    };
+  }
+  
+  public static TcpChannel newClient() {
+    return new DefaultTcpChannel(bootstrap());
+  }
+  
+  public static TcpChannel newServer() {
+    return new DefaultTcpChannel(serverBootstrap());
   }
   
 }

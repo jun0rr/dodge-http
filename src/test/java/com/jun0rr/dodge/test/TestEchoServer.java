@@ -24,11 +24,16 @@ public class TestEchoServer {
   public static final String MESSAGE = "Hello World!";
   
   @Test
+  public void testEcho() {
+    echoServer();
+    echoClient();
+  }
+  
   public void echoServer() {
     try {
       Logger logger = LoggerFactory.getLogger("EchoServer");
       logger.info("------ Starting Server ------");
-      TcpChannel.newChannel()
+      TcpChannel.newServer()
           .setAddress(Host.localhost(7000))
           .setLogLevel(Level.DEBUG)
           .addHandler(ChannelEvent.Outbound.WRITE, String.class, ()->x->{
@@ -51,12 +56,13 @@ public class TestEchoServer {
             logger.info("<< {}", x.message());
             x.write(x.message());
           })
-          .startServer()
+          .start()
           .acceptNext(f->logger.info("TcpServer listening at: {}", f.channel().localAddress()))
+          .syncUninterruptibly()
           .acceptOnClose(f->{
             logger.info("TcpServer Stopped");
             f.shutdownWorkerGroup().shutdownMasterGroup();
-          }).syncUninterruptibly();
+          });
     }
     catch(Exception e) {
       e.printStackTrace();
@@ -64,12 +70,11 @@ public class TestEchoServer {
     }
   }
   
-  //@Test
   public void echoClient() {
     try {
       Logger logger = LoggerFactory.getLogger("EchoClient");
       logger.info("------ Starting Client ------");
-      TcpChannel.newChannel()
+      TcpChannel.newClient()
           .setAddress(Host.localhost(7000))
           .setLogLevel(Level.DEBUG)
           .addHandler(ChannelEvent.Outbound.WRITE, String.class, ()->x->{
@@ -90,7 +95,7 @@ public class TestEchoServer {
             logger.info("<< {}", x.message());
             x.context().close();
           })
-          .startClient()
+          .start()
           .acceptNext(f->{
             String msg = "Hello World!";
             logger.info(">> {}", msg);

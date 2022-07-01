@@ -11,6 +11,7 @@ import com.jun0rr.dodge.http.handler.SSLConnectHandler;
 import com.jun0rr.util.Host;
 import com.jun0rr.util.ResourceLoader;
 import com.jun0rr.util.match.Match;
+import io.netty.bootstrap.AbstractBootstrap;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -25,9 +26,9 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -40,6 +41,7 @@ public class DefaultTcpChannel implements TcpChannel {
   
   public static final int DEFAULT_BUFFER_SIZE = 128 * 1024 * 1024;
   
+  private final Function<TcpChannel,AbstractBootstrap> bootstrap;
   
   private int masterThreads = 1;
   
@@ -67,7 +69,8 @@ public class DefaultTcpChannel implements TcpChannel {
   
   protected final Attributes attrs;
   
-  public DefaultTcpChannel() {
+  public DefaultTcpChannel(Function<TcpChannel,AbstractBootstrap> bootstrap) {
+    this.bootstrap = Match.notNull(bootstrap).getOrFail("Bad null Bootstrap");
     this.handlers = new LinkedList<>();
     this.attrs = new Attributes();
   }
@@ -258,32 +261,6 @@ public class DefaultTcpChannel implements TcpChannel {
     }
   }
   
-  protected ServerBootstrap serverBootstrap() {
-    if(sslEnabled) {
-      sslFactory = SSLHandlerFactory.forServer(keystorePath, keystorePass);
-    }
-    return new ServerBootstrap()
-        .group(getMasterGroup(), getWorkerGroup())  
-        .channel(NioServerSocketChannel.class)
-        .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
-        .childOption(ChannelOption.AUTO_CLOSE, Boolean.TRUE)
-        .childOption(ChannelOption.AUTO_READ, Boolean.TRUE)
-        .childHandler(createInitializer());
-  }
-  
-  protected Bootstrap bootstrap() {
-    if(sslEnabled) {
-      sslFactory = SSLHandlerFactory.forClient();
-    }
-    return new Bootstrap()
-        .group(getMasterGroup())
-        .channel(NioSocketChannel.class)
-        .option(ChannelOption.TCP_NODELAY, true)
-        .option(ChannelOption.AUTO_CLOSE, Boolean.TRUE)
-        .option(ChannelOption.AUTO_READ, Boolean.TRUE)
-        .handler(createInitializer());
-  }
-  
   @Override
   public ChannelInitializer<SocketChannel> createInitializer() {
     Match.notEmpty(handlers).failIfNotMatch("Bad empty ChannelHandler List");
@@ -297,17 +274,24 @@ public class DefaultTcpChannel implements TcpChannel {
   }
   
   @Override
-  public FutureEvent startClient() {
-    Match.notNull(getAddress()).failIfNotMatch("Bad null Host address");
-    ChannelFuture f = bootstrap().connect(getAddress().toSocketAddr());
-    return FutureEvent.of(this, f);
-  }
-  
-  @Override
-  public FutureEvent startServer() {
-    ChannelFuture cf = serverBootstrap().bind(getAddress().toSocketAddr());
+  public FutureEvent start() {
+    AbstractBootstrap boot = bootstrap.apply(this);
+    if(ServerBootstrap.class.isAssignableFrom(boot.getClass())) {
+      if(sslEnabled) {
+        sslFactory = SSLHandlerFactory.forServer(keystorePath, keystorePass);
+      }
+      ChannelFuture cf = ((ServerBootstrap)boot).bind(getAddress().toSocketAddr());
+      return FutureEvent.of(this, cf)
+          .acceptNext(f->logger.debug("Listening on {}", f.channel().localAddress()));
+    }
+    else {
+      if(sslEnabled) {
+        sslFactory = SSLHandlerFactory.forClient();
+      }
+    }
+    ChannelFuture cf = ((Bootstrap)boot).connect(getAddress().toSocketAddr());
     return FutureEvent.of(this, cf)
-        .acceptNext(f->logger.debug("Listening on {}", f.channel().localAddress()));
+        .acceptNext(f->logger.debug("Connected to {}", f.channel().remoteAddress()));
   }
   
   @Override

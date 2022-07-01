@@ -10,8 +10,10 @@ import com.jun0rr.dodge.tcp.ChannelExchange;
 import com.jun0rr.dodge.tcp.ConsumerType;
 import com.jun0rr.dodge.tcp.TcpChannel;
 import com.jun0rr.util.match.Match;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +68,8 @@ public class EventInboundHandler extends ChannelInboundHandlerAdapter {
   
   @Override
   public void channelActive(ChannelHandlerContext chc) throws Exception {
+    GenericFutureListener<ChannelFuture> rmattrs = f->attrs.clearChannel(f.channel());
+    chc.channel().closeFuture().addListener(rmattrs);
     if(ChannelEvent.Inbound.ACTIVE == event) {
       cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
     }

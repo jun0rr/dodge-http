@@ -48,6 +48,15 @@ public class Attributes {
     return new Attributes(this, ch.id().asShortText());
   }
   
+  public Attributes clearChannel(Channel ch) {
+    attrs.entrySet().stream()
+        .filter(e->e.getKey().startsWith(ch.id().asShortText()))
+        .map(Map.Entry::getKey)
+        //.collect(Collectors.toList())
+        .forEach(attrs::remove);
+    return this;
+  }
+  
   private String key(String key) {
     return (keyPrefix == null || keyPrefix.isBlank() ? "" : keyPrefix.concat(".")).concat(key);
   }

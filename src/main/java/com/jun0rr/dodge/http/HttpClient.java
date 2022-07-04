@@ -27,7 +27,7 @@ public class HttpClient extends Http {
   private String proxyPass;
   
   public HttpClient() {
-    super();
+    super(BOOTSTRAP);
   }
   
   public Host getProxyAddress() {

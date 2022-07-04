@@ -4,7 +4,6 @@
  */
 package com.jun0rr.dodge.http;
 
-import com.jun0rr.dodge.http.auth.Storage;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.handler.HttpRouteHandler;
 import com.jun0rr.dodge.tcp.ChannelEvent;
@@ -15,7 +14,6 @@ import io.netty.handler.codec.http.HttpRequest;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import one.microstream.storage.embedded.types.EmbeddedStorage;
 import one.microstream.storage.embedded.types.EmbeddedStorageManager;
 
 /**
@@ -29,7 +27,7 @@ public class HttpServer extends Http {
   private EmbeddedStorageManager storageManager;
   
   public HttpServer() {
-    super();
+    super(SERVER_BOOTSTRAP);
   }
   
   public Path getStorageDir() {

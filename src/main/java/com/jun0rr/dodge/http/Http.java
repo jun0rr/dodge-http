@@ -9,11 +9,13 @@ import com.jun0rr.dodge.tcp.TcpChannel;
 import com.jun0rr.util.ResourceLoader;
 import com.jun0rr.util.Unchecked;
 import com.jun0rr.util.crypto.Crypto;
+import io.netty.bootstrap.AbstractBootstrap;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  *
@@ -29,8 +31,8 @@ public abstract class Http extends DefaultTcpChannel {
   
   private boolean httpMessageLogger = true;
   
-  public Http() {
-    super();
+  public Http(Function<TcpChannel, AbstractBootstrap> bootstrap) {
+    super(bootstrap);
   }
   
   public Http setFullHttpMessageEnabled(boolean enabled) {

@@ -4,6 +4,7 @@
  */
 package com.jun0rr.dodge.tcp;
 
+import com.jun0rr.dodge.metrics.Metric;
 import com.jun0rr.util.Host;
 import io.netty.bootstrap.AbstractBootstrap;
 import io.netty.bootstrap.Bootstrap;
@@ -16,6 +17,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -53,7 +55,13 @@ public interface TcpChannel {
   public EventLoopGroup getWorkerGroup();
 
   public TcpChannel setWorkerGroup(EventLoopGroup workerGroup);
-
+  
+  public TcpChannel setMetricsEnabled(boolean metrics);
+  
+  public boolean isMetricsEnabled();
+  
+  public List<Metric> metrics();
+  
   public Host getAddress();
 
   public TcpChannel setAddress(Host listenAddress);
@@ -87,36 +95,34 @@ public interface TcpChannel {
   public FutureEvent start();
   
   
-  private static Function<TcpChannel,AbstractBootstrap> serverBootstrap() {
-    return c->{
-      return new ServerBootstrap()
-          .group(c.getMasterGroup(), c.getWorkerGroup())  
-          .channel(NioServerSocketChannel.class)
-          .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
-          .childOption(ChannelOption.AUTO_CLOSE, Boolean.TRUE)
-          .childOption(ChannelOption.AUTO_READ, Boolean.TRUE)
-          .childHandler(c.createInitializer());
-    };
-  }
-  
-  private static Function<TcpChannel,AbstractBootstrap> bootstrap() {
-    return c->{
-      return new Bootstrap()
-          .group(c.getMasterGroup())
-          .channel(NioSocketChannel.class)
-          .option(ChannelOption.TCP_NODELAY, true)
-          .option(ChannelOption.AUTO_CLOSE, Boolean.TRUE)
-          .option(ChannelOption.AUTO_READ, Boolean.TRUE)
-          .handler(c.createInitializer());
-    };
-  }
-  
   public static TcpChannel newClient() {
-    return new DefaultTcpChannel(bootstrap());
+    return new DefaultTcpChannel(BOOTSTRAP);
   }
   
   public static TcpChannel newServer() {
-    return new DefaultTcpChannel(serverBootstrap());
+    return new DefaultTcpChannel(SERVER_BOOTSTRAP);
   }
+  
+  
+  
+  public static final Function<TcpChannel,AbstractBootstrap> BOOTSTRAP = c->{
+    return new Bootstrap()
+        .group(c.getMasterGroup())
+        .channel(NioSocketChannel.class)
+        .option(ChannelOption.TCP_NODELAY, true)
+        .option(ChannelOption.AUTO_CLOSE, Boolean.TRUE)
+        .option(ChannelOption.AUTO_READ, Boolean.TRUE)
+        .handler(c.createInitializer());
+  };
+  
+  public static final Function<TcpChannel,AbstractBootstrap> SERVER_BOOTSTRAP = c->{
+    return new ServerBootstrap()
+        .group(c.getMasterGroup(), c.getWorkerGroup())  
+        .channel(NioServerSocketChannel.class)
+        .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
+        .childOption(ChannelOption.AUTO_CLOSE, Boolean.TRUE)
+        .childOption(ChannelOption.AUTO_READ, Boolean.TRUE)
+        .childHandler(c.createInitializer());
+  };
   
 }

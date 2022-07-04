@@ -8,6 +8,7 @@ import ch.qos.logback.classic.LoggerContext;
 import com.jun0rr.dodge.http.handler.EventInboundHandler;
 import com.jun0rr.dodge.http.handler.EventOutboundHandler;
 import com.jun0rr.dodge.http.handler.SSLConnectHandler;
+import com.jun0rr.dodge.metrics.Metric;
 import com.jun0rr.util.Host;
 import com.jun0rr.util.ResourceLoader;
 import com.jun0rr.util.match.Match;
@@ -17,16 +18,14 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -61,6 +60,8 @@ public class DefaultTcpChannel implements TcpChannel {
   
   private boolean sslEnabled = false;
   
+  protected boolean metricsEnabled = true;
+  
   private SSLHandlerFactory sslFactory;
   
   private int bufferSize = DEFAULT_BUFFER_SIZE;
@@ -69,9 +70,12 @@ public class DefaultTcpChannel implements TcpChannel {
   
   protected final Attributes attrs;
   
+  protected final List<Metric> metrics;
+  
   public DefaultTcpChannel(Function<TcpChannel,AbstractBootstrap> bootstrap) {
     this.bootstrap = Match.notNull(bootstrap).getOrFail("Bad null Bootstrap");
     this.handlers = new LinkedList<>();
+    this.metrics = new CopyOnWriteArrayList<>();
     this.attrs = new Attributes();
   }
   
@@ -141,7 +145,23 @@ public class DefaultTcpChannel implements TcpChannel {
     this.workerGroup = workerGroup;
     return this;
   }
-
+  
+  @Override
+  public TcpChannel setMetricsEnabled(boolean metrics) {
+    this.metricsEnabled = metrics;
+    return this;
+  }
+  
+  @Override
+  public boolean isMetricsEnabled() {
+    return this.metricsEnabled;
+  }
+  
+  @Override
+  public List<Metric> metrics() {
+    return this.metrics;
+  }
+  
   @Override
   public Host getAddress() {
     return address;

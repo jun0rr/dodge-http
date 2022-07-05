@@ -13,6 +13,7 @@ import java.util.Random;
  *
  * @author F6036477
  */
+@JsonIgnore
 public class Password {
   
   private final byte[] salt;

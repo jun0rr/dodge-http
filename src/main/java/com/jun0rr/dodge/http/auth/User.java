@@ -17,12 +17,13 @@ import java.util.Objects;
  */
 public class User {
   
-  public static final String EMAIL_REGEX = "[a-zA-Z0-9_.]+@[a-zA-Z0-9_]+\\.[a-zA-Z0-9_.]+";
+  public static final String EMAIL_REGEX = "[a-zA-Z_]+[a-zA-Z0-9_\\.\\-]*@[a-zA-Z_]+\\.[a-zA-Z0-9_.]+";
   
   private String name;
   
   private String email;
   
+  @JsonIgnore
   private Password password;
   
   private LocalDate birthday;

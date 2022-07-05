@@ -18,6 +18,8 @@ public class Group {
   
   private Instant created;
   
+  public Group() {}
+  
   public Group(String name, Instant created) {
     this.name = Match.notEmpty(name).getOrFail("Bad null/empty Group name");
     this.created = Match.notNull(created).getOrFail("Bad null created Instant");

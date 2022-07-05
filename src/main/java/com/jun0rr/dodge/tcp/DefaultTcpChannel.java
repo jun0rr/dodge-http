@@ -5,10 +5,12 @@
 package com.jun0rr.dodge.tcp;
 
 import ch.qos.logback.classic.LoggerContext;
+import com.jun0rr.dodge.http.auth.Storage;
 import com.jun0rr.dodge.http.handler.EventInboundHandler;
 import com.jun0rr.dodge.http.handler.EventOutboundHandler;
 import com.jun0rr.dodge.http.handler.SSLConnectHandler;
 import com.jun0rr.dodge.metrics.Metric;
+import com.jun0rr.dodge.metrics.TcpMetricsHandler;
 import com.jun0rr.util.Host;
 import com.jun0rr.util.ResourceLoader;
 import com.jun0rr.util.match.Match;
@@ -61,6 +63,12 @@ public class DefaultTcpChannel implements TcpChannel {
   private boolean sslEnabled = false;
   
   protected boolean metricsEnabled = true;
+  
+  protected boolean storageEnabled = true;
+  
+  protected Path storagePath = ResourceLoader.caller().loadPath("storage");
+  
+  protected Storage storage;
   
   private SSLHandlerFactory sslFactory;
   
@@ -237,6 +245,31 @@ public class DefaultTcpChannel implements TcpChannel {
     return this;
   }
   
+  public TcpChannel setStorageEnabled(boolean enabled) {
+    this.storageEnabled = enabled;
+    return this;
+  }
+  
+  public boolean isStorageEnabled() {
+    return storageEnabled;
+  }
+  
+  @Override
+  public Path getStorageDir() {
+    return storagePath;
+  }
+  
+  @Override
+  public TcpChannel setStorageDir(Path path) {
+    this.storagePath = Match.notNull(path).getOrFail("Bad null storage Path");
+    return this;
+  }
+  
+  @Override
+  public Storage storage() {
+    return storage;
+  }
+
   @Override
   public <T> TcpChannel addHandler(ChannelEvent evt, Class<T> type, Supplier<Consumer<ChannelExchange<T>>> cs) {
     Match.notNull(evt).failIfNotMatch("Bad null ChannelEvent");
@@ -288,6 +321,9 @@ public class DefaultTcpChannel implements TcpChannel {
       @Override
       protected void initChannel(SocketChannel c) throws Exception {
         initSslHandler(c);
+        if(isMetricsEnabled()) {
+          c.pipeline().addLast(new TcpMetricsHandler(DefaultTcpChannel.this));
+        }
         initHandlers(c);
       }
     };
@@ -295,6 +331,9 @@ public class DefaultTcpChannel implements TcpChannel {
   
   @Override
   public FutureEvent start() {
+    if(storageEnabled) {
+      storage = new Storage(storagePath);
+    }
     AbstractBootstrap boot = bootstrap.apply(this);
     if(ServerBootstrap.class.isAssignableFrom(boot.getClass())) {
       if(sslEnabled) {
@@ -308,10 +347,10 @@ public class DefaultTcpChannel implements TcpChannel {
       if(sslEnabled) {
         sslFactory = SSLHandlerFactory.forClient();
       }
+      ChannelFuture cf = ((Bootstrap)boot).connect(getAddress().toSocketAddr());
+      return FutureEvent.of(this, cf)
+          .acceptNext(f->logger.debug("Connected to {}", f.channel().remoteAddress()));
     }
-    ChannelFuture cf = ((Bootstrap)boot).connect(getAddress().toSocketAddr());
-    return FutureEvent.of(this, cf)
-        .acceptNext(f->logger.debug("Connected to {}", f.channel().remoteAddress()));
   }
   
   @Override

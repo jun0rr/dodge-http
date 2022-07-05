@@ -29,7 +29,7 @@ public class Gauge extends AbstractMetric<Double> {
   public void collect(List<String> ls) {
     super.collect(ls);
     StringBuilder lbs = new StringBuilder();
-    ls.add(String.format(GAUGE_VALUE_FORMAT, name, labelsToString(), GAUGE_FORMAT.format(value.get().doubleValue()), time.get().toEpochMilli() / 1000));
+    ls.add(String.format(GAUGE_VALUE_FORMAT, name, labelsToString(), GAUGE_FORMAT.format(value.get().doubleValue()), time.get().getEpochSecond()));
   }
   
   @Override

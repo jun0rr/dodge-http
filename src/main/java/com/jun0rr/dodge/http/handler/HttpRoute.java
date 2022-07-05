@@ -5,8 +5,8 @@
  */
 package com.jun0rr.dodge.http.handler;
 
+import com.jun0rr.dodge.http.Method;
 import com.jun0rr.util.match.Match;
-import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import java.util.List;
 import java.util.Objects;
@@ -19,42 +19,32 @@ import java.util.regex.Pattern;
  */
 public class HttpRoute implements Predicate<HttpRequest> {
   
-  public static final List<HttpMethod> ALL_METHODS = List.of(
-      HttpMethod.CONNECT,
-      HttpMethod.DELETE,
-      HttpMethod.GET,
-      HttpMethod.HEAD,
-      HttpMethod.OPTIONS,
-      HttpMethod.PATCH,
-      HttpMethod.POST,
-      HttpMethod.PUT,
-      HttpMethod.TRACE
-  );
+  public static final List<Method> ALL_METHODS = List.of(Method.values());
 
   private final String pattern;
   
-  private final List<HttpMethod> methods;
+  private final List<Method> methods;
   
   private final transient Predicate<String> matcher;
   
-  public HttpRoute(String ptrn, List<HttpMethod> meths) {
+  public HttpRoute(String ptrn, List<Method> meths) {
     this.pattern = Match.notEmpty(ptrn).getOrFail("Bad empty pattern");
     this.methods = Match.notEmpty(meths).getOrFail("Bad empty methods List");
     this.matcher = Pattern.compile(ptrn).asPredicate();
   }
   
-  public HttpRoute(String ptrn, HttpMethod... meths) {
+  public HttpRoute(String ptrn, Method... meths) {
     this.pattern = Match.notEmpty(ptrn).getOrFail("Bad empty pattern");
     this.methods = List.of(Match.notEmpty(meths).getOrFail("Bad empty methods List"));
     this.matcher = Pattern.compile(ptrn).asPredicate();
   }
   
   
-  public static HttpRoute of(String ptrn, HttpMethod... meths) {
+  public static HttpRoute of(String ptrn, Method... meths) {
     return new HttpRoute(ptrn, meths);
   }
   
-  public static HttpRoute of(String ptrn, List<HttpMethod> meths) {
+  public static HttpRoute of(String ptrn, List<Method> meths) {
     return new HttpRoute(ptrn, meths);
   }
   
@@ -63,7 +53,7 @@ public class HttpRoute implements Predicate<HttpRequest> {
     this(ptrn, ALL_METHODS);
   }
   
-  public List<HttpMethod> methods() {
+  public List<Method> methods() {
     return methods;
   }
   

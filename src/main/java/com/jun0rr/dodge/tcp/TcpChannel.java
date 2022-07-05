@@ -4,6 +4,7 @@
  */
 package com.jun0rr.dodge.tcp;
 
+import com.jun0rr.dodge.http.auth.Storage;
 import com.jun0rr.dodge.metrics.Metric;
 import com.jun0rr.util.Host;
 import io.netty.bootstrap.AbstractBootstrap;
@@ -81,6 +82,17 @@ public interface TcpChannel {
   public char[] getKeystorePass();
   
   public TcpChannel setKeystorePass(char[] pass);
+  
+  public TcpChannel setStorageEnabled(boolean enabled);
+  
+  public boolean isStorageEnabled();
+  
+  public Path getStorageDir();
+  
+  public TcpChannel setStorageDir(Path path);
+  
+  public Storage storage();
+
   
   public <T> TcpChannel addHandler(ChannelEvent evt, Class<T> type, Supplier<Consumer<ChannelExchange<T>>> cs);
 

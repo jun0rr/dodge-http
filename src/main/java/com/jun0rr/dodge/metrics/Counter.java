@@ -29,7 +29,7 @@ public class Counter extends AbstractMetric<Long> {
   public void collect(List<String> ls) {
     super.collect(ls);
     StringBuilder lbs = new StringBuilder();
-    ls.add(String.format(COUNTER_VALUE_FORMAT, name, labelsToString(), value.get(), time.get().toEpochMilli() / 1000));
+    ls.add(String.format(COUNTER_VALUE_FORMAT, name, labelsToString(), value.get(), time.get().getEpochSecond()));
   }
   
   @Override

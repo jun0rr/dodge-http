@@ -26,19 +26,22 @@ public class Storage {
   
   private final List<User> users;
   
+  private final List<Group> groups;
+  
   private final List<Role> roles;
   
   private final Map<String,Object> map;
   
-  public Storage(Path path, List<User> users, List<Role> roles, Map<String,Object> map) {
+  public Storage(Path path, List<User> users, List<Group> groups, List<Role> roles, Map<String,Object> map) {
     this.users = Match.notNull(users).getOrFail("Bad null User List");
+    this.groups = Match.notNull(groups).getOrFail("Bad null Group List");
     this.roles = Match.notNull(roles).getOrFail("Bad null Role List");
     this.map = Match.notNull(map).getOrFail("Bad null Map<String,Object>");
     this.manager = EmbeddedStorage.start(this, Match.exists(path).getOrFail("Path does not exists"));
   }
   
   public Storage(Path path) {
-    this(path, new LinkedList<>(), new LinkedList<>(), new HashMap<>());
+    this(path, new LinkedList<>(), new LinkedList<>(), new LinkedList<>(), new HashMap<>());
   }
   
   public Storage add(User u) {
@@ -46,6 +49,14 @@ public class Storage {
     manager.store(u);
     users.add(u);
     manager.store(users);
+    return this;
+  }
+  
+  public Storage add(Group g) {
+    Match.notNull(g).failIfNotMatch("Bad null Group");
+    manager.store(g);
+    groups.add(g);
+    manager.store(groups);
     return this;
   }
   
@@ -80,6 +91,10 @@ public class Storage {
   
   public Stream<User> users() {
     return users.stream();
+  }
+  
+  public Stream<Group> groups() {
+    return groups.stream();
   }
   
   public Stream<Role> roles() {

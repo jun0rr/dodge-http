@@ -5,11 +5,13 @@
 package com.jun0rr.dodge.http.auth;
 
 import com.jun0rr.dodge.http.HttpServer;
+import com.jun0rr.dodge.http.Method;
+import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.util.match.Match;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpRequest;
-import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -18,9 +20,9 @@ import java.util.regex.Pattern;
  */
 public class HttpAuthHandler extends ChannelInboundHandlerAdapter {
   
-  public static final Predicate<String> URI_GET_USER = Pattern.compile("\\/?auth\\/user\\/" + User.EMAIL_REGEX).asPredicate();
+  public static final HttpRoute USER_GET_ALL = new HttpRoute("\\/?auth\\/user\\/?", Method.GET);
   
-  public static final Predicate<String> URI_GET_GROUP = Pattern.compile("\\/?auth\\/group\\/(GET|POST|PUT|DELETE)" + User.EMAIL_REGEX).asPredicate();
+  public static final HttpRoute USER_GET_ONE = new HttpRoute(String.format("\\/?auth\\/user\\/(%s)", User.EMAIL_REGEX), Method.GET);
   
   private final HttpServer server;
   
@@ -30,11 +32,19 @@ public class HttpAuthHandler extends ChannelInboundHandlerAdapter {
   
   @Override
   public void channelRead(ChannelHandlerContext chc, Object o) {
-    
+    if(HttpRequest.class.isAssignableFrom(o.getClass())) {
+      HttpRequest req = (HttpRequest) o;
+      if(USER_GET_ONE.test(req)) userGetOne(chc, req);
+    }
   }
   
-  public User get(ChannelHandlerContext chc, HttpRequest req) {
-    return null;
+  public User userGetOne(ChannelHandlerContext chc, HttpRequest req) {
+    Pattern p = Pattern.compile(USER_GET_ONE.pattern());
+    Matcher m = p.matcher(req.uri());
+    if(m.find()) {
+      String email = m.group();
+      System.out.println("**** HttpAuthHandler.email = " + email);
+    }
   }
   
 }

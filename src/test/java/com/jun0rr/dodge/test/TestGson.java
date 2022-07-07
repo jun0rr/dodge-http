@@ -9,7 +9,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.jun0rr.dodge.http.Method;
 import com.jun0rr.dodge.http.auth.AllowRole;
 import com.jun0rr.dodge.http.auth.DenyRole;
 import com.jun0rr.dodge.http.auth.Group;
@@ -19,6 +18,8 @@ import com.jun0rr.dodge.http.auth.Role;
 import com.jun0rr.dodge.http.auth.JsonRoleAdapter;
 import com.jun0rr.dodge.http.auth.User;
 import com.jun0rr.dodge.http.handler.HttpRoute;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Function;
@@ -39,7 +40,7 @@ public class TestGson {
       .setExclusionStrategies(new JsonIgnoreStrategy())
       .create();
   
-  private static final HttpRoute routeCreateUser = new HttpRoute("\\/?auth\\/user", Method.POST, Method.PUT);
+  private static final HttpRoute routeCreateUser = new HttpRoute("\\/?auth\\/user", HttpMethod.POST, HttpMethod.PUT);
   
   private static final Group groupDefault = new Group("default");
   
@@ -60,8 +61,9 @@ public class TestGson {
   
   @Test
   public void testHttpRoute() {
+    try {
     JsonObject obj = gson.toJsonTree(routeCreateUser).getAsJsonObject();
-    Assertions.assertEquals(routeCreateUser.pattern(), obj.get("pattern").getAsString());
+    Assertions.assertEquals(routeCreateUser.regexString(), obj.get("regex").getAsString());
     Assertions.assertTrue(routeCreateUser.methods().stream()
         .allMatch(m->jsonArrayContains(
             obj.getAsJsonArray("methods"), 
@@ -71,9 +73,14 @@ public class TestGson {
     );
     String json = gson.toJson(obj);
     HttpRoute r = gson.fromJson(json, HttpRoute.class);
-    Assertions.assertEquals(routeCreateUser.pattern(), r.pattern());
+    Assertions.assertEquals(routeCreateUser.regexString(), r.regexString());
     Assertions.assertEquals(routeCreateUser.methods(), r.methods());
     Assertions.assertEquals(routeCreateUser, r);
+    }
+    catch(Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
   
   @Test
@@ -109,6 +116,12 @@ public class TestGson {
     Assertions.assertEquals(AllowRole.class, role.getClass());
     Assertions.assertTrue(roleCreateUser.allow(user));
     Assertions.assertTrue(role.allow(user));
+  }
+  
+  @Test
+  public void testHttpResponseStatus() {
+    System.out.println("------ testHttpResponseStatus ------");
+    System.out.println(gson.toJson(HttpResponseStatus.NOT_FOUND));
   }
   
 }

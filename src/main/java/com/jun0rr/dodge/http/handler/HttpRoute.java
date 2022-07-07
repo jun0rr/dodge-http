@@ -5,12 +5,14 @@
  */
 package com.jun0rr.dodge.http.handler;
 
-import com.jun0rr.dodge.http.Method;
 import com.jun0rr.util.match.Match;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -19,33 +21,43 @@ import java.util.regex.Pattern;
  */
 public class HttpRoute implements Predicate<HttpRequest> {
   
-  public static final List<Method> ALL_METHODS = List.of(Method.values());
+  public static final List<HttpMethod> ALL_METHODS = List.of(
+      HttpMethod.CONNECT,
+      HttpMethod.DELETE,
+      HttpMethod.GET,
+      HttpMethod.HEAD,
+      HttpMethod.OPTIONS,
+      HttpMethod.PATCH,
+      HttpMethod.POST,
+      HttpMethod.PUT,
+      HttpMethod.TRACE
+  );
 
-  private final String pattern;
+  private final String regex;
   
-  private final List<Method> methods;
+  private final List<HttpMethod> methods;
   
-  private final transient Predicate<String> matcher;
+  private final transient Pattern pattern;
   
-  public HttpRoute(String ptrn, List<Method> meths) {
-    this.pattern = Match.notEmpty(ptrn).getOrFail("Bad empty pattern");
+  public HttpRoute(String regex, List<HttpMethod> meths) {
+    this.regex = Match.notEmpty(regex).getOrFail("Bad empty pattern");
     this.methods = Match.notEmpty(meths).getOrFail("Bad empty methods List");
-    this.matcher = Pattern.compile(ptrn).asPredicate();
+    this.pattern = Pattern.compile(regex);
   }
   
-  public HttpRoute(String ptrn, Method... meths) {
-    this.pattern = Match.notEmpty(ptrn).getOrFail("Bad empty pattern");
+  public HttpRoute(String regex, HttpMethod... meths) {
+    this.regex = Match.notEmpty(regex).getOrFail("Bad empty pattern");
     this.methods = List.of(Match.notEmpty(meths).getOrFail("Bad empty methods List"));
-    this.matcher = Pattern.compile(ptrn).asPredicate();
+    this.pattern = Pattern.compile(regex);
   }
   
   
-  public static HttpRoute of(String ptrn, Method... meths) {
-    return new HttpRoute(ptrn, meths);
+  public static HttpRoute of(String regex, HttpMethod... meths) {
+    return new HttpRoute(regex, meths);
   }
   
-  public static HttpRoute of(String ptrn, List<Method> meths) {
-    return new HttpRoute(ptrn, meths);
+  public static HttpRoute of(String regex, List<HttpMethod> meths) {
+    return new HttpRoute(regex, meths);
   }
   
   
@@ -53,23 +65,27 @@ public class HttpRoute implements Predicate<HttpRequest> {
     this(ptrn, ALL_METHODS);
   }
   
-  public List<Method> methods() {
+  public List<HttpMethod> methods() {
     return methods;
   }
   
-  public String pattern() {
-    return pattern;
+  public String regexString() {
+    return regex;
+  }
+  
+  public Matcher matcher(String uri) {
+    return pattern.matcher(uri);
   }
   
   @Override
   public boolean test(HttpRequest req) {
-    return methods.stream().anyMatch(m->m.equals(req.method())) && matcher.test(req.uri());
+    return methods.stream().anyMatch(m->m.equals(req.method())) && matcher(req.uri()).find();
   }
 
   @Override
   public int hashCode() {
     int hash = 3;
-    hash = 43 * hash + Objects.hashCode(this.pattern);
+    hash = 43 * hash + Objects.hashCode(this.regex);
     hash = 43 * hash + Objects.hashCode(this.methods);
     return hash;
   }
@@ -86,7 +102,7 @@ public class HttpRoute implements Predicate<HttpRequest> {
       return false;
     }
     final HttpRoute other = (HttpRoute) obj;
-    if (!Objects.equals(this.pattern, other.pattern)) {
+    if (!Objects.equals(this.regex, other.regex)) {
       return false;
     }
     if (!Objects.equals(this.methods, other.methods)) {
@@ -97,7 +113,7 @@ public class HttpRoute implements Predicate<HttpRequest> {
 
   @Override
   public String toString() {
-    return "HttpRoute{" + "pattern=" + pattern + ", methods=" + methods + '}';
+    return "HttpRoute{" + "regex=" + regex + ", methods=" + methods + '}';
   }
   
 }

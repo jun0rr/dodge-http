@@ -4,6 +4,13 @@
  */
 package com.jun0rr.dodge.http;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.jun0rr.dodge.http.auth.AllowRole;
+import com.jun0rr.dodge.http.auth.DenyRole;
+import com.jun0rr.dodge.http.auth.JsonIgnoreStrategy;
+import com.jun0rr.dodge.http.auth.JsonRoleAdapter;
+import com.jun0rr.dodge.http.auth.Role;
 import com.jun0rr.dodge.tcp.DefaultTcpChannel;
 import com.jun0rr.dodge.tcp.TcpChannel;
 import com.jun0rr.util.ResourceLoader;
@@ -31,6 +38,13 @@ public abstract class Http extends DefaultTcpChannel {
   
   private boolean httpMessageLogger = true;
   
+  private final Gson gson = new GsonBuilder()
+      .registerTypeAdapter(AllowRole.class, new JsonRoleAdapter())
+      .registerTypeAdapter(DenyRole.class, new JsonRoleAdapter())
+      .registerTypeAdapter(Role.class, new JsonRoleAdapter())
+      .setExclusionStrategies(new JsonIgnoreStrategy())
+      .create();
+  
   public Http(Function<TcpChannel, AbstractBootstrap> bootstrap) {
     super(bootstrap);
   }
@@ -51,6 +65,10 @@ public abstract class Http extends DefaultTcpChannel {
   
   public boolean isHttpMessageLoggerEnabled() {
     return this.httpMessageLogger;
+  }
+  
+  public Gson gson() {
+    return gson;
   }
   
   public Path getPrivateKeyPath() {

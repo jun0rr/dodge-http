@@ -4,7 +4,6 @@
  */
 package com.jun0rr.dodge.test;
 
-import com.jun0rr.dodge.http.Method;
 import com.jun0rr.dodge.http.auth.AllowRole;
 import com.jun0rr.dodge.http.auth.Group;
 import com.jun0rr.dodge.http.auth.Password;
@@ -13,6 +12,7 @@ import com.jun0rr.dodge.http.auth.Role;
 import com.jun0rr.dodge.http.auth.User;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.util.Unchecked;
+import io.netty.handler.codec.http.HttpMethod;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,7 +39,7 @@ public class TestEmbeddedStorage {
   
   public static final Role allow = new AllowRole(HttpRoute.of(".*", HttpRoute.ALL_METHODS), admin);
   
-  public static final Role deny = new AllowRole(HttpRoute.of("usr", Method.POST), def);
+  public static final Role deny = new AllowRole(HttpRoute.of("usr", HttpMethod.POST), def);
   
   
   @Test

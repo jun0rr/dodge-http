@@ -4,6 +4,7 @@
  */
 package com.jun0rr.dodge.http.handler;
 
+import com.jun0rr.dodge.http.header.ProxyAuthorizationHeader;
 import com.jun0rr.util.match.Match;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;

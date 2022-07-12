@@ -5,10 +5,10 @@
 package com.jun0rr.dodge.metrics;
 
 import com.jun0rr.dodge.http.HttpServer;
-import com.jun0rr.dodge.http.handler.CacheControlHeaders;
-import com.jun0rr.dodge.http.handler.ConnectionCloseHeaders;
-import com.jun0rr.dodge.http.handler.DateHeader;
-import com.jun0rr.dodge.http.handler.ServerHeader;
+import com.jun0rr.dodge.http.header.CacheControlHeaders;
+import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
+import com.jun0rr.dodge.http.header.DateHeader;
+import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.util.match.Match;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFutureListener;

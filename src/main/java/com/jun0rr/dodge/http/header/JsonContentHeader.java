@@ -2,24 +2,26 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.jun0rr.dodge.http.handler;
+package com.jun0rr.dodge.http.header;
 
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
-import java.util.List;
 
 /**
  *
  * @author F6036477
  */
-public class CacheControlHeaders extends DefaultHttpHeaders {
+public class JsonContentHeader extends DefaultHttpHeaders {
   
-  public CacheControlHeaders() {
+  public static final int INIT_CONTENT_LENGTH = 256 * 1024 * 1024;
+  
+  public JsonContentHeader(int len) {
     super();
-    add(HttpHeaderNames.CACHE_CONTROL, List.of(HttpHeaderValues.NO_CACHE, HttpHeaderValues.NO_STORE, HttpHeaderValues.MUST_REVALIDATE));
-    add(HttpHeaderNames.PRAGMA, HttpHeaderValues.NO_CACHE);
-    addInt(HttpHeaderNames.EXPIRES, -1);
+    if(len > 0) {
+      add(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON);
+      addInt(HttpHeaderNames.CONTENT_LENGTH, len);
+    }
   }
   
 }

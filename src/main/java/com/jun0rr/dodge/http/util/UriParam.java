@@ -19,32 +19,31 @@
  * endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package com.jun0rr.dodge.http.auth;
+package com.jun0rr.dodge.http.util;
 
-import static com.jun0rr.dodge.http.auth.RequestParam.BOOLEAN_TEST;
-import static com.jun0rr.dodge.http.auth.RequestParam.DOUBLE_TEST;
-import static com.jun0rr.dodge.http.auth.RequestParam.INSTANT_TEST;
-import static com.jun0rr.dodge.http.auth.RequestParam.LOCAL_DATE_DDMMYYYY_FORMAT;
-import static com.jun0rr.dodge.http.auth.RequestParam.LOCAL_DATE_DDMMYYYY_TEST;
-import static com.jun0rr.dodge.http.auth.RequestParam.LOCAL_DATE_TIME_FORMAT;
-import static com.jun0rr.dodge.http.auth.RequestParam.LOCAL_DATE_TIME_TEST;
-import static com.jun0rr.dodge.http.auth.RequestParam.LOCAL_DATE_YYYYMMDD_FORMAT;
-import static com.jun0rr.dodge.http.auth.RequestParam.LOCAL_DATE_YYYYMMDD_TEST;
-import static com.jun0rr.dodge.http.auth.RequestParam.LONG_TEST;
-import static com.jun0rr.dodge.http.auth.RequestParam.OFFSET_DATE_TIME_FORMAT;
-import static com.jun0rr.dodge.http.auth.RequestParam.OFFSET_DATE_TIME_TEST;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import static com.jun0rr.dodge.http.util.RequestParam.BOOLEAN_TEST;
+import static com.jun0rr.dodge.http.util.RequestParam.DOUBLE_TEST;
+import static com.jun0rr.dodge.http.util.RequestParam.INSTANT_TEST;
+import static com.jun0rr.dodge.http.util.RequestParam.LOCAL_DATE_DDMMYYYY_FORMAT;
+import static com.jun0rr.dodge.http.util.RequestParam.LOCAL_DATE_DDMMYYYY_TEST;
+import static com.jun0rr.dodge.http.util.RequestParam.LOCAL_DATE_TIME_FORMAT;
+import static com.jun0rr.dodge.http.util.RequestParam.LOCAL_DATE_TIME_TEST;
+import static com.jun0rr.dodge.http.util.RequestParam.LOCAL_DATE_YYYYMMDD_FORMAT;
+import static com.jun0rr.dodge.http.util.RequestParam.LOCAL_DATE_YYYYMMDD_TEST;
+import static com.jun0rr.dodge.http.util.RequestParam.LONG_TEST;
+import static com.jun0rr.dodge.http.util.RequestParam.OFFSET_DATE_TIME_FORMAT;
+import static com.jun0rr.dodge.http.util.RequestParam.OFFSET_DATE_TIME_TEST;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -63,13 +62,13 @@ public class UriParam {
       throw new IllegalArgumentException("Bad URI: "+ uri);
     }
     this.uri = uri;
-    params = Arrays.asList(this.uri.startsWith("/") 
+    params = List.of(this.uri.startsWith("/") 
         ? this.uri.substring(1).split("/") 
         : this.uri.split("/")
     );
   }
   
-  public int length() {
+  public int size() {
     return params.size() -1;
   }
   
@@ -119,13 +118,13 @@ public class UriParam {
   
   public List getList(int index) {
     String svl = getParam(index);
-    if(svl == null) return Collections.EMPTY_LIST;
-    String[] vls = svl.split(",");
-    List lst = new ArrayList<>(vls.length);
-    for(String v : vls) {
-      lst.add(getObjectValue(v));
+    if(svl == null || svl.isBlank()) {
+      return Collections.EMPTY_LIST;
     }
-    return lst;
+    return List.of(svl.split(","))
+        .stream()
+        .map(this::getObjectValue)
+        .collect(Collectors.toList());
   }
   
   public LocalDate getLocalDate(int index) {
@@ -203,12 +202,16 @@ public class UriParam {
     }
   }
 
-  public Object[] getObjectArgs() {
-    Object[] args = new Object[this.length()];
-    for(int i = 0; i < this.length(); i++) {
-      args[i] = this.getObject(i);
+  public RequestParam asRequestParam(String alias) {
+    List<String> aliases = List.of(alias.startsWith("/") ? alias.substring(1).split("/") : alias.split("/"));
+    if(aliases.size() != params.size()) {
+      throw new IllegalArgumentException(String.format("Aliases size does not match uri params size: %s != %s", aliases.size(), params.size()));
     }
-    return args;
+    Map<String,List<String>> map = new HashMap<>();
+    for(int i = 1; i < params.size(); i++) {
+      map.put(aliases.get(i), List.of(params.get(i)));
+    }
+    return new RequestParam(map);
   }
 
   @Override

@@ -4,12 +4,13 @@
  */
 package com.jun0rr.dodge.http.handler;
 
+import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
+import com.jun0rr.dodge.http.header.ServerHeader;
+import com.jun0rr.dodge.http.header.DateHeader;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -33,7 +34,7 @@ public class HttpRequestNotFoundHandler extends ChannelInboundHandlerAdapter {
       logger.info("Request Not Found (404): {}", req.uri());
       HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
       res.headers()
-          .add(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE)
+          .add(new ConnectionCloseHeaders())
           .add(new DateHeader())
           .add(new ServerHeader());
       ReferenceCountUtil.release(req);

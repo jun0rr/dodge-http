@@ -19,8 +19,9 @@
  * endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package com.jun0rr.dodge.http.auth;
+package com.jun0rr.dodge.http.util;
 
+import com.jun0rr.dodge.http.*;
 import com.jun0rr.util.match.Match;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import java.time.Instant;
@@ -28,10 +29,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -88,6 +92,11 @@ public class RequestParam {
   public RequestParam(String uri) {
     Match.notEmpty(uri).failIfNotMatch("Bad null empty URI");
     pars = new QueryStringDecoder(uri).parameters();
+  }
+  
+  public RequestParam(Map<String,List<String>> pars) {
+    Match.notNull(pars).failIfNotMatch("Bad null empty URI");
+    this.pars = pars;
   }
   
   public Map<String,List<String>> getParameters() {
@@ -170,6 +179,17 @@ public class RequestParam {
       return null;
     }
     return Instant.parse(sdt);
+  }
+  
+  public List<Object> getList(String key) {
+    String val = get(key);
+    if(val == null || val.isBlank()) {
+      return Collections.EMPTY_LIST;
+    }
+    return List.of(val.split(","))
+        .stream()
+        .map(this::getObjectValue)
+        .collect(Collectors.toList());
   }
   
   public boolean getBoolean(String key) {

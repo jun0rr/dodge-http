@@ -8,7 +8,6 @@ package com.jun0rr.dodge.tcp;
 import com.jun0rr.util.match.Match;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -19,7 +18,7 @@ import java.util.Optional;
  */
 public interface ChannelExchange<T> {
   
-  public TcpChannel tcpChannel();
+  public TcpChannel channel();
   
   public ChannelHandlerContext context();
   
@@ -80,7 +79,7 @@ public interface ChannelExchange<T> {
     }
 
     @Override
-    public TcpChannel tcpChannel() {
+    public TcpChannel channel() {
       return tcp;
     }
     

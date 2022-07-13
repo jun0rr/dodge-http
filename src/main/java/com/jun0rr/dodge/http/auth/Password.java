@@ -25,20 +25,24 @@ public class Password {
     this.hash = Match.notNull(hash).getOrFail("Bad null hash byte array");
   }
   
-  public static Password of(String email, String passwd) {
-    Match.notEmpty(email).failIfNotMatch("Bad null/empty e-mail");
-    Match.notEmpty(passwd).failIfNotMatch("Bad null/empty password");
+  public static Password of(Login login) {
+    Match.notNull(login).failIfNotMatch("Bad null Login");
     Random r = new Random();
     byte[] salt = new byte[16];
     r.nextBytes(salt);
-    byte[] hash = Hash.sha512().put(salt).put(email).put(passwd).getBytes();
+    byte[] hash = Hash.sha512().put(salt)
+        .put(login.getEmail())
+        .put(login.getPasswordBytes())
+        .getBytes();
     return new Password(salt, hash);
   }
   
-  public boolean validate(String email, String passwd) {
-    Match.notEmpty(email).failIfNotMatch("Bad null/empty e-mail");
-    Match.notEmpty(passwd).failIfNotMatch("Bad null/empty password");
-    return Arrays.equals(hash, Hash.sha512().put(salt).put(email).put(passwd).getBytes());
+  public boolean validate(Login login) {
+    Match.notNull(login).failIfNotMatch("Bad null Login");
+    return Arrays.equals(hash, Hash.sha512().put(salt)
+        .put(login.getEmail())
+        .put(login.getPasswordBytes())
+        .getBytes());
   }
 
   @Override

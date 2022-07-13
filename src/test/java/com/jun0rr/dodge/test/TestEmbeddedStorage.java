@@ -6,6 +6,7 @@ package com.jun0rr.dodge.test;
 
 import com.jun0rr.dodge.http.auth.AllowRole;
 import com.jun0rr.dodge.http.auth.Group;
+import com.jun0rr.dodge.http.auth.Login;
 import com.jun0rr.dodge.http.auth.Password;
 import com.jun0rr.dodge.http.auth.Storage;
 import com.jun0rr.dodge.http.auth.Role;
@@ -35,7 +36,7 @@ public class TestEmbeddedStorage {
   
   public static final String email = "juno.rr@gmail.com";
   
-  public static final User user = new User("juno", email, Password.of(email, "123456"), LocalDate.of(2022, 7, 7), List.of(def, admin));
+  public static final User user = new User("juno", email, Password.of(new Login(email, "123456".toCharArray())), LocalDate.of(2022, 7, 7), List.of(def, admin));
   
   public static final Role allow = new AllowRole(HttpRoute.of(".*", HttpRoute.ALL_METHODS), admin);
   
@@ -78,7 +79,7 @@ public class TestEmbeddedStorage {
       Assertions.assertTrue(s.roles().filter(r->r.equals(deny)).findAny().isPresent());
       Assertions.assertEquals(user, s.users().findFirst().get());
       Assertions.assertEquals(admin, s.get(email));
-      Assertions.assertTrue(s.users().filter(u->u.getEmail().equals(email)).findAny().get().getPassword().validate(email, "123456"));
+      Assertions.assertTrue(s.users().filter(u->u.getEmail().equals(email)).findAny().get().getPassword().validate(new Login(email, "123456".toCharArray())));
       s.shutdown();
     }
     catch(Exception e) {

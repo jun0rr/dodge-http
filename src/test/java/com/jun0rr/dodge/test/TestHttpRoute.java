@@ -4,6 +4,7 @@
  */
 package com.jun0rr.dodge.test;
 
+import com.jun0rr.dodge.http.auth.HttpAuthHandler6;
 import com.jun0rr.dodge.http.auth.User;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
@@ -34,6 +35,14 @@ public class TestHttpRoute {
       System.out.println("* group      = " + m.group());
       System.out.println("* group( count ) = " + m.group(m.groupCount()));
     }
+  }
+  
+  @Test
+  public void test() {
+    System.out.println("PUT_REQUEST..: " + HttpAuthHandler6.PUT_REQUEST.get());
+    System.out.println("PUT_REQUEST..: " + (HttpAuthHandler6.PUT_REQUEST.get() == HttpAuthHandler6.PUT_REQUEST.get()));
+    System.out.println("putRequest...: " + HttpAuthHandler6.putRequest());
+    System.out.println("putRequest...: " + (HttpAuthHandler6.putRequest() == HttpAuthHandler6.putRequest()));
   }
   
 }

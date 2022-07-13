@@ -12,15 +12,18 @@ import com.google.gson.JsonObject;
 import com.jun0rr.dodge.http.auth.AllowRole;
 import com.jun0rr.dodge.http.auth.DenyRole;
 import com.jun0rr.dodge.http.auth.Group;
+import com.jun0rr.dodge.http.auth.JsonHttpMethodAdapter;
 import com.jun0rr.dodge.http.auth.JsonIgnoreStrategy;
 import com.jun0rr.dodge.http.auth.Password;
 import com.jun0rr.dodge.http.auth.Role;
 import com.jun0rr.dodge.http.auth.JsonRoleAdapter;
+import com.jun0rr.dodge.http.auth.Login;
 import com.jun0rr.dodge.http.auth.User;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import org.junit.jupiter.api.Assertions;
@@ -37,6 +40,7 @@ public class TestGson {
       .registerTypeAdapter(AllowRole.class, new JsonRoleAdapter())
       .registerTypeAdapter(DenyRole.class, new JsonRoleAdapter())
       .registerTypeAdapter(Role.class, new JsonRoleAdapter())
+      .registerTypeAdapter(HttpMethod.class, new JsonHttpMethodAdapter())
       .setExclusionStrategies(new JsonIgnoreStrategy())
       .create();
   
@@ -46,9 +50,11 @@ public class TestGson {
   
   private static final Group groupAdmin = new Group("admin");
   
-  private static final User user = new User("Juno", "juno.rr@gmail.com", Password.of("juno.rr@gmail.com", "32132155"), LocalDate.of(1980, 7, 7), List.of(groupDefault, groupAdmin));
+  private static final User user = new User("Juno", "juno.rr@gmail.com", Password.of(new Login("juno.rr@gmail.com", "32132155".toCharArray())), LocalDate.of(1980, 7, 7), List.of(groupDefault, groupAdmin));
   
   private static final Role roleCreateUser = new AllowRole(routeCreateUser, groupAdmin);
+  
+  private static final Login login = new Login("juno.rr@gmail.com", "32132155".toCharArray());
   
   private boolean jsonArrayContains(JsonArray array, Function<JsonElement,String> prop, String val) {
     for(int i = 0; i < array.size(); i++) {
@@ -61,8 +67,10 @@ public class TestGson {
   
   @Test
   public void testHttpRoute() {
+    System.out.println("------ testHttpRoute ------");
     try {
     JsonObject obj = gson.toJsonTree(routeCreateUser).getAsJsonObject();
+    System.out.println("JsonObject = " + obj);
     Assertions.assertEquals(routeCreateUser.regexString(), obj.get("regex").getAsString());
     Assertions.assertTrue(routeCreateUser.methods().stream()
         .allMatch(m->jsonArrayContains(
@@ -122,6 +130,17 @@ public class TestGson {
   public void testHttpResponseStatus() {
     System.out.println("------ testHttpResponseStatus ------");
     System.out.println(gson.toJson(HttpResponseStatus.NOT_FOUND));
+  }
+  
+  @Test
+  public void testLogin() {
+    System.out.println("------ testLogin ------");
+    System.out.printf("login...: Login{email=%s, password=%s}%n", login.getEmail(), Arrays.toString(login.getPassword()));
+    String json = gson.toJson(login);
+    System.out.println("toJson.: " + json);
+    Login l = gson.fromJson(json, Login.class);
+    System.out.printf("fromJson: Login{email=%s, password=%s}%n", l.getEmail(), Arrays.toString(l.getPassword()));
+    Assertions.assertEquals(login, l);
   }
   
 }

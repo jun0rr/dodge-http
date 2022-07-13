@@ -35,7 +35,7 @@ public class HttpResponseTimingHandler implements Consumer<ChannelExchange<HttpR
     Optional<String> req = x.attributes().remove(ATTR_REQUEST);
     Optional<Instant> timing = x.attributes().remove(ATTR_TIMING);
     if(req.isPresent() && timing.isPresent()) {
-      Optional<Metric> metric = x.tcpChannel().metrics().stream()
+      Optional<Metric> metric = x.channel().metrics().stream()
           .filter(m->m.name().equals(HTTP_RESPONSE_TIMING.name()))
           .filter(m->m.labels().containsKey(LABEL_URI))
           .filter(m->req.get().equals(m.labels().get(LABEL_URI)))
@@ -45,9 +45,9 @@ public class HttpResponseTimingHandler implements Consumer<ChannelExchange<HttpR
       gauge.update(d->Long.valueOf(Duration.between(timing.get(), Instant.now()).toMillis()).doubleValue());
       logger.debug("{}", gauge);
       if(metric.isEmpty()) {
-        x.tcpChannel().metrics().add(gauge);
+        x.channel().metrics().add(gauge);
       }
-      Optional<Metric> status = x.tcpChannel().metrics().stream()
+      Optional<Metric> status = x.channel().metrics().stream()
           .filter(m->m.name().equals(HTTP_RESPONSE_STATUS.name()))
           .filter(m->m.labels().containsKey(LABEL_URI))
           .filter(m->req.get().equals(m.labels().get(LABEL_URI)))
@@ -59,7 +59,7 @@ public class HttpResponseTimingHandler implements Consumer<ChannelExchange<HttpR
           .putLabel(LABEL_STATUS, String.valueOf(x.message().status().code()))).asCounter();
       count.update(i->i + 1);
       if(status.isEmpty()) {
-        x.tcpChannel().metrics().add(count);
+        x.channel().metrics().add(count);
       }
     }
     x.forwardMessage();

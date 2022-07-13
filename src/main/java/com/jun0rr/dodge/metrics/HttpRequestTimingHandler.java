@@ -27,7 +27,7 @@ public class HttpRequestTimingHandler implements Consumer<ChannelExchange<HttpRe
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    Optional<Metric> metric = x.tcpChannel().metrics().stream()
+    Optional<Metric> metric = x.channel().metrics().stream()
         .filter(m->m.name().equals(HTTP_RESPONSE_TIMING.name()))
         .filter(m->m.labels().containsKey(LABEL_URI))
         .filter(m->x.message().uri().equals(m.labels().get(LABEL_URI)))
@@ -36,7 +36,7 @@ public class HttpRequestTimingHandler implements Consumer<ChannelExchange<HttpRe
         .newCopy(LABEL_URI, x.message().uri())).asCounter();
     count.update(i->i + 1);
     if(metric.isEmpty()) {
-      x.tcpChannel().metrics().add(count);
+      x.channel().metrics().add(count);
     }
     x.attributes()
         .put(ATTR_REQUEST, x.message().uri())

@@ -13,8 +13,6 @@ import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.jsonwebtoken.Jwts;
 import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.http.cookie.Cookie;
-import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -23,6 +21,8 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -30,13 +30,16 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author F6036477
  */
-public class HttpAuthHandler6 {
+public class HttpLoginHandler implements Consumer<ChannelExchange<Object>> {
+  
+  static final Logger logger = LoggerFactory.getLogger(HttpLoginHandler.class);
   
   public static final String DODGE_TOKEN = "dodgeToken";
   
@@ -51,78 +54,32 @@ public class HttpAuthHandler6 {
   public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/?", HttpMethod.POST);
   
   
-  public static final Supplier<Consumer<ChannelExchange<HttpRequest>>> PUT_REQUEST = ()->x->{
-    x.attributes().put("request", x.message());
-    x.forwardMessage();
-  };
+  public static HttpLoginHandler get() {
+    return new HttpLoginHandler();
+  }
   
-  public static final Supplier<Consumer<ChannelExchange<HttpContent>>> EXTRACT_LOGIN = ()->x->{
-    Optional<HttpRequest> req = x.attributes().get("request");
-    Object msg = x.message();
-    if(req.isPresent() && ROUTE.test(req.get())) {
-      Gson gson = ((Http)x.channel()).gson();
-      msg = gson.fromJson(x.message().content().toString(StandardCharsets.UTF_8), Login.class);
-    }
-    x.read(msg);
-  };
-  
-  public static final Supplier<Consumer<ChannelExchange<Login>>> LOGIN = ()->x->{
-    Optional<User> user = x.channel()
-        .storage().users()
-        .filter(u->u.getPassword().validate(x.message()))
-        .findAny();
-    HttpResponse res;
-    if(user.isPresent()) {
-      res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.EMPTY_BUFFER);
-      Instant now = Instant.now();
-      String jwt = Jwts.builder()
-          .setId(user.get().getEmail())
-          .setIssuer(JWT_ISSUER)
-          .setAudience(JWT_AUDIENCE)
-          .setSubject(JWT_SUBJECT)
-          .setPayload(user.get().getEmail())
-          .setIssuedAt(Date.from(now))
-          .setNotBefore(Date.from(now))
-          .setExpiration(Date.from(now.plusSeconds(DEFAULT_TOKEN_DURATION.toSeconds())))
-          .signWith(((Http)x.channel()).loadPrivateKey())
-          .compact();
-      Cookie cookie = new DefaultCookie("dodgeToken", jwt);
-      cookie.setMaxAge(DEFAULT_TOKEN_DURATION.toSeconds());
-      cookie.setHttpOnly(true);
-      res.headers().add(HttpHeaderNames.SET_COOKIE, ServerCookieEncoder.STRICT.encode(cookie));
-    }
-    else {
-      res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.UNAUTHORIZED, Unpooled.EMPTY_BUFFER);
-    }
-    res.headers()
-        .add(new ConnectionCloseHeaders())
-        .add(new DateHeader())
-        .add(new ServerHeader());
-    x.writeAndFlush(res);
-  };
-  
-  
-  public static Consumer<ChannelExchange<HttpRequest>> putRequest() {
-    return x->{
+  @Override
+  public void accept(ChannelExchange<Object> x) {
+    if(HttpRequest.class.isAssignableFrom(x.message().getClass())) {
       x.attributes().put("request", x.message());
-      x.forwardMessage();
-    };
-  }
-  
-  public static void extractLogin(ChannelExchange<HttpContent> x) {
-    Optional<HttpRequest> req = x.attributes().get("request");
-    Object msg = x.message();
-    if(req.isPresent() && ROUTE.test(req.get())) {
-      Gson gson = ((Http)x.channel()).gson();
-      msg = gson.fromJson(x.message().content().toString(StandardCharsets.UTF_8), Login.class);
     }
-    x.read(msg);
+    Optional<HttpRequest> req = x.attributes().get("request");
+    if(req.isPresent() && ROUTE.test(req.get())) {
+      if(HttpContent.class.isAssignableFrom(x.message().getClass())) {
+        HttpContent c = (HttpContent) x.message();
+        Gson gson = ((Http)x.channel()).gson();
+        login(x, gson.fromJson(c.content().toString(StandardCharsets.UTF_8), Login.class));
+      }
+    }
+    else {
+      x.forwardMessage();
+    }
   }
   
-  public static void login(ChannelExchange<Login> x) {
+  private void login(ChannelExchange x, Login l) {
     Optional<User> user = x.channel()
         .storage().users()
-        .filter(u->u.getPassword().validate(x.message()))
+        .filter(u->u.getPassword().validate(l))
         .findAny();
     HttpResponse res;
     if(user.isPresent()) {
@@ -133,7 +90,6 @@ public class HttpAuthHandler6 {
           .setIssuer(JWT_ISSUER)
           .setAudience(JWT_AUDIENCE)
           .setSubject(JWT_SUBJECT)
-          .setPayload(user.get().getEmail())
           .setIssuedAt(Date.from(now))
           .setNotBefore(Date.from(now))
           .setExpiration(Date.from(now.plusSeconds(DEFAULT_TOKEN_DURATION.toSeconds())))
@@ -142,6 +98,7 @@ public class HttpAuthHandler6 {
       Cookie cookie = new DefaultCookie("dodgeToken", jwt);
       cookie.setMaxAge(DEFAULT_TOKEN_DURATION.toSeconds());
       cookie.setHttpOnly(true);
+      logger.debug("{}", ServerCookieEncoder.STRICT.encode(cookie));
       res.headers().add(HttpHeaderNames.SET_COOKIE, ServerCookieEncoder.STRICT.encode(cookie));
     }
     else {
@@ -151,7 +108,7 @@ public class HttpAuthHandler6 {
         .add(new ConnectionCloseHeaders())
         .add(new DateHeader())
         .add(new ServerHeader());
-    x.writeAndFlush(res);
+    logger.debug("writeAndFlush: {}", x.writeAndFlush(res));
   }
   
 }

@@ -245,22 +245,19 @@ public class DefaultTcpChannel implements TcpChannel {
     return this;
   }
   
-  public TcpChannel setStorageEnabled(boolean enabled) {
-    this.storageEnabled = enabled;
-    return this;
-  }
-  
-  public boolean isStorageEnabled() {
-    return storageEnabled;
+  @Override
+  public Storage startStorage() {
+    this.storage = new Storage(storagePath);
+    return storage;
   }
   
   @Override
-  public Path getStorageDir() {
+  public Path getStoragePath() {
     return storagePath;
   }
   
   @Override
-  public TcpChannel setStorageDir(Path path) {
+  public TcpChannel setStoragePath(Path path) {
     this.storagePath = Match.notNull(path).getOrFail("Bad null storage Path");
     return this;
   }
@@ -331,9 +328,6 @@ public class DefaultTcpChannel implements TcpChannel {
   
   @Override
   public FutureEvent start() {
-    if(storageEnabled) {
-      storage = new Storage(storagePath);
-    }
     AbstractBootstrap boot = bootstrap.apply(this);
     if(ServerBootstrap.class.isAssignableFrom(boot.getClass())) {
       if(sslEnabled) {

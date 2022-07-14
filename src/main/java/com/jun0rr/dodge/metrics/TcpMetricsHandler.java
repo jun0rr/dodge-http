@@ -4,20 +4,22 @@
  */
 package com.jun0rr.dodge.metrics;
 
-import com.jun0rr.dodge.metrics.Counter;
-import com.jun0rr.dodge.metrics.Gauge;
 import com.jun0rr.dodge.tcp.TcpChannel;
 import com.jun0rr.util.match.Match;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author F6036477
  */
 public class TcpMetricsHandler extends ChannelDuplexHandler {
+  
+  static final Logger logger = LoggerFactory.getLogger(TcpMetricsHandler.class);
   
   public static final Counter INBOUND_BYTES_TOTAL = new Counter("dodge_inbound_bytes_total", "Total inbound bytes");
   
@@ -36,30 +38,31 @@ public class TcpMetricsHandler extends ChannelDuplexHandler {
   
   @Override
   public void channelActive(ChannelHandlerContext chc) throws Exception {
-    CONNECTIONS_COUNT.update(d->d + 1);
+    CONNECTIONS_COUNT.update(d->d + 1.0);
     chc.fireChannelActive();
   }
   
   @Override
   public void channelInactive(ChannelHandlerContext chc) throws Exception {
-    CONNECTIONS_COUNT.update(d->d - 1);
+    CONNECTIONS_COUNT.update(d->d - 1.0);
     chc.fireChannelInactive();
   }
   
   @Override
   public void channelRead(ChannelHandlerContext chc, Object o) {
     if(o instanceof ByteBuf) {
-      INBOUND_BYTES_TOTAL.update(l->((ByteBuf)o).readableBytes() + l);
+      INBOUND_BYTES_TOTAL.update(l->l + ((ByteBuf)o).readableBytes());
     }
     chc.fireChannelRead(o);
   }
   
   @Override
   public void write(ChannelHandlerContext chc, Object o, ChannelPromise cp) {
+    logger.info("(Write) >> {}" + o);
     if(o instanceof ByteBuf) {
-      OUTBOUND_BYTES_TOTAL.update(l->((ByteBuf)o).readableBytes() + l);
+      OUTBOUND_BYTES_TOTAL.update(l->l + ((ByteBuf)o).readableBytes());
     }
-    chc.write(o, cp);
+    chc.writeAndFlush(o, cp);
   }
   
 }

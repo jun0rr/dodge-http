@@ -18,10 +18,10 @@ import com.jun0rr.dodge.tcp.ConsumerType;
 import com.jun0rr.util.match.Match;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpServerCodec;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -50,7 +50,7 @@ public class HttpServer extends Http {
         if(isMetricsEnabled()) {
           c.pipeline().addLast(new TcpMetricsHandler(HttpServer.this));
         }
-        c.pipeline().addLast(new HttpClientCodec());
+        c.pipeline().addLast(new HttpServerCodec());
         if(isFullHttpMessageEnabled()) {
           c.pipeline().addLast(new HttpObjectAggregator(getBufferSize()));
         }

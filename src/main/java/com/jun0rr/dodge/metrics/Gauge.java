@@ -22,7 +22,7 @@ public class Gauge extends AbstractMetric<Double> {
   }
   
   public Gauge(String name, String help) {
-    super(name, help);
+    super(name, help, 0.0);
   }
   
   @Override

@@ -83,13 +83,11 @@ public interface TcpChannel {
   
   public TcpChannel setKeystorePass(char[] pass);
   
-  public TcpChannel setStorageEnabled(boolean enabled);
+  public Storage startStorage();
   
-  public boolean isStorageEnabled();
+  public Path getStoragePath();
   
-  public Path getStorageDir();
-  
-  public TcpChannel setStorageDir(Path path);
+  public TcpChannel setStoragePath(Path path);
   
   public Storage storage();
 

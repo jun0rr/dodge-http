@@ -15,12 +15,16 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author F6036477
  */
 public abstract class AbstractMetric<N extends Number> implements Metric<N> {
+  
+  static final Logger logger = LoggerFactory.getLogger(AbstractMetric.class);
   
   public static final String HELP_FORMAT = "# HELP %s %s";
   
@@ -47,16 +51,12 @@ public abstract class AbstractMetric<N extends Number> implements Metric<N> {
     this.labels = new ConcurrentHashMap();
     this.name = Match.notEmpty(name).getOrFail("Bad empty name String");
     this.help = Match.notEmpty(help).getOrFail("Bad empty help String");
-    this.value = new AtomicReference(value != null ? value : 0);
+    this.value = new AtomicReference(Match.notNull(value).getOrFail("Bad null metric value"));
     this.time = new AtomicReference(time != null ? time : Instant.now());
   }
   
   public AbstractMetric(String name, String help, N value) {
     this(name, help, value, Instant.now());
-  }
-  
-  public AbstractMetric(String name, String help) {
-    this(name, help, null, Instant.now());
   }
   
   @Override

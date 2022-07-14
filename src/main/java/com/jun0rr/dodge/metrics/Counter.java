@@ -22,7 +22,7 @@ public class Counter extends AbstractMetric<Long> {
   }
   
   public Counter(String name, String help) {
-    super(name, help);
+    super(name, help, 0L);
   }
   
   @Override

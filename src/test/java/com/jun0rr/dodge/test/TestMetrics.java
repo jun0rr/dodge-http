@@ -28,6 +28,10 @@ public class TestMetrics {
     List<String> ls = new LinkedList();
     ct.collect(ls);
     ls.forEach(System.out::println);
+    ct.update(d->d+1);
+    ls.clear();
+    ct.collect(ls);
+    ls.forEach(System.out::println);
   }
   
   @Test
@@ -37,6 +41,10 @@ public class TestMetrics {
     gg.labels().put("uri", "/t40");
     gg.labels().put("hello", "world");
     List<String> ls = new LinkedList();
+    gg.collect(ls);
+    ls.forEach(System.out::println);
+    gg.update(d->d+5.2);
+    ls.clear();
     gg.collect(ls);
     ls.forEach(System.out::println);
   }

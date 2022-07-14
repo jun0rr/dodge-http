@@ -10,6 +10,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import java.util.Objects;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -52,6 +54,8 @@ public interface ChannelExchange<T> {
   
   
   static class ChannelExchangeImpl<T> implements ChannelExchange<T> {
+    
+    static final Logger logger = LoggerFactory.getLogger(ChannelExchangeImpl.class);
     
     private final TcpChannel tcp;
     
@@ -110,11 +114,14 @@ public interface ChannelExchange<T> {
     
     @Override
     public void forwardMessage() {
+      logger.debug("forwardMessage: {}", event);
       if(ChannelEvent.Inbound.READ == event) {
+        logger.debug("fireChannelRead: {}", message);
         context.fireChannelRead(message);
       }
       else if(ChannelEvent.Outbound.WRITE == event) {
-        context.write(message, promise);
+        logger.debug("forwardMessage: {} - {}", message, promise);
+        context.writeAndFlush(message, promise);
       }
     }
     

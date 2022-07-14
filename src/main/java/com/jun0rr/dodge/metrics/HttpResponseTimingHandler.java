@@ -11,6 +11,8 @@ import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.netty.handler.codec.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -61,6 +63,9 @@ public class HttpResponseTimingHandler implements Consumer<ChannelExchange<HttpR
       if(status.isEmpty()) {
         x.channel().metrics().add(count);
       }
+      List<String> ll = new LinkedList<>();
+      count.collect(ll);
+      ll.forEach(s->logger.debug(s));
     }
     x.forwardMessage();
   }

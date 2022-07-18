@@ -108,7 +108,7 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<Object>> {
         .add(new ConnectionCloseHeaders())
         .add(new DateHeader())
         .add(new ServerHeader());
-    logger.debug("writeAndFlush: {}", x.writeAndFlush(res));
+    x.writeAndFlush(res).acceptNext(f->logger.debug("RESPONSE WRITED!"));
   }
   
 }

@@ -4,7 +4,6 @@
  */
 package com.jun0rr.dodge.metrics;
 
-import static com.jun0rr.dodge.metrics.HttpResponseTimingHandler.HTTP_RESPONSE_TIMING;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.netty.handler.codec.http.HttpRequest;
 import java.time.Instant;
@@ -21,14 +20,14 @@ public class HttpRequestTimingHandler implements Consumer<ChannelExchange<HttpRe
   
   public static final String LABEL_URI = "uri";
   
-  public static final String ATTR_REQUEST = "request";
+  public static final String ATTR_REQUEST = "request_uri";
   
-  public static final String ATTR_TIMING = "timing";
+  public static final String ATTR_TIMING = "timing_uri";
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
     Optional<Metric> metric = x.channel().metrics().stream()
-        .filter(m->m.name().equals(HTTP_RESPONSE_TIMING.name()))
+        .filter(m->m.name().equals(HTTP_REQUEST_COUNT.name()))
         .filter(m->m.labels().containsKey(LABEL_URI))
         .filter(m->x.message().uri().equals(m.labels().get(LABEL_URI)))
         .findAny();

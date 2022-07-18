@@ -34,22 +34,28 @@ public class HttpResponseTimingHandler implements Consumer<ChannelExchange<HttpR
   
   @Override
   public void accept(ChannelExchange<HttpResponse> x) {
+    logger.debug("Writing HttpResponse: {}", x.message());
     Optional<String> req = x.attributes().remove(ATTR_REQUEST);
     Optional<Instant> timing = x.attributes().remove(ATTR_TIMING);
+    logger.debug("Request: {} - Timing: {}", req, timing);
     if(req.isPresent() && timing.isPresent()) {
       Optional<Metric> metric = x.channel().metrics().stream()
+          .peek(m->logger.debug("{}", m))
           .filter(m->m.name().equals(HTTP_RESPONSE_TIMING.name()))
           .filter(m->m.labels().containsKey(LABEL_URI))
           .filter(m->req.get().equals(m.labels().get(LABEL_URI)))
           .findAny();
+      logger.debug("metric: {}", metric);
       Gauge gauge = metric.orElse(HTTP_RESPONSE_TIMING
           .newCopy(LABEL_URI, req.get())).asGauge();
+      logger.debug("gauge: {}", gauge);
       gauge.update(d->Long.valueOf(Duration.between(timing.get(), Instant.now()).toMillis()).doubleValue());
-      logger.debug("{}", gauge);
+      logger.debug("gauge: {}", gauge);
       if(metric.isEmpty()) {
         x.channel().metrics().add(gauge);
       }
       Optional<Metric> status = x.channel().metrics().stream()
+          .peek(m->logger.debug("{}", m))
           .filter(m->m.name().equals(HTTP_RESPONSE_STATUS.name()))
           .filter(m->m.labels().containsKey(LABEL_URI))
           .filter(m->req.get().equals(m.labels().get(LABEL_URI)))
@@ -67,7 +73,10 @@ public class HttpResponseTimingHandler implements Consumer<ChannelExchange<HttpR
       count.collect(ll);
       ll.forEach(s->logger.debug(s));
     }
-    x.forwardMessage();
+    x.context().writeAndFlush(x.message(), x.promise()).addListener(f->{
+      logger.debug("Writed from HttpResponseTimingHandler");
+    });
+    //x.writeAndFlush(x.message()).acceptNext(f->logger.debug("Writed from HttpResponseTimingHandler"));
   }
   
 }

@@ -9,7 +9,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.LastHttpContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +42,7 @@ public class HttpMessageLogger extends ChannelDuplexHandler {
   @Override
   public void write(ChannelHandlerContext chc, Object o, ChannelPromise cp) {
     printHttpMessage(o, "Write");
-    chc.write(o, cp);
+    chc.writeAndFlush(o, cp);
   }
   
 }

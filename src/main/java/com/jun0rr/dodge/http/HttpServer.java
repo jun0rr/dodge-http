@@ -24,12 +24,16 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpServerCodec;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author F6036477
  */
 public class HttpServer extends Http {
+  
+  private static final Logger logger = LoggerFactory.getLogger(HttpServer.class);
   
   public HttpServer() {
     super(SERVER_BOOTSTRAP);
@@ -68,6 +72,7 @@ public class HttpServer extends Http {
           );
         }
         initHandlers(c);
+        c.pipeline().forEach(e->logger.debug("PIPELINE: {} - {} - {}", e.getKey(), e.getValue(), e.getValue().getClass()));
       }
     };
   }

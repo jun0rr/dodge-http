@@ -114,13 +114,10 @@ public interface ChannelExchange<T> {
     
     @Override
     public void forwardMessage() {
-      logger.debug("forwardMessage: {}", event);
       if(ChannelEvent.Inbound.READ == event) {
-        logger.debug("fireChannelRead: {}", message);
         context.fireChannelRead(message);
       }
       else if(ChannelEvent.Outbound.WRITE == event) {
-        logger.debug("forwardMessage: {} - {}", message, promise);
         context.writeAndFlush(message, promise);
       }
     }

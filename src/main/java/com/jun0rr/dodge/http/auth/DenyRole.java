@@ -23,7 +23,7 @@ public class DenyRole extends Role {
   
   @Override
   public boolean allow(User usr) {
-    return groups.stream().noneMatch(g->usr.getGroups().contains(g));
+    return groups.stream().noneMatch(usr.getGroups()::contains);
   }
 
 }

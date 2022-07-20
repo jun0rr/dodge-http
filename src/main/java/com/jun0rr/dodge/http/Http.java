@@ -8,6 +8,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.jun0rr.dodge.http.auth.AllowRole;
 import com.jun0rr.dodge.http.auth.DenyRole;
+import com.jun0rr.dodge.http.auth.ErrMessage;
+import com.jun0rr.dodge.http.auth.JsonErrMsgAdapter;
 import com.jun0rr.dodge.http.auth.JsonIgnoreStrategy;
 import com.jun0rr.dodge.http.auth.JsonRoleAdapter;
 import com.jun0rr.dodge.http.auth.Role;
@@ -42,6 +44,7 @@ public abstract class Http extends DefaultTcpChannel {
       .registerTypeAdapter(AllowRole.class, new JsonRoleAdapter())
       .registerTypeAdapter(DenyRole.class, new JsonRoleAdapter())
       .registerTypeAdapter(Role.class, new JsonRoleAdapter())
+      .registerTypeAdapter(ErrMessage.class, new JsonErrMsgAdapter())
       .setExclusionStrategies(new JsonIgnoreStrategy())
       .create();
   

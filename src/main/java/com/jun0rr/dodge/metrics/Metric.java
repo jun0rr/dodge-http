@@ -4,10 +4,10 @@
  */
 package com.jun0rr.dodge.metrics;
 
-import com.jun0rr.util.match.Match;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.function.DoubleUnaryOperator;
 import java.util.function.UnaryOperator;
 
 /**
@@ -26,20 +26,26 @@ public interface Metric<N extends Number> {
   
   public Map<String,String> labels();
   
-  public Metric putLabel(String key, String val);
+  public Metric<N> putLabel(String key, Object val);
   
-  public N update(UnaryOperator<N> fn);
+  //public Metric<N> update(UnaryOperator<N> fn);
+  
+  public Metric<N> update(DoubleUnaryOperator fn);
+  
+  //public N updateAndGet(UnaryOperator<N> fn);
+  
+  public double updateAndGet(DoubleUnaryOperator fn);
   
   public void collect(List<String> ls);
   
-  public Metric newCopy(String key, String val);
+  public Metric<N> newCopy(String key, String val);
   
   public default Counter asCounter() {
-    return (Counter) Match.of(this, o->Counter.class.isAssignableFrom(o.getClass())).getOrFail("Not a Counter instance");
+    return (Counter) this;
   }
   
   public default Gauge asGauge() {
-    return (Gauge) Match.of(this, o->Counter.class.isAssignableFrom(o.getClass())).getOrFail("Not a Gauge instance");
+    return (Gauge) this;
   }
   
 }

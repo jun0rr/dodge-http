@@ -8,12 +8,14 @@ import com.jun0rr.util.match.Match;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.DoubleUnaryOperator;
+import java.util.function.LongUnaryOperator;
 import java.util.function.UnaryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +50,7 @@ public abstract class AbstractMetric<N extends Number> implements Metric<N> {
   protected final Map<String,String> labels;
   
   public AbstractMetric(String name, String help, N value, Instant time) {
-    this.labels = new ConcurrentHashMap();
+    this.labels = new HashMap();
     this.name = Match.notEmpty(name).getOrFail("Bad empty name String");
     this.help = Match.notEmpty(help).getOrFail("Bad empty help String");
     this.value = new AtomicReference(Match.notNull(value).getOrFail("Bad null metric value"));
@@ -85,10 +87,10 @@ public abstract class AbstractMetric<N extends Number> implements Metric<N> {
   }
   
   @Override
-  public Metric putLabel(String key, String val) {
+  public Metric<N> putLabel(String key, Object val) {
     labels.put(
         Match.notEmpty(key).getOrFail("Bad null key String"), 
-        Match.notNull(val).getOrFail("Bad null value String")
+        Objects.toString(Match.notNull(val).getOrFail("Bad null value String"))
     );
     return this;
   }
@@ -108,12 +110,30 @@ public abstract class AbstractMetric<N extends Number> implements Metric<N> {
     ls.add(String.format(TYPE_FORMAT, name, getClass().getSimpleName().toLowerCase()));
   }
 
+  //@Override
+  //public Metric<N> update(UnaryOperator<N> fn) {
+    //updateAndGet(fn);
+    //return this;
+  //}
+  
   @Override
-  public N update(UnaryOperator<N> fn) {
-    time.set(Instant.now());
-    return value.updateAndGet(fn);
+  public Metric<N> update(DoubleUnaryOperator fn) {
+    updateAndGet(fn);
+    return this;
   }
-
+  
+  //@Override
+  //public N updateAndGet(UnaryOperator<N> fn) {
+    //time.set(Instant.now());
+    //return value.updateAndGet(fn);
+  //}
+  
+  @Override
+  public double updateAndGet(DoubleUnaryOperator fn) {
+    time.set(Instant.now());
+    return value.updateAndGet(n->(N)Double.valueOf(fn.applyAsDouble(n.doubleValue()))).doubleValue();
+  }
+  
   @Override
   public int hashCode() {
     int hash = 7;
@@ -146,7 +166,7 @@ public abstract class AbstractMetric<N extends Number> implements Metric<N> {
 
   @Override
   public String toString() {
-    return "AbstractMetric{" + "name=" + name + ", help=" + help + ", value=" + value + ", time=" + time + ", labels=" + labels + '}';
+    return getClass().getSimpleName() + "{" + "name=" + name + ", help=" + help + ", value=" + value + ", time=" + time + ", labels=" + labels + '}';
   }
 
 }

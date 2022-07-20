@@ -30,6 +30,10 @@ public abstract class Role {
   }
   
   public abstract boolean allow(User usr);
+  
+  public boolean isDeny() {
+    return DenyRole.class.isAssignableFrom(getClass());
+  }
 
   @Override
   public int hashCode() {

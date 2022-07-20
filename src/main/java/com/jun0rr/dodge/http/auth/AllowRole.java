@@ -23,7 +23,7 @@ public class AllowRole extends Role {
   
   @Override
   public boolean allow(User usr) {
-    return groups.stream().anyMatch(g->usr.getGroups().contains(g));
+    return groups.stream().anyMatch(usr.getGroups()::contains);
   }
 
 }

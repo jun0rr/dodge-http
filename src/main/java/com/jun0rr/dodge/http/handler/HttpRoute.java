@@ -8,7 +8,6 @@ package com.jun0rr.dodge.http.handler;
 import com.jun0rr.util.match.Match;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -79,7 +78,7 @@ public class HttpRoute implements Predicate<HttpRequest> {
   
   @Override
   public boolean test(HttpRequest req) {
-    return methods.stream().anyMatch(m->m.equals(req.method())) && matcher(req.uri()).find();
+    return methods.stream().anyMatch(m->m.equals(req.method())) && matcher(req.uri()).matches();
   }
 
   @Override

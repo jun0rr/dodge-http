@@ -11,8 +11,6 @@ import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.netty.handler.codec.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -28,55 +26,45 @@ public class HttpResponseTimingHandler implements Consumer<ChannelExchange<HttpR
   
   public static final Gauge HTTP_RESPONSE_TIMING = new Gauge("dodge_http_response_timing", "HTTP response timing millis");
   
-  public static final Counter HTTP_RESPONSE_STATUS = new Counter("dodge_http_response_count", "HTTP response status count");
+  public static final Gauge HTTP_RESPONSE_TIMING_AVG = new Gauge("dodge_http_response_timing_avg", "Average HTTP response timing millis");
+  
+  public static final Counter HTTP_RESPONSE_COUNT = new Counter("dodge_http_response_count", "HTTP response status count");
   
   public static final String LABEL_STATUS = "status";
   
   @Override
   public void accept(ChannelExchange<HttpResponse> x) {
-    logger.debug("Writing HttpResponse: {}", x.message());
     Optional<String> req = x.attributes().remove(ATTR_REQUEST);
     Optional<Instant> timing = x.attributes().remove(ATTR_TIMING);
-    logger.debug("Request: {} - Timing: {}", req, timing);
     if(req.isPresent() && timing.isPresent()) {
-      Optional<Metric> metric = x.channel().metrics().stream()
-          .peek(m->logger.debug("{}", m))
+      Optional<Metric> opt = x.channel().metrics().stream()
           .filter(m->m.name().equals(HTTP_RESPONSE_TIMING.name()))
-          .filter(m->m.labels().containsKey(LABEL_URI))
           .filter(m->req.get().equals(m.labels().get(LABEL_URI)))
-          .findAny();
-      logger.debug("metric: {}", metric);
-      Gauge gauge = metric.orElse(HTTP_RESPONSE_TIMING
-          .newCopy(LABEL_URI, req.get())).asGauge();
-      logger.debug("gauge: {}", gauge);
-      gauge.update(d->Long.valueOf(Duration.between(timing.get(), Instant.now()).toMillis()).doubleValue());
-      logger.debug("gauge: {}", gauge);
-      if(metric.isEmpty()) {
-        x.channel().metrics().add(gauge);
-      }
-      Optional<Metric> status = x.channel().metrics().stream()
-          .peek(m->logger.debug("{}", m))
-          .filter(m->m.name().equals(HTTP_RESPONSE_STATUS.name()))
-          .filter(m->m.labels().containsKey(LABEL_URI))
-          .filter(m->req.get().equals(m.labels().get(LABEL_URI)))
-          .filter(m->m.labels().containsKey(LABEL_STATUS))
           .filter(m->String.valueOf(x.message().status().code()).equals(m.labels().get(LABEL_STATUS)))
           .findAny();
-      Counter count = status.orElseGet(()->HTTP_RESPONSE_STATUS
-          .newCopy(LABEL_URI, req.get())
-          .putLabel(LABEL_STATUS, String.valueOf(x.message().status().code()))).asCounter();
-      count.update(i->i + 1);
-      if(status.isEmpty()) {
-        x.channel().metrics().add(count);
-      }
-      List<String> ll = new LinkedList<>();
-      count.collect(ll);
-      ll.forEach(s->logger.debug(s));
+      double duration = Duration.between(timing.get(), Instant.now()).toMillis();
+      Metric metric = opt.orElseGet(()->HTTP_RESPONSE_TIMING.newCopy(LABEL_URI, req.get()))
+          .putLabel(LABEL_STATUS, x.message().status().code())
+          .update(d->duration);
+      if(opt.isEmpty()) x.channel().metrics().add(metric);
+      opt = x.channel().metrics().stream()
+          .filter(m->m.name().equals(HTTP_RESPONSE_COUNT.name()))
+          .filter(m->req.get().equals(m.labels().get(LABEL_URI)))
+          .filter(m->String.valueOf(x.message().status().code()).equals(m.labels().get(LABEL_STATUS)))
+          .findAny();
+      metric = opt.orElseGet(()->HTTP_RESPONSE_COUNT.newCopy(LABEL_URI, req.get()))
+          .putLabel(LABEL_STATUS, x.message().status().code())
+          .update(i->i+1);
+      if(opt.isEmpty()) x.channel().metrics().add(metric);
+      opt = x.channel().metrics().stream()
+          .filter(m->m.name().equals(HTTP_RESPONSE_TIMING_AVG.name()))
+          .filter(m->req.get().equals(m.labels().get(LABEL_URI)))
+          .findAny();
+      metric = opt.orElseGet(()->HTTP_RESPONSE_TIMING_AVG.newCopy(LABEL_URI, req.get()))
+          .update(d->(duration + d) / (d < 1 ? 1 : 2));
+      if(opt.isEmpty()) x.channel().metrics().add(metric);
     }
-    x.context().writeAndFlush(x.message(), x.promise()).addListener(f->{
-      logger.debug("Writed from HttpResponseTimingHandler");
-    });
-    //x.writeAndFlush(x.message()).acceptNext(f->logger.debug("Writed from HttpResponseTimingHandler"));
+    x.forwardMessage();
   }
   
 }

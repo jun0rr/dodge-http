@@ -7,8 +7,10 @@ package com.jun0rr.dodge.http;
 import com.jun0rr.dodge.http.handler.EventInboundHandler;
 import com.jun0rr.dodge.http.handler.EventOutboundHandler;
 import com.jun0rr.dodge.http.handler.HttpMessageLogger;
+import com.jun0rr.dodge.http.handler.HttpRequestNotFoundHandler;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.handler.HttpRouteHandler;
+import com.jun0rr.dodge.http.handler.ReleaseInboundHandler;
 import com.jun0rr.dodge.metrics.HttpRequestTimingHandler;
 import com.jun0rr.dodge.metrics.HttpResponseTimingHandler;
 import com.jun0rr.dodge.metrics.TcpMetricsHandler;
@@ -62,17 +64,22 @@ public class HttpServer extends Http {
           c.pipeline().addLast(new HttpMessageLogger());
         }
         if(isMetricsEnabled()) {
-          c.pipeline().addLast(new EventOutboundHandler(HttpServer.this, attributes(), 
-              ChannelEvent.Outbound.WRITE, 
-              ConsumerType.of(HttpResponse.class, new HttpResponseTimingHandler()))
+          c.pipeline().addLast(HttpResponseTimingHandler.class.getSimpleName().concat("#1"), 
+              new EventOutboundHandler(HttpServer.this, attributes(), 
+                  ChannelEvent.Outbound.WRITE, 
+                  ConsumerType.of(HttpResponse.class, new HttpResponseTimingHandler())
+              )
           );
-          c.pipeline().addLast(new EventInboundHandler(HttpServer.this, attributes(), 
-              ChannelEvent.Inbound.READ, 
-              ConsumerType.of(HttpRequest.class, new HttpRequestTimingHandler()))
+          c.pipeline().addLast(HttpRequestTimingHandler.class.getSimpleName().concat("#1"),
+              new EventInboundHandler(HttpServer.this, attributes(), 
+                  ChannelEvent.Inbound.READ, 
+                  ConsumerType.of(HttpRequest.class, new HttpRequestTimingHandler())
+              )
           );
         }
         initHandlers(c);
-        c.pipeline().forEach(e->logger.debug("PIPELINE: {} - {} - {}", e.getKey(), e.getValue(), e.getValue().getClass()));
+        c.pipeline().addLast(new HttpRequestNotFoundHandler());
+        c.pipeline().addLast(new ReleaseInboundHandler());
       }
     };
   }

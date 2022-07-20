@@ -49,6 +49,8 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<Object>> {
   
   public static final String JWT_SUBJECT = "dodge-auth";
   
+  public static final String ATTR_REQUEST = "HttpRequest";
+  
   public static final Duration DEFAULT_TOKEN_DURATION = Duration.ofMinutes(90);
   
   public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/?", HttpMethod.POST);
@@ -61,9 +63,9 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<Object>> {
   @Override
   public void accept(ChannelExchange<Object> x) {
     if(HttpRequest.class.isAssignableFrom(x.message().getClass())) {
-      x.attributes().put("request", x.message());
+      x.attributes().put(ATTR_REQUEST, x.message());
     }
-    Optional<HttpRequest> req = x.attributes().get("request");
+    Optional<HttpRequest> req = x.attributes().get(ATTR_REQUEST);
     if(req.isPresent() && ROUTE.test(req.get())) {
       if(HttpContent.class.isAssignableFrom(x.message().getClass())) {
         HttpContent c = (HttpContent) x.message();
@@ -98,17 +100,21 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<Object>> {
       Cookie cookie = new DefaultCookie("dodgeToken", jwt);
       cookie.setMaxAge(DEFAULT_TOKEN_DURATION.toSeconds());
       cookie.setHttpOnly(true);
-      logger.debug("{}", ServerCookieEncoder.STRICT.encode(cookie));
-      res.headers().add(HttpHeaderNames.SET_COOKIE, ServerCookieEncoder.STRICT.encode(cookie));
+      res.headers().add(
+          HttpHeaderNames.SET_COOKIE, 
+          ServerCookieEncoder.STRICT.encode(cookie)
+      );
     }
     else {
-      res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.UNAUTHORIZED, Unpooled.EMPTY_BUFFER);
+      res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, 
+          HttpResponseStatus.UNAUTHORIZED, Unpooled.EMPTY_BUFFER
+      );
     }
     res.headers()
         .add(new ConnectionCloseHeaders())
         .add(new DateHeader())
         .add(new ServerHeader());
-    x.writeAndFlush(res).acceptNext(f->logger.debug("RESPONSE WRITED!"));
+    x.writeAndFlush(res).channelClose();
   }
   
 }

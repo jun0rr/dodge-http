@@ -8,11 +8,12 @@ import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
-import com.jun0rr.dodge.http.header.JsonContentHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
+import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
@@ -20,27 +21,32 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author F6036477
  */
-public class HttpGetUserHandler implements Consumer<ChannelExchange<HttpRequest>> {
+public class HttpPutUserHandler implements Consumer<ChannelExchange<HttpContent>> {
   
-  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/user\\/?", HttpMethod.GET);
+  static final Logger logger = LoggerFactory.getLogger(HttpPutUserHandler.class);
   
-  public static HttpGetUserHandler get() {
-    return new HttpGetUserHandler();
+  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/users\\/?", HttpMethod.PUT);
+  
+  public static HttpPutUserHandler get() {
+    return new HttpPutUserHandler();
   }
   
   @Override
-  public void accept(ChannelExchange<HttpRequest> x) {
-    if(ROUTE.test(x.message()) && x.attributes().contains("user")) {
-      ByteBuf buf = x.context().alloc().directBuffer();
-      buf.writeCharSequence(((Http)x.channel()).gson().toJson(x.attributes().get("user").get()), StandardCharsets.UTF_8);
-      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
+  public void accept(ChannelExchange<HttpContent> x) {
+    HttpRequest req = x.attributes().<HttpRequest>get("http-request").get();
+    if(ROUTE.test(req) && HttpConstants.isValidHttpContent(x.message())) {
+      String json = x.message().content().toString(StandardCharsets.UTF_8);
+      User u = ((Http)x.channel()).gson().fromJson(json, User.class);
+      x.channel().storage().add(u);
+      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.EMPTY_BUFFER);
       res.headers()
-          .add(new JsonContentHeader(buf.readableBytes()))
           .add(new ConnectionCloseHeaders())
           .add(new DateHeader())
           .add(new ServerHeader());

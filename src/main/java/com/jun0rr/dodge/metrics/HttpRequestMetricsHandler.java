@@ -50,7 +50,6 @@ public class HttpRequestMetricsHandler extends ChannelInboundHandlerAdapter {
       HttpRequest req = (HttpRequest) o;
       int index = req.uri().indexOf(URI);
       if(index >= 0) {
-        logger.debug("Request Metrics: {}", req.uri());
         List<String> ls = new LinkedList<>();
         server.metrics().forEach(m->m.collect(ls));
         int mlen = ls.stream().mapToInt(s->s.length() + 1).sum();

@@ -4,6 +4,7 @@
  */
 package com.jun0rr.dodge.http.auth;
 
+import com.google.gson.JsonArray;
 import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
@@ -25,19 +26,22 @@ import java.util.function.Consumer;
  *
  * @author F6036477
  */
-public class HttpGetUserHandler implements Consumer<ChannelExchange<HttpRequest>> {
+public class HttpGetAllUsersHandler implements Consumer<ChannelExchange<HttpRequest>> {
   
-  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/user\\/?", HttpMethod.GET);
+  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/users\\/?", HttpMethod.GET);
   
-  public static HttpGetUserHandler get() {
-    return new HttpGetUserHandler();
+  public static HttpGetAllUsersHandler get() {
+    return new HttpGetAllUsersHandler();
   }
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
     if(ROUTE.test(x.message()) && x.attributes().contains("user")) {
+      JsonArray array = new JsonArray();
+      x.channel().storage().users()
+          .forEach(u->array.add( ((Http)x.channel()).gson().toJsonTree(u) ));
       ByteBuf buf = x.context().alloc().directBuffer();
-      buf.writeCharSequence(((Http)x.channel()).gson().toJson(x.attributes().get("user").get()), StandardCharsets.UTF_8);
+      buf.writeCharSequence(((Http)x.channel()).gson().toJson(array), StandardCharsets.UTF_8);
       HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
       res.headers()
           .add(new JsonContentHeader(buf.readableBytes()))

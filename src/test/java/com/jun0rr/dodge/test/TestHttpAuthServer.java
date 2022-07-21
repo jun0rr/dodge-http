@@ -9,12 +9,13 @@ import com.jun0rr.dodge.http.auth.AllowRole;
 import com.jun0rr.dodge.http.auth.Group;
 import com.jun0rr.dodge.http.auth.HttpAccessFilter;
 import com.jun0rr.dodge.http.auth.HttpAuthFilter;
+import com.jun0rr.dodge.http.auth.HttpBindGroupHandler;
 import com.jun0rr.dodge.http.auth.HttpGetAllGroupsHandler;
 import com.jun0rr.dodge.http.auth.HttpGetAllRolesHandler;
 import com.jun0rr.dodge.http.auth.HttpGetAllUsersHandler;
 import com.jun0rr.dodge.http.auth.HttpGetUserHandler;
 import com.jun0rr.dodge.http.auth.HttpLoginHandler;
-import com.jun0rr.dodge.http.auth.HttpPostGroupHandler;
+import com.jun0rr.dodge.http.auth.HttpPutGroupHandler;
 import com.jun0rr.dodge.http.auth.HttpPutUserHandler;
 import com.jun0rr.dodge.http.auth.Login;
 import com.jun0rr.dodge.http.auth.Password;
@@ -54,9 +55,11 @@ public class TestHttpAuthServer {
   
   private static final Role allGroups = new AllowRole(HttpGetAllGroupsHandler.ROUTE, admin);
   
+  private static final Role bindGroups = new AllowRole(HttpBindGroupHandler.ROUTE, admin);
+  
   private static final Role allRoles = new AllowRole(HttpGetAllRolesHandler.ROUTE, admin);
   
-  private static final Role postGroup = new AllowRole(HttpPostGroupHandler.ROUTE, admin);
+  private static final Role postGroup = new AllowRole(HttpPutGroupHandler.ROUTE, admin);
   
   private static final Role putUser = new AllowRole(HttpPutUserHandler.ROUTE, admin);
   
@@ -75,11 +78,12 @@ public class TestHttpAuthServer {
       server.addHandler(ChannelEvent.Inbound.READ, HttpLoginHandler::get)
           .addHandler(ChannelEvent.Inbound.READ, HttpRequest.class, HttpAuthFilter::get)
           .addHandler(ChannelEvent.Inbound.READ, HttpRequest.class, HttpAccessFilter::get)
-          .addHandler(ChannelEvent.Inbound.READ, HttpObject.class, HttpPostGroupHandler::get)
+          .addHandler(ChannelEvent.Inbound.READ, HttpObject.class, HttpPutGroupHandler::get)
           .addHandler(ChannelEvent.Inbound.READ, HttpObject.class, HttpPutUserHandler::get);
       server.addRoute(HttpGetUserHandler.ROUTE, HttpGetUserHandler::get)
           .addRoute(HttpGetAllUsersHandler.ROUTE, HttpGetAllUsersHandler::get)
           .addRoute(HttpGetAllGroupsHandler.ROUTE, HttpGetAllGroupsHandler::get)
+          .addRoute(HttpBindGroupHandler.ROUTE, HttpBindGroupHandler::get)
           ;
       server.startStorage()
           .add(auth)
@@ -87,6 +91,7 @@ public class TestHttpAuthServer {
           .add(authUser)
           .add(allUsers)
           .add(allGroups)
+          .add(bindGroups)
           .add(allRoles)
           .add(postGroup)
           .add(putUser)

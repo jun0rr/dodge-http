@@ -47,8 +47,11 @@ public class Storage {
   public Storage add(User u) {
     Match.notNull(u).failIfNotMatch("Bad null User");
     manager.store(u);
-    users.add(u);
-    manager.store(users);
+    if(users.stream().noneMatch(s->s.getEmail().equals(u.getEmail()))) {
+      users.add(u);
+      users.stream().map(Indexed::)
+      manager.store(users);
+    }
     return this;
   }
   

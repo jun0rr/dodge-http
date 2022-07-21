@@ -92,8 +92,8 @@ public class TcpMetricsHandler extends ChannelDuplexHandler {
           .update(i->((ByteBuf)o).readableBytes() + i);
       if(opt.isEmpty()) server.metrics().add(metric);
     }
-    logger.debug("metrics.size() = {}", server.metrics().size());
-    server.metrics().stream().map(Metric::toString).forEach(logger::debug);
+    //logger.debug("metrics.size() = {}", server.metrics().size());
+    //server.metrics().stream().map(Metric::toString).forEach(logger::debug);
     chc.writeAndFlush(o, cp);
   }
   

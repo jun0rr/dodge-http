@@ -37,7 +37,9 @@ public class HttpAccessFilter implements Consumer<ChannelExchange<HttpRequest>> 
   public void accept(ChannelExchange<HttpRequest> x) {
     User user = x.attributes().<User>get(HttpAuthFilter.ATTR_USER).get();
     if(x.channel().storage().roles()
+        .peek(r->logger.debug("FILTER ROLE: {}", r))
         .filter(r->r.match(x.message()))
+        .peek(r->logger.debug("ACCESS ROLE: {}", r))
         .anyMatch(r->r.allow(user))) {
       x.forwardMessage();
     }

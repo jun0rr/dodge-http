@@ -29,14 +29,14 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpPostGroupHandler implements Consumer<ChannelExchange<HttpObject>> {
+public class HttpPutGroupHandler implements Consumer<ChannelExchange<HttpObject>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpPostGroupHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpPutGroupHandler.class);
   
   public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/groups\\/?", HttpMethod.POST);
   
-  public static HttpPostGroupHandler get() {
-    return new HttpPostGroupHandler();
+  public static HttpPutGroupHandler get() {
+    return new HttpPutGroupHandler();
   }
   
   @Override

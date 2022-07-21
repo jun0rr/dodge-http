@@ -70,7 +70,9 @@ public class HttpAuthFilter implements Consumer<ChannelExchange<HttpRequest>> {
       x.forwardMessage();
     }
     else {
-      sendForbidden(x, "User not found");
+      send(x, new ErrMessage(HttpResponseStatus.FORBIDDEN, "Unauthenticated user")
+          .put("method", x.message().method().name())
+          .put("uri", x.message().uri()));
     }
   }
   
@@ -89,24 +91,16 @@ public class HttpAuthFilter implements Consumer<ChannelExchange<HttpRequest>> {
     }
   }
   
-  private void sendForbidden(ChannelExchange<HttpRequest> x, String msg) {
-    ByteBuf buf = Unpooled.EMPTY_BUFFER;
-    if(msg != null) {
-      JsonObject obj = new JsonObject();
-      obj.addProperty("status", HttpResponseStatus.FORBIDDEN.code());
-      obj.addProperty("message", msg);
-      String json = ((Http)x.channel()).gson().toJson(obj);
-      buf = x.context().alloc().heapBuffer(json.length());
-      buf.writeCharSequence(json, StandardCharsets.UTF_8);
-    }
-    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FORBIDDEN, buf);
+  private void send(ChannelExchange<HttpRequest> x, ErrMessage msg) {
+    String json = ((Http)x.channel()).gson().toJson(msg);
+    ByteBuf buf = x.context().alloc().heapBuffer(json.length());
+    buf.writeCharSequence(json, StandardCharsets.UTF_8);
+    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, msg.getStatus(), buf);
     res.headers()
         .add(new ConnectionCloseHeaders())
         .add(new DateHeader())
-        .add(new ServerHeader());
-    if(msg != null) {
-      res.headers().add(new JsonContentHeader(buf.readableBytes()));
-    }
+        .add(new ServerHeader())
+        .add(new JsonContentHeader(buf.readableBytes()));
     x.writeAndFlush(res).channelClose();
   }
   

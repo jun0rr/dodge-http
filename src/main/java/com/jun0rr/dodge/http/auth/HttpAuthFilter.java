@@ -39,6 +39,10 @@ import org.slf4j.LoggerFactory;
  */
 public class HttpAuthFilter implements Consumer<ChannelExchange<HttpRequest>> {
   
+  public static final String ATTR_HTTP_REQUEST = "http-request";
+  
+  public static final String ATTR_USER = "user";
+  
   static final Logger logger = LoggerFactory.getLogger(HttpAuthFilter.class);
   
   public static HttpAuthFilter get() {
@@ -61,14 +65,13 @@ public class HttpAuthFilter implements Consumer<ChannelExchange<HttpRequest>> {
         .findAny();
     if(opt.isPresent()) {
       x.attributes()
-          .put("http-request", x.message())
-          .put("user", opt.get());
+          .put(ATTR_HTTP_REQUEST, x.message())
+          .put(ATTR_USER, opt.get());
       x.forwardMessage();
     }
     else {
       sendForbidden(x, "User not found");
     }
-    x.attributes().stream().forEach(e->logger.debug("attribute: {}={} - {}", e.getKey(), e.getValue(), e.getValue().getClass()));
   }
   
   private Jws<Claims> parseJwt(ChannelExchange<HttpRequest> x, String jwt) {

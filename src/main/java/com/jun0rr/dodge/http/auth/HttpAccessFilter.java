@@ -35,7 +35,7 @@ public class HttpAccessFilter implements Consumer<ChannelExchange<HttpRequest>> 
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    User user = x.attributes().<User>get("user").get();
+    User user = x.attributes().<User>get(HttpAuthFilter.ATTR_USER).get();
     if(x.channel().storage().roles()
         .filter(r->r.match(x.message()))
         .anyMatch(r->r.allow(user))) {
@@ -46,7 +46,6 @@ public class HttpAccessFilter implements Consumer<ChannelExchange<HttpRequest>> 
           .put("method", x.message().method().name())
           .put("uri", x.message().uri()));
     }
-    x.attributes().stream().forEach(e->logger.debug("attribute: {}={} - {}", e.getKey(), e.getValue(), e.getValue().getClass()));
   }
   
   private void send(ChannelExchange<HttpRequest> x, ErrMessage msg) {

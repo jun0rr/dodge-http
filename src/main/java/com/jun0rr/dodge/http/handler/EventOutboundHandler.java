@@ -90,7 +90,7 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
   
   @Override
   public void write(ChannelHandlerContext chc, Object o, ChannelPromise cp) throws Exception {
-    if(ChannelEvent.Outbound.WRITE == event && cons.isTypeOf(o.getClass())) {
+    if(ChannelEvent.Outbound.WRITE == event && cons.isTypeOf(o.getClass()) && chc.channel().isOpen()) {
       cons.cast(o).ifPresent(m->cons.accept(ChannelExchange.of(tcp, event, chc, m, attrs.channelAttrs(chc.channel()), cp)));
     }
     else {

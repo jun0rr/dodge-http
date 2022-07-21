@@ -23,7 +23,7 @@ import com.jun0rr.dodge.http.auth.User;
 import com.jun0rr.dodge.tcp.ChannelEvent;
 import com.jun0rr.util.Host;
 import com.jun0rr.util.Unchecked;
-import io.netty.handler.codec.http.HttpContent;
+import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import java.nio.file.Files;
 import java.time.LocalDate;
@@ -75,11 +75,12 @@ public class TestHttpAuthServer {
       server.addHandler(ChannelEvent.Inbound.READ, HttpLoginHandler::get)
           .addHandler(ChannelEvent.Inbound.READ, HttpRequest.class, HttpAuthFilter::get)
           .addHandler(ChannelEvent.Inbound.READ, HttpRequest.class, HttpAccessFilter::get)
-          .addHandler(ChannelEvent.Inbound.READ, HttpContent.class, HttpGetAllGroupsHandler::get)
-          .addHandler(ChannelEvent.Inbound.READ, HttpContent.class, HttpPostGroupHandler::get)
-          .addHandler(ChannelEvent.Inbound.READ, HttpContent.class, HttpPutUserHandler::get);
+          .addHandler(ChannelEvent.Inbound.READ, HttpObject.class, HttpPostGroupHandler::get)
+          .addHandler(ChannelEvent.Inbound.READ, HttpObject.class, HttpPutUserHandler::get);
       server.addRoute(HttpGetUserHandler.ROUTE, HttpGetUserHandler::get)
-          .addRoute(HttpGetAllUsersHandler.ROUTE, HttpGetAllUsersHandler::get);
+          .addRoute(HttpGetAllUsersHandler.ROUTE, HttpGetAllUsersHandler::get)
+          .addRoute(HttpGetAllGroupsHandler.ROUTE, HttpGetAllGroupsHandler::get)
+          ;
       server.startStorage()
           .add(auth)
           .add(admin)

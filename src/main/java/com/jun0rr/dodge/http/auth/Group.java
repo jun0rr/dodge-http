@@ -34,6 +34,7 @@ public class Group {
   }
 
   public Group setName(String name) {
+    System.out.println(">>>>> setName <<<<<");
     this.name = name;
     return this;
   }

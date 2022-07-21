@@ -42,7 +42,7 @@ public class EventInboundHandler extends ChannelInboundHandlerAdapter {
   
   @Override
   public void channelRead(ChannelHandlerContext chc, Object o) throws Exception {
-    if(ChannelEvent.Inbound.READ == event && cons.isTypeOf(o.getClass())) {
+    if(ChannelEvent.Inbound.READ == event && cons.isTypeOf(o.getClass()) && chc.channel().isOpen()) {
       cons.cast(o).ifPresent(m->cons.accept(ChannelExchange.of(tcp, event, chc, m, attrs.channelAttrs(chc.channel()))));
     }
     else {

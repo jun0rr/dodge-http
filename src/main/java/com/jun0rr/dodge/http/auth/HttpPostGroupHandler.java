@@ -15,6 +15,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -28,7 +29,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpPostGroupHandler implements Consumer<ChannelExchange<HttpContent>> {
+public class HttpPostGroupHandler implements Consumer<ChannelExchange<HttpObject>> {
   
   static final Logger logger = LoggerFactory.getLogger(HttpPostGroupHandler.class);
   
@@ -39,20 +40,20 @@ public class HttpPostGroupHandler implements Consumer<ChannelExchange<HttpConten
   }
   
   @Override
-  public void accept(ChannelExchange<HttpContent> x) {
-    x.attributes().stream().forEach(e->logger.debug("attribute: {}={} - {}", e.getKey(), e.getValue(), e.getValue().getClass()));
-    x.attributes().parent().stream().forEach(e->logger.debug("parent.attribute: {}={} - {}", e.getKey(), e.getValue(), e.getValue().getClass()));
-    HttpRequest req = x.attributes().<HttpRequest>get("http-request").get();
-    if(ROUTE.test(req) && HttpConstants.isValidHttpContent(x.message())) {
-      String json = x.message().content().toString(StandardCharsets.UTF_8);
-      Group g = ((Http)x.channel()).gson().fromJson(json, Group.class);
-      x.channel().storage().add(g);
-      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.EMPTY_BUFFER);
-      res.headers()
-          .add(new ConnectionCloseHeaders())
-          .add(new DateHeader())
-          .add(new ServerHeader());
-      x.writeAndFlush(res).channelClose();
+  public void accept(ChannelExchange<HttpObject> x) {
+    HttpRequest req = x.attributes().<HttpRequest>get(HttpAuthFilter.ATTR_HTTP_REQUEST).get();
+    if(ROUTE.test(req)) {
+      if(HttpConstants.isValidHttpContent(x.message())) {
+        String json = ((HttpContent)x.message()).content().toString(StandardCharsets.UTF_8);
+        Group g = ((Http)x.channel()).gson().fromJson(json, Group.class);
+        x.channel().storage().add(g);
+        HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.EMPTY_BUFFER);
+        res.headers()
+            .add(new ConnectionCloseHeaders())
+            .add(new DateHeader())
+            .add(new ServerHeader());
+        x.writeAndFlush(res).channelClose();
+      }
     }
     else {
       x.forwardMessage();

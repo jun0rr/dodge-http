@@ -80,6 +80,7 @@ public class HttpServer extends Http {
         initHandlers(c);
         c.pipeline().addLast(new HttpRequestNotFoundHandler());
         c.pipeline().addLast(new ReleaseInboundHandler());
+        //c.pipeline().forEach(e->logger.debug("PIPELINE: {} >> {} - {}", e.getKey(), e.getValue(), e.getValue().getClass()));
       }
     };
   }

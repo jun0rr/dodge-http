@@ -19,13 +19,18 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author F6036477
  */
 public class HttpGetUserHandler implements Consumer<ChannelExchange<HttpRequest>> {
+  
+  static final Logger logger = LoggerFactory.getLogger(HttpGetUserHandler.class);
   
   public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/user\\/?", HttpMethod.GET);
   
@@ -35,9 +40,9 @@ public class HttpGetUserHandler implements Consumer<ChannelExchange<HttpRequest>
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    if(ROUTE.test(x.message()) && x.attributes().contains("user")) {
+    if(ROUTE.test(x.message()) && x.attributes().contains(HttpAuthFilter.ATTR_USER)) {
       ByteBuf buf = x.context().alloc().directBuffer();
-      buf.writeCharSequence(((Http)x.channel()).gson().toJson(x.attributes().get("user").get()), StandardCharsets.UTF_8);
+      buf.writeCharSequence(((Http)x.channel()).gson().toJson(x.attributes().get(HttpAuthFilter.ATTR_USER).get()), StandardCharsets.UTF_8);
       HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
       res.headers()
           .add(new JsonContentHeader(buf.readableBytes()))

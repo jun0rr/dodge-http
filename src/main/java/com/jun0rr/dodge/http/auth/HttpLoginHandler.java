@@ -17,6 +17,7 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -37,7 +38,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpLoginHandler implements Consumer<ChannelExchange<Object>> {
+public class HttpLoginHandler implements Consumer<ChannelExchange<HttpObject>> {
   
   static final Logger logger = LoggerFactory.getLogger(HttpLoginHandler.class);
   
@@ -49,8 +50,6 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<Object>> {
   
   public static final String JWT_SUBJECT = "dodge-auth";
   
-  public static final String ATTR_REQUEST = "HttpRequest";
-  
   public static final Duration DEFAULT_TOKEN_DURATION = Duration.ofMinutes(90);
   
   public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/?", HttpMethod.POST);
@@ -61,11 +60,11 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<Object>> {
   }
   
   @Override
-  public void accept(ChannelExchange<Object> x) {
+  public void accept(ChannelExchange<HttpObject> x) {
     if(HttpRequest.class.isAssignableFrom(x.message().getClass())) {
-      x.attributes().put(ATTR_REQUEST, x.message());
+      x.attributes().put(HttpRequest.class, x.message());
     }
-    Optional<HttpRequest> req = x.attributes().get(ATTR_REQUEST);
+    Optional<HttpRequest> req = x.attributes().get(HttpRequest.class);
     if(req.isPresent() && ROUTE.test(req.get())) {
       if(HttpContent.class.isAssignableFrom(x.message().getClass())) {
         HttpContent c = (HttpContent) x.message();

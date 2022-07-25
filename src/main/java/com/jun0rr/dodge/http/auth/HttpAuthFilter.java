@@ -39,10 +39,6 @@ import org.slf4j.LoggerFactory;
  */
 public class HttpAuthFilter implements Consumer<ChannelExchange<HttpRequest>> {
   
-  public static final String ATTR_HTTP_REQUEST = "http-request";
-  
-  public static final String ATTR_USER = "user";
-  
   static final Logger logger = LoggerFactory.getLogger(HttpAuthFilter.class);
   
   public static HttpAuthFilter get() {
@@ -65,8 +61,8 @@ public class HttpAuthFilter implements Consumer<ChannelExchange<HttpRequest>> {
         .findAny();
     if(opt.isPresent()) {
       x.attributes()
-          .put(ATTR_HTTP_REQUEST, x.message())
-          .put(ATTR_USER, opt.get());
+          .put(HttpRequest.class, x.message())
+          .put(User.class, opt.get());
       x.forwardMessage();
     }
     else {

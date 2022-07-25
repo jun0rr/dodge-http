@@ -35,7 +35,7 @@ public class HttpAccessFilter implements Consumer<ChannelExchange<HttpRequest>> 
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    User user = x.attributes().<User>get(HttpAuthFilter.ATTR_USER).get();
+    User user = x.attributes().get(User.class).get();
     if(x.channel().storage().roles()
         .peek(r->logger.debug("FILTER ROLE: {}", r))
         .filter(r->r.match(x.message()))

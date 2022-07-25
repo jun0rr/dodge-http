@@ -65,6 +65,13 @@ public class Attributes {
     return parent;
   }
   
+  public Attributes put(Class cls, Object val) {
+    Match.notNull(cls).failIfNotMatch("Bad null Class key");
+    Match.notNull(val).failIfNotMatch("Bad null value Object");
+    attrs.put(key(cls.getName()), val);
+    return this;
+  }
+  
   public Attributes put(String key, Object val) {
     Match.notEmpty(key).failIfNotMatch("Bad null/empty key String");
     Match.notNull(val).failIfNotMatch("Bad null value Object");
@@ -78,15 +85,30 @@ public class Attributes {
     return Optional.ofNullable(val);
   }
   
+  public <T> Optional<T> get(Class<T> key) {
+    Match.notNull(key).failIfNotMatch("Bad null Class key");
+    return Optional.ofNullable(key.cast(attrs.get(key(key.getName()))));
+  }
+  
   public <T> Optional<T> remove(String key) {
     Match.notEmpty(key).failIfNotMatch("Bad null/empty key String");
     T val = (T) attrs.remove(key(key));
     return Optional.ofNullable(val);
   }
   
+  public <T> Optional<T> remove(Class<T> key) {
+    Match.notNull(key).failIfNotMatch("Bad null Class key");
+    return Optional.ofNullable(key.cast(attrs.remove(key(key.getName()))));
+  }
+  
   public boolean contains(String key) {
     Match.notEmpty(key).failIfNotMatch("Bad null/empty key String");
     return attrs.containsKey(key(key));
+  }
+  
+  public boolean contains(Class key) {
+    Match.notNull(key).failIfNotMatch("Bad null Class key");
+    return attrs.containsKey(key(key.getName()));
   }
   
   public Stream<Entry<String,Object>> stream() {

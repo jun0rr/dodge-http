@@ -4,12 +4,15 @@
  */
 package com.jun0rr.dodge.http.auth;
 
+import com.google.gson.JsonArray;
 import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.JsonContentHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
+import com.jun0rr.dodge.http.util.RequestParam;
+import com.jun0rr.dodge.http.util.UriParam;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -19,36 +22,35 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.function.Consumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author F6036477
  */
-public class HttpGetUserHandler implements Consumer<ChannelExchange<HttpRequest>> {
+public class HttpShutdownHandler implements Consumer<ChannelExchange<HttpRequest>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpGetUserHandler.class);
+  public static final HttpRoute ROUTE = HttpRoute.of("\\/?shutdown\\/?", HttpMethod.GET);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/user\\/?", HttpMethod.GET);
-  
-  public static HttpGetUserHandler get() {
-    return new HttpGetUserHandler();
+  public static HttpShutdownHandler get() {
+    return new HttpShutdownHandler();
   }
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    String json = ((Http)x.channel()).gson().toJson(x.attributes().get(User.class).get());
-    ByteBuf buf = x.context().alloc().buffer(json.length());
-    buf.writeCharSequence(json, StandardCharsets.UTF_8);
-    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
+    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
     res.headers()
-        .add(new JsonContentHeader(buf.readableBytes()))
         .add(new ConnectionCloseHeaders())
         .add(new DateHeader())
         .add(new ServerHeader());
-    x.writeAndFlush(res).channelClose();
+    x.writeAndFlush(res)
+        .channelClose()
+        .acceptNext(f->f.channel().parent().close())
+        .acceptNext(f->x.channel().storage().shutdown())
+        .syncUninterruptibly();
+    x.channel().getWorkerGroup().shutdownGracefully();
+    x.channel().getMasterGroup().shutdownGracefully();
   }
   
 }

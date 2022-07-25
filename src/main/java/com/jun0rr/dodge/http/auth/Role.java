@@ -24,6 +24,10 @@ public abstract class Role {
     this.route = Match.notNull(route).getOrFail("Bad null HttpRoute");
     this.groups = Match.notNull(groups).getOrFail("Bad null Groups List");
   }
+  
+  public HttpRoute route() {
+    return route;
+  }
 
   public boolean match(HttpRequest req) {
     return route.test(req);

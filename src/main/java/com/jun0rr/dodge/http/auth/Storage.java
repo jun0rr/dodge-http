@@ -4,6 +4,7 @@
  */
 package com.jun0rr.dodge.http.auth;
 
+import com.jun0rr.dodge.http.util.Indexed;
 import com.jun0rr.util.match.Match;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -15,12 +16,16 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import one.microstream.storage.embedded.types.EmbeddedStorage;
 import one.microstream.storage.embedded.types.EmbeddedStorageManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author F6036477
  */
 public class Storage {
+  
+  static final Logger logger = LoggerFactory.getLogger(Storage.class);
   
   private final transient EmbeddedStorageManager manager;
   
@@ -44,39 +49,79 @@ public class Storage {
     this(path, new LinkedList<>(), new LinkedList<>(), new LinkedList<>(), new HashMap<>());
   }
   
-  public Storage add(User u) {
+  public Storage set(User u) {
     Match.notNull(u).failIfNotMatch("Bad null User");
+    users.stream()
+        .map(Indexed.mapper())
+        .filter(i->i.get().getEmail().equals(u.getEmail()))
+        .findFirst()
+        .ifPresent(i->users.remove(i.index()));
+    users.add(u);
     manager.store(u);
-    if(users.stream().noneMatch(s->s.getEmail().equals(u.getEmail()))) {
-      users.add(u);
-      users.stream().map(Indexed::)
-      manager.store(users);
-    }
+    manager.store(users);
+    manager.store(this);
     return this;
   }
   
-  public Storage add(Group g) {
+  public Storage set(Group g) {
     Match.notNull(g).failIfNotMatch("Bad null Group");
-    manager.store(g);
+    groups.stream()
+        .map(Indexed.mapper())
+        .filter(i->i.get().getName().equals(g.getName()))
+        .findFirst()
+        .ifPresent(i->groups.remove(i.index()));
     groups.add(g);
+    manager.store(g);
     manager.store(groups);
+    manager.store(this);
     return this;
   }
   
-  public Storage add(Role r) {
+  public Storage set(Role r) {
     Match.notNull(r).failIfNotMatch("Bad null Role");
-    manager.store(r);
+    roles.stream()
+        .map(Indexed.mapper())
+        .filter(i->i.get().route().equals(r.route()))
+        .findFirst()
+        .ifPresent(i->roles.remove(i.index()));
     roles.add(r);
+    manager.store(r);
     manager.store(roles);
+    manager.store(this);
     return this;
   }
   
-  public Storage add(String key, Object obj) {
+  public Storage rm(User u) {
+    Match.notNull(u).failIfNotMatch("Bad null User");
+    users.remove(u);
+    manager.store(users);
+    manager.store(this);
+    return this;
+  }
+  
+  public Storage rm(Group g) {
+    Match.notNull(g).failIfNotMatch("Bad null Group");
+    groups.remove(g);
+    manager.store(groups);
+    manager.store(this);
+    return this;
+  }
+  
+  public Storage rm(Role r) {
+    Match.notNull(r).failIfNotMatch("Bad null Role");
+    roles.remove(r);
+    manager.store(roles);
+    manager.store(this);
+    return this;
+  }
+  
+  public Storage set(String key, Object obj) {
     Match.notEmpty(key).failIfNotMatch("Bad empty key String");
     Match.notNull(obj).failIfNotMatch("Bad empty value Object");
-    manager.store(obj);
     map.put(key, obj);
+    manager.store(obj);
     manager.store(map);
+    manager.store(this);
     return this;
   }
   
@@ -84,7 +129,7 @@ public class Storage {
     return (T) map.get(key);
   }
   
-  public <T> T remove(String key) {
+  public <T> T rm(String key) {
     return (T) map.remove(key);
   }
   

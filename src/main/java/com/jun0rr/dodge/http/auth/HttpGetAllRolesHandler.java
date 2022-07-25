@@ -36,23 +36,18 @@ public class HttpGetAllRolesHandler implements Consumer<ChannelExchange<HttpRequ
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    if(ROUTE.test(x.message()) && x.attributes().contains("user")) {
-      JsonArray array = new JsonArray();
-      x.channel().storage().roles()
-          .forEach(r->array.add( ((Http)x.channel()).gson().toJsonTree(r) ));
-      ByteBuf buf = x.context().alloc().directBuffer();
-      buf.writeCharSequence(((Http)x.channel()).gson().toJson(array), StandardCharsets.UTF_8);
-      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
-      res.headers()
-          .add(new JsonContentHeader(buf.readableBytes()))
-          .add(new ConnectionCloseHeaders())
-          .add(new DateHeader())
-          .add(new ServerHeader());
-      x.writeAndFlush(res).channelClose();
-    }
-    else {
-      x.forwardMessage();
-    }
+    JsonArray array = new JsonArray();
+    x.channel().storage().roles()
+        .forEach(r->array.add( ((Http)x.channel()).gson().toJsonTree(r) ));
+    ByteBuf buf = x.context().alloc().directBuffer();
+    buf.writeCharSequence(((Http)x.channel()).gson().toJson(array), StandardCharsets.UTF_8);
+    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
+    res.headers()
+        .add(new JsonContentHeader(buf.readableBytes()))
+        .add(new ConnectionCloseHeaders())
+        .add(new DateHeader())
+        .add(new ServerHeader());
+    x.writeAndFlush(res).channelClose();
   }
   
 }

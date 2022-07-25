@@ -10,6 +10,7 @@ import com.jun0rr.dodge.http.auth.AllowRole;
 import com.jun0rr.dodge.http.auth.DenyRole;
 import com.jun0rr.dodge.http.auth.ErrMessage;
 import com.jun0rr.dodge.http.auth.JsonErrMsgAdapter;
+import com.jun0rr.dodge.http.auth.JsonHttpMethodAdapter;
 import com.jun0rr.dodge.http.auth.JsonIgnoreStrategy;
 import com.jun0rr.dodge.http.auth.JsonRoleAdapter;
 import com.jun0rr.dodge.http.auth.Role;
@@ -19,6 +20,7 @@ import com.jun0rr.util.ResourceLoader;
 import com.jun0rr.util.Unchecked;
 import com.jun0rr.util.crypto.Crypto;
 import io.netty.bootstrap.AbstractBootstrap;
+import io.netty.handler.codec.http.HttpMethod;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.PrivateKey;
@@ -45,6 +47,7 @@ public abstract class Http extends DefaultTcpChannel {
       .registerTypeAdapter(DenyRole.class, new JsonRoleAdapter())
       .registerTypeAdapter(Role.class, new JsonRoleAdapter())
       .registerTypeAdapter(ErrMessage.class, new JsonErrMsgAdapter())
+      .registerTypeAdapter(HttpMethod.class, new JsonHttpMethodAdapter())
       .setExclusionStrategies(new JsonIgnoreStrategy())
       .create();
   

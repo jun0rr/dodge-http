@@ -59,7 +59,7 @@ public class TestEmbeddedStorage {
     System.out.println("-------- storageWrite --------");
     try {
       Storage s = new Storage(storagePath);
-      s.add(user).add(allow).add(deny).add(email, admin);
+      s.set(user).set(allow).set(deny).set(email, admin);
       s.shutdown();
     }
     catch(Exception e) {

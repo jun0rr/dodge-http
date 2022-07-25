@@ -30,22 +30,22 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpDeleteUserHandler implements Consumer<ChannelExchange<HttpRequest>> {
+public class HttpDeleteGroupHandler implements Consumer<ChannelExchange<HttpRequest>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpDeleteUserHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpDeleteGroupHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/users\\/[a-zA-Z_]+[a-zA-Z0-9_\\.\\-]*@[a-zA-Z_]+\\.[a-zA-Z0-9_.]+\\/?", HttpMethod.DELETE);
+  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/groups\\/.+\\/?", HttpMethod.DELETE);
   
-  public static HttpDeleteUserHandler get() {
-    return new HttpDeleteUserHandler();
+  public static HttpDeleteGroupHandler get() {
+    return new HttpDeleteGroupHandler();
   }
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    RequestParam pars = new UriParam(x.message().uri()).asRequestParam("/auth/users/email");
-    String email = pars.get("email");
-    Optional<User> opt = x.channel().storage().users()
-        .filter(u->u.getEmail().equals(email))
+    RequestParam pars = new UriParam(x.message().uri()).asRequestParam("/auth/groups/name");
+    String name = pars.get("name");
+    Optional<Group> opt = x.channel().storage().groups()
+        .filter(g->g.getName().equals(name))
         .findAny();
     HttpResponse res;
     if(opt.isPresent()) {
@@ -53,8 +53,8 @@ public class HttpDeleteUserHandler implements Consumer<ChannelExchange<HttpReque
       res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
     }
     else {
-      ErrMessage msg = new ErrMessage(HttpResponseStatus.NOT_FOUND, "User Not Found")
-          .put("email", email);
+      ErrMessage msg = new ErrMessage(HttpResponseStatus.NOT_FOUND, "Group Not Found")
+          .put("name", name);
       String json = ((Http)x.channel()).gson().toJson(msg);
       ByteBuf cont = x.context().alloc().buffer(json.length());
       cont.writeCharSequence(json, StandardCharsets.UTF_8);

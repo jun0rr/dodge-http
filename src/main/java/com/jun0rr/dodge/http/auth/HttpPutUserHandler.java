@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpPutUserHandler implements Consumer<ChannelExchange<HttpObject>> {
+public class HttpPutUserHandler implements Consumer<ChannelExchange<HttpContent>> {
   
   static final Logger logger = LoggerFactory.getLogger(HttpPutUserHandler.class);
   
@@ -40,28 +40,23 @@ public class HttpPutUserHandler implements Consumer<ChannelExchange<HttpObject>>
   }
   
   @Override
-  public void accept(ChannelExchange<HttpObject> x) {
-    HttpRequest req = x.attributes().<HttpRequest>get(HttpAuthFilter.ATTR_HTTP_REQUEST).get();
-    if(ROUTE.test(req)) {
-      if(HttpConstants.isValidHttpContent(x.message())) {
-        String json = ((HttpContent)x.message()).content().toString(StandardCharsets.UTF_8);
-        CreatingUser u = ((Http)x.channel()).gson().fromJson(json, CreatingUser.class);
-        if(!u.getGroups().isEmpty()) {
-          u.getGroups().forEach(x.channel().storage()::add);
-        }
-        Group auth = x.channel().storage().groups().filter(g->g.getName().equals("auth")).findAny().get();
-        u.getGroups().add(auth);
-        x.channel().storage().add(u.toUser());
-        HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.EMPTY_BUFFER);
-        res.headers()
-            .add(new ConnectionCloseHeaders())
-            .add(new DateHeader())
-            .add(new ServerHeader());
-        x.writeAndFlush(res).channelClose();
+  public void accept(ChannelExchange<HttpContent> x) {
+    HttpRequest req = x.attributes().get(HttpRequest.class).get();
+    if(HttpConstants.isValidHttpContent(x.message())) {
+      String json = x.message().content().toString(StandardCharsets.UTF_8);
+      CreatingUser u = ((Http)x.channel()).gson().fromJson(json, CreatingUser.class);
+      if(!u.getGroups().isEmpty()) {
+        u.getGroups().forEach(x.channel().storage()::set);
       }
-    }
-    else {
-      x.forwardMessage();
+      Group auth = x.channel().storage().groups().filter(g->g.getName().equals("auth")).findAny().get();
+      u.getGroups().add(auth);
+      x.channel().storage().set(u.toUser());
+      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.EMPTY_BUFFER);
+      res.headers()
+          .add(new ConnectionCloseHeaders())
+          .add(new DateHeader())
+          .add(new ServerHeader());
+      x.writeAndFlush(res).channelClose();
     }
   }
   

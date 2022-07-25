@@ -17,9 +17,12 @@ import com.jun0rr.dodge.metrics.TcpMetricsHandler;
 import com.jun0rr.dodge.tcp.ChannelEvent;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import com.jun0rr.dodge.tcp.ConsumerType;
+import com.jun0rr.dodge.tcp.TcpChannel;
 import com.jun0rr.util.match.Match;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
@@ -41,8 +44,31 @@ public class HttpServer extends Http {
     super(SERVER_BOOTSTRAP);
   }
   
-  public HttpServer addRoute(HttpRoute route, Supplier<Consumer<ChannelExchange<HttpRequest>>> sup) {
-    addHandler(ChannelEvent.Inbound.READ, HttpRequest.class, ()->new HttpRouteHandler(route, sup.get()));
+  public HttpServer addRoute(HttpRoute route, Supplier<Consumer<ChannelExchange<HttpObject>>> sup) {
+    addHandler(ChannelEvent.Inbound.READ, HttpObject.class, ()->new HttpRouteHandler(route, sup.get()));
+    return this;
+  }
+  
+  public <T> HttpServer addRoute(HttpRoute route, Class<T> c, Supplier<Consumer<ChannelExchange<T>>> sup) {
+    addHandler(ChannelEvent.Inbound.READ, c, ()->new HttpRouteHandler(route, sup.get()));
+    return this;
+  }
+  
+  @Override
+  public <T> HttpServer addHandler(ChannelEvent evt, Class<T> type, Supplier<Consumer<ChannelExchange<T>>> cs) {
+    super.addHandler(evt, type, cs);
+    return this;
+  }
+
+  @Override
+  public HttpServer addHandler(ChannelEvent evt, Supplier<Consumer<ChannelExchange<Object>>> cs) {
+    super.addHandler(evt, cs);
+    return this;
+  }
+
+  @Override
+  public HttpServer addHandler(Supplier<ChannelHandler> cih) {
+    super.addHandler(cih);
     return this;
   }
   

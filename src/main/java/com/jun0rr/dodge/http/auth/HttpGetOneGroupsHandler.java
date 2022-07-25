@@ -23,45 +23,44 @@ import io.netty.handler.codec.http.HttpVersion;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.function.Consumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author F6036477
  */
-public class HttpDeleteUserHandler implements Consumer<ChannelExchange<HttpRequest>> {
+public class HttpGetOneGroupsHandler implements Consumer<ChannelExchange<HttpRequest>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpDeleteUserHandler.class);
+  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/groups\\/.+\\/?", HttpMethod.GET);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/users\\/[a-zA-Z_]+[a-zA-Z0-9_\\.\\-]*@[a-zA-Z_]+\\.[a-zA-Z0-9_.]+\\/?", HttpMethod.DELETE);
-  
-  public static HttpDeleteUserHandler get() {
-    return new HttpDeleteUserHandler();
+  public static HttpGetOneGroupsHandler get() {
+    return new HttpGetOneGroupsHandler();
   }
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    RequestParam pars = new UriParam(x.message().uri()).asRequestParam("/auth/users/email");
-    String email = pars.get("email");
-    Optional<User> opt = x.channel().storage().users()
-        .filter(u->u.getEmail().equals(email))
+    RequestParam pars = new UriParam(x.message().uri()).asRequestParam("/auth/groups/name");
+    String name = pars.get("name");
+    Optional<Group> opt = x.channel().storage().groups()
+        .filter(o->o.getName().equals(name))
         .findAny();
     HttpResponse res;
+    ByteBuf cont;
     if(opt.isPresent()) {
-      x.channel().storage().rm(opt.get());
-      res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+      String json = ((Http)x.channel()).gson().toJson(opt.get());
+      cont = x.context().alloc().buffer(json.length());
+      cont.writeCharSequence(json, StandardCharsets.UTF_8);
+      res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, cont);
     }
     else {
-      ErrMessage msg = new ErrMessage(HttpResponseStatus.NOT_FOUND, "User Not Found")
-          .put("email", email);
+      ErrMessage msg = new ErrMessage(HttpResponseStatus.NOT_FOUND, "Group Not Found")
+          .put("name", name);
       String json = ((Http)x.channel()).gson().toJson(msg);
-      ByteBuf cont = x.context().alloc().buffer(json.length());
+      cont = x.context().alloc().buffer(json.length());
       cont.writeCharSequence(json, StandardCharsets.UTF_8);
       res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, msg.getStatus(), cont);
-      res.headers().add(new JsonContentHeader(cont.readableBytes()));
     }
     res.headers()
+        .add(new JsonContentHeader(cont.readableBytes()))
         .add(new ConnectionCloseHeaders())
         .add(new DateHeader())
         .add(new ServerHeader());

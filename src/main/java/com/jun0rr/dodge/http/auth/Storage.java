@@ -67,8 +67,6 @@ public class Storage {
   public Storage set(Group g) {
     Match.notNull(g).failIfNotMatch("Bad null Group");
     groups.stream()
-        //.map(Indexed.mapper())
-        //.filter(i->i.get().getName().equals(g.getName()))
         .filter(o->o.getName().equals(g.getName()))
         .findFirst()
         .ifPresent(groups::remove);
@@ -82,8 +80,6 @@ public class Storage {
   public Storage set(Role r) {
     Match.notNull(r).failIfNotMatch("Bad null Role");
     roles.stream()
-        //.map(Indexed.mapper())
-        //.filter(i->i.get().route().equals(r.route()))
         .filter(o->o.route().equals(r.route()))
         .findFirst()
         .ifPresent(o->roles.remove(o));
@@ -114,6 +110,9 @@ public class Storage {
       users.stream()
           .filter(u->u.getGroups().contains(opt.get()))
           .forEach(u->rmUserGroup(u, opt.get()));
+      roles.stream()
+          .filter(r->r.getGroups().contains(opt.get()))
+          .forEach(r->rmRoleGroup(r, opt.get()));
     }
     manager.store(groups);
     manager.store(this);

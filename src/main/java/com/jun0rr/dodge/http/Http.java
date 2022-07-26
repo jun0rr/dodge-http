@@ -12,6 +12,7 @@ import com.jun0rr.dodge.http.auth.ErrMessage;
 import com.jun0rr.dodge.http.auth.JsonErrMsgAdapter;
 import com.jun0rr.dodge.http.auth.JsonHttpMethodAdapter;
 import com.jun0rr.dodge.http.auth.JsonIgnoreStrategy;
+import com.jun0rr.dodge.http.auth.JsonInstantAdapter;
 import com.jun0rr.dodge.http.auth.JsonRoleAdapter;
 import com.jun0rr.dodge.http.auth.Role;
 import com.jun0rr.dodge.tcp.DefaultTcpChannel;
@@ -25,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -48,6 +50,7 @@ public abstract class Http extends DefaultTcpChannel {
       .registerTypeAdapter(Role.class, new JsonRoleAdapter())
       .registerTypeAdapter(ErrMessage.class, new JsonErrMsgAdapter())
       .registerTypeAdapter(HttpMethod.class, new JsonHttpMethodAdapter())
+      .registerTypeAdapter(Instant.class, new JsonInstantAdapter())
       .setExclusionStrategies(new JsonIgnoreStrategy())
       .create();
   

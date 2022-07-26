@@ -11,6 +11,7 @@ import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
@@ -29,21 +30,22 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpPutGroupHandler implements Consumer<ChannelExchange<HttpContent>> {
+public class HttpPutGroupHandler implements Consumer<ChannelExchange<HttpObject>> {
   
   static final Logger logger = LoggerFactory.getLogger(HttpPutGroupHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/groups\\/?", HttpMethod.POST);
+  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/groups\\/?", HttpMethod.PUT);
   
   public static HttpPutGroupHandler get() {
     return new HttpPutGroupHandler();
   }
   
   @Override
-  public void accept(ChannelExchange<HttpContent> x) {
+  public void accept(ChannelExchange<HttpObject> x) {
     HttpRequest req = x.attributes().get(HttpRequest.class).get();
     if(HttpConstants.isValidHttpContent(x.message())) {
-      String json = x.message().content().toString(StandardCharsets.UTF_8);
+      ByteBuf cont = ((HttpContent)x.message()).content();
+      String json = cont.toString(StandardCharsets.UTF_8);
       Group g = ((Http)x.channel()).gson().fromJson(json, Group.class);
       x.channel().storage().set(g);
       HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.EMPTY_BUFFER);

@@ -11,6 +11,7 @@ import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
@@ -29,7 +30,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpPutUserHandler implements Consumer<ChannelExchange<HttpContent>> {
+public class HttpPutUserHandler implements Consumer<ChannelExchange<HttpObject>> {
   
   static final Logger logger = LoggerFactory.getLogger(HttpPutUserHandler.class);
   
@@ -40,10 +41,11 @@ public class HttpPutUserHandler implements Consumer<ChannelExchange<HttpContent>
   }
   
   @Override
-  public void accept(ChannelExchange<HttpContent> x) {
+  public void accept(ChannelExchange<HttpObject> x) {
     HttpRequest req = x.attributes().get(HttpRequest.class).get();
     if(HttpConstants.isValidHttpContent(x.message())) {
-      String json = x.message().content().toString(StandardCharsets.UTF_8);
+      ByteBuf cont = ((HttpContent)x.message()).content();
+      String json = cont.toString(StandardCharsets.UTF_8);
       CreatingUser u = ((Http)x.channel()).gson().fromJson(json, CreatingUser.class);
       if(!u.getGroups().isEmpty()) {
         u.getGroups().forEach(x.channel().storage()::set);

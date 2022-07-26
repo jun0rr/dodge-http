@@ -18,7 +18,7 @@ public abstract class Role {
   
   protected final HttpRoute route;
 
-  protected final List<Group> groups;
+  protected List<Group> groups;
 
   public Role(HttpRoute route, List<Group> groups) {
     this.route = Match.notNull(route).getOrFail("Bad null HttpRoute");
@@ -27,6 +27,15 @@ public abstract class Role {
   
   public HttpRoute route() {
     return route;
+  }
+  
+  public List<Group> getGroups() {
+    return groups;
+  }
+  
+  public Role setGroups(List<Group> gs) {
+    groups = gs;
+    return this;
   }
 
   public boolean match(HttpRequest req) {

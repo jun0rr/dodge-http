@@ -4,7 +4,6 @@
  */
 package com.jun0rr.dodge.http.auth;
 
-import com.jun0rr.dodge.http.util.Indexed;
 import com.jun0rr.util.match.Match;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -13,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 import one.microstream.storage.embedded.types.EmbeddedStorage;
 import one.microstream.storage.embedded.types.EmbeddedStorageManager;
@@ -52,10 +52,11 @@ public class Storage {
   public Storage set(User u) {
     Match.notNull(u).failIfNotMatch("Bad null User");
     users.stream()
-        .map(Indexed.mapper())
-        .filter(i->i.get().getEmail().equals(u.getEmail()))
+        //.map(Indexed.mapper())
+        //.filter(i->i.get().getEmail().equals(u.getEmail()))
+        .filter(o->o.getEmail().equals(u.getEmail()))
         .findFirst()
-        .ifPresent(i->users.remove(i.index()));
+        .ifPresent(users::remove);
     users.add(u);
     manager.store(u);
     manager.store(users);
@@ -66,10 +67,11 @@ public class Storage {
   public Storage set(Group g) {
     Match.notNull(g).failIfNotMatch("Bad null Group");
     groups.stream()
-        .map(Indexed.mapper())
-        .filter(i->i.get().getName().equals(g.getName()))
+        //.map(Indexed.mapper())
+        //.filter(i->i.get().getName().equals(g.getName()))
+        .filter(o->o.getName().equals(g.getName()))
         .findFirst()
-        .ifPresent(i->groups.remove(i.index()));
+        .ifPresent(groups::remove);
     groups.add(g);
     manager.store(g);
     manager.store(groups);
@@ -80,10 +82,11 @@ public class Storage {
   public Storage set(Role r) {
     Match.notNull(r).failIfNotMatch("Bad null Role");
     roles.stream()
-        .map(Indexed.mapper())
-        .filter(i->i.get().route().equals(r.route()))
+        //.map(Indexed.mapper())
+        //.filter(i->i.get().route().equals(r.route()))
+        .filter(o->o.route().equals(r.route()))
         .findFirst()
-        .ifPresent(i->roles.remove(i.index()));
+        .ifPresent(o->roles.remove(o));
     roles.add(r);
     manager.store(r);
     manager.store(roles);
@@ -91,20 +94,48 @@ public class Storage {
     return this;
   }
   
-  public Storage rm(User u) {
-    Match.notNull(u).failIfNotMatch("Bad null User");
-    users.remove(u);
+  public Storage rmUser(String email) {
+    Match.notEmpty(email).failIfNotMatch("Bad null User email");
+    users.stream()
+        .filter(u->u.getEmail().equals(email))
+        .forEach(users::remove);
     manager.store(users);
     manager.store(this);
     return this;
   }
   
-  public Storage rm(Group g) {
-    Match.notNull(g).failIfNotMatch("Bad null Group");
-    groups.remove(g);
+  public Storage rmGroup(String name) {
+    Match.notNull(name).failIfNotMatch("Bad null Group name");
+    Optional<Group> opt = groups.stream()
+        .filter(o->o.getName().equals(name))
+        .findAny();
+    if(opt.isPresent()) {
+      groups.remove(opt.get());
+      users.stream()
+          .filter(u->u.getGroups().contains(opt.get()))
+          .forEach(u->rmUserGroup(u, opt.get()));
+    }
     manager.store(groups);
     manager.store(this);
     return this;
+  }
+  
+  private void rmUserGroup(User u, Group g) {
+    List<Group> gs = new LinkedList<>();
+    u.getGroups().stream()
+        .filter(o->!o.equals(g))
+        .forEach(gs::add);
+    u.setGroups(gs);
+    set(u);
+  }
+  
+  private void rmRoleGroup(Role r, Group g) {
+    List<Group> gs = new LinkedList<>();
+    r.getGroups().stream()
+        .filter(o->!o.equals(g))
+        .forEach(gs::add);
+    r.setGroups(gs);
+    set(r);
   }
   
   public Storage rm(Role r) {

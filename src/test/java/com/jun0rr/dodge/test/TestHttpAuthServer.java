@@ -26,7 +26,6 @@ import com.jun0rr.dodge.http.auth.Role;
 import com.jun0rr.dodge.http.auth.User;
 import com.jun0rr.dodge.tcp.ChannelEvent;
 import com.jun0rr.util.Host;
-import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import java.time.LocalDate;
@@ -87,8 +86,8 @@ public class TestHttpAuthServer {
       server.addHandler(ChannelEvent.Inbound.READ, HttpObject.class, HttpLoginHandler::get)
           .addHandler(ChannelEvent.Inbound.READ, HttpRequest.class, HttpAuthFilter::get)
           .addHandler(ChannelEvent.Inbound.READ, HttpRequest.class, HttpAccessFilter::get)
-          .addRoute(HttpPutGroupHandler.ROUTE, HttpContent.class, HttpPutGroupHandler::get)
-          .addRoute(HttpPutUserHandler.ROUTE, HttpContent.class, HttpPutUserHandler::get)
+          .addRoute(HttpPutGroupHandler.ROUTE, HttpObject.class, HttpPutGroupHandler::get)
+          .addRoute(HttpPutUserHandler.ROUTE, HttpObject.class, HttpPutUserHandler::get)
           .addRoute(HttpGetUserHandler.ROUTE, HttpRequest.class, HttpGetUserHandler::get)
           .addRoute(HttpGetAllUsersHandler.ROUTE, HttpRequest.class, HttpGetAllUsersHandler::get)
           .addRoute(HttpDeleteUserHandler.ROUTE, HttpRequest.class, HttpDeleteUserHandler::get)

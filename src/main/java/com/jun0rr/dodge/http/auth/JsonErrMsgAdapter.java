@@ -24,6 +24,7 @@ public class JsonErrMsgAdapter implements JsonSerializer<ErrMessage>, JsonDeseri
   public JsonElement serialize(ErrMessage m, Type type, JsonSerializationContext jsc) {
     JsonObject obj = new JsonObject();
     obj.addProperty("status", m.getStatus().code());
+    obj.addProperty("reasonPhrase", m.getStatus().reasonPhrase());
     obj.addProperty("message", m.getMessage());
     m.properties().forEach(e->obj.add(e.getKey(), jsc.serialize(e.getValue())));
     return obj;

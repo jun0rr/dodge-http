@@ -35,9 +35,7 @@ public class HttpRouteHandler<T> implements Consumer<ChannelExchange<T>> {
     if(req.isEmpty()) {
       throw new IllegalStateException("HttpRequest not present in channel attributes");
     }
-    logger.debug("uri={}, handler={}", req.get().uri(), handler);
     if(route.test(req.get())) {
-      logger.debug("ACCEPT: {}", req.get().uri());
       handler.accept(x);
     }
     else {

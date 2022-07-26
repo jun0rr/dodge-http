@@ -27,6 +27,7 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -47,9 +48,11 @@ public class HttpAuthFilter implements Consumer<ChannelExchange<HttpRequest>> {
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    Set<Cookie> cookies = ServerCookieDecoder.STRICT.decode(
-        x.message().headers().get(HttpHeaderNames.COOKIE)
-    );
+    String scookie = x.message().headers().get(HttpHeaderNames.COOKIE);
+    Set<Cookie> cookies = Collections.EMPTY_SET;
+    if(scookie != null && !scookie.isBlank()) {
+      cookies = ServerCookieDecoder.STRICT.decode(scookie);
+    }
     Optional<User> opt = cookies.stream()
         .filter(c->c.name().equals(HttpLoginHandler.DODGE_TOKEN))
         .map(c->parseJwt(x, c.value()))

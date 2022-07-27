@@ -6,7 +6,7 @@ package com.jun0rr.dodge.http.auth;
 
 import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.handler.HttpRoute;
-import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
+import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
@@ -30,14 +30,14 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpPutUserHandler implements Consumer<ChannelExchange<HttpObject>> {
+public class HttpGroupsPutHandler implements Consumer<ChannelExchange<HttpObject>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpPutUserHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpGroupsPutHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/users\\/?", HttpMethod.PUT);
+  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/groups/?", HttpMethod.PUT);
   
-  public static HttpPutUserHandler get() {
-    return new HttpPutUserHandler();
+  public static HttpGroupsPutHandler get() {
+    return new HttpGroupsPutHandler();
   }
   
   @Override
@@ -46,19 +46,14 @@ public class HttpPutUserHandler implements Consumer<ChannelExchange<HttpObject>>
     if(HttpConstants.isValidHttpContent(x.message())) {
       ByteBuf cont = ((HttpContent)x.message()).content();
       String json = cont.toString(StandardCharsets.UTF_8);
-      CreatingUser u = ((Http)x.channel()).gson().fromJson(json, CreatingUser.class);
-      if(!u.getGroups().isEmpty()) {
-        u.getGroups().forEach(x.channel().storage()::set);
-      }
-      Group auth = x.channel().storage().groups().filter(g->g.getName().equals("auth")).findAny().get();
-      u.getGroups().add(auth);
-      x.channel().storage().set(u.toUser());
+      Group g = ((Http)x.channel()).gson().fromJson(json, Group.class);
+      x.channel().storage().set(g);
       HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.EMPTY_BUFFER);
       res.headers()
-          .add(new ConnectionCloseHeaders())
+          .add(new ConnectionHeaders(x))
           .add(new DateHeader())
           .add(new ServerHeader());
-      x.writeAndFlush(res).channelClose();
+      HttpConstants.sendAndCheckConnection(x, res);
     }
   }
   

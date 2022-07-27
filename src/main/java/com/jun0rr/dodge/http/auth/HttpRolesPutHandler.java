@@ -6,18 +6,16 @@ package com.jun0rr.dodge.http.auth;
 
 import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.handler.HttpRoute;
-import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
+import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObject;
-import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
@@ -30,30 +28,29 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpPutGroupHandler implements Consumer<ChannelExchange<HttpObject>> {
+public class HttpRolesPutHandler implements Consumer<ChannelExchange<HttpObject>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpPutGroupHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpRolesPutHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/groups\\/?", HttpMethod.PUT);
+  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/roles/?", HttpMethod.PUT);
   
-  public static HttpPutGroupHandler get() {
-    return new HttpPutGroupHandler();
+  public static HttpRolesPutHandler get() {
+    return new HttpRolesPutHandler();
   }
   
   @Override
   public void accept(ChannelExchange<HttpObject> x) {
-    HttpRequest req = x.attributes().get(HttpRequest.class).get();
     if(HttpConstants.isValidHttpContent(x.message())) {
-      ByteBuf cont = ((HttpContent)x.message()).content();
-      String json = cont.toString(StandardCharsets.UTF_8);
-      Group g = ((Http)x.channel()).gson().fromJson(json, Group.class);
-      x.channel().storage().set(g);
-      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.EMPTY_BUFFER);
+      ByteBuf buf = ((HttpContent)x.message()).content();
+      Role role = ((Http)x.channel()).gson().fromJson(buf.toString(StandardCharsets.UTF_8), Role.class);
+      //logger.debug("Put Role: {}", role);
+      x.channel().storage().set(role);
+      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
       res.headers()
-          .add(new ConnectionCloseHeaders())
+          .add(new ConnectionHeaders(x))
           .add(new DateHeader())
           .add(new ServerHeader());
-      x.writeAndFlush(res).channelClose();
+      HttpConstants.sendAndCheckConnection(x, res);
     }
   }
   

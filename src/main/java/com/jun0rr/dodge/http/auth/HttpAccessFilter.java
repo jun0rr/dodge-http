@@ -9,6 +9,7 @@ import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.JsonContentHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
+import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -36,31 +37,21 @@ public class HttpAccessFilter implements Consumer<ChannelExchange<HttpRequest>> 
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
     User user = x.attributes().get(User.class).get();
+    //logger.debug("{}", user);
     if(x.channel().storage().roles()
-        .peek(r->logger.debug("FILTER ROLE: {}", r))
+        //.peek(r->logger.debug("FILTER ROLE: {}", r))
         .filter(r->r.match(x.message()))
-        .peek(r->logger.debug("ACCESS ROLE: {}", r))
+        //.peek(r->logger.debug("ACCESS ROLE: {}", r))
         .anyMatch(r->r.allow(user))) {
       x.forwardMessage();
     }
     else {
-      send(x, new ErrMessage(HttpResponseStatus.UNAUTHORIZED, "Unauthorized resource")
-          .put("method", x.message().method().name())
-          .put("uri", x.message().uri()));
+      HttpConstants.sendError(x, 
+          new ErrMessage(HttpResponseStatus.UNAUTHORIZED, "Unauthorized resource")
+              .put("user", user.getEmail())
+              .put("method", x.message().method().name())
+              .put("uri", x.message().uri()));
     }
-  }
-  
-  private void send(ChannelExchange<HttpRequest> x, ErrMessage msg) {
-    String json = ((Http)x.channel()).gson().toJson(msg);
-    ByteBuf buf = x.context().alloc().heapBuffer(json.length());
-    buf.writeCharSequence(json, StandardCharsets.UTF_8);
-    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, msg.getStatus(), buf);
-    res.headers()
-        .add(new ConnectionCloseHeaders())
-        .add(new DateHeader())
-        .add(new ServerHeader())
-        .add(new JsonContentHeader(buf.readableBytes()));
-    x.writeAndFlush(res).channelClose();
   }
   
 }

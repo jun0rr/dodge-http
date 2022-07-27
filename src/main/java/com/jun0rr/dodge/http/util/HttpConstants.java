@@ -4,20 +4,33 @@
  */
 package com.jun0rr.dodge.http.util;
 
-import com.jun0rr.dodge.http.handler.*;
+import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.header.ProxyAuthorizationHeader;
 import com.jun0rr.dodge.http.HttpClient;
+import com.jun0rr.dodge.http.auth.ErrMessage;
+import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
+import com.jun0rr.dodge.http.header.DateHeader;
+import com.jun0rr.dodge.http.header.JsonContentHeader;
+import com.jun0rr.dodge.http.header.ServerHeader;
+import com.jun0rr.dodge.tcp.ChannelExchange;
+import com.jun0rr.dodge.tcp.FutureEvent;
 import com.jun0rr.util.match.Match;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.AsciiString;
+import java.nio.charset.StandardCharsets;
 
 /**
  *
@@ -156,6 +169,36 @@ public abstract class HttpConstants {
       hds.add(new ProxyAuthorizationHeader(cli.getProxyUser(), cli.getProxyPassword()));
     }
     return hds;
+  }
+  
+  public static void sendError(ChannelExchange<?> x, ErrMessage msg) {
+    String json = ((Http)x.channel()).gson().toJson(msg);
+    ByteBuf buf = x.context().alloc().buffer(json.length());
+    buf.writeCharSequence(json, StandardCharsets.UTF_8);
+    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, msg.getStatus(), buf);
+    res.headers()
+        .add(new ConnectionCloseHeaders())
+        .add(new DateHeader())
+        .add(new ServerHeader())
+        .add(new JsonContentHeader(buf.readableBytes()));
+    x.writeAndFlush(res).channelClose();
+  }
+  
+  public static boolean isHttpConnectionClose(Object o) {
+    if(isHttpResponse(o)) {
+      HttpResponse res = (HttpResponse) o;
+      String conn = res.headers().get(HttpHeaderNames.CONNECTION);
+      return conn == null || HttpHeaderValues.CLOSE.toString().equalsIgnoreCase(conn);
+    }
+    return false;
+  }
+  
+  public static void sendAndCheckConnection(ChannelExchange<?> x, Object o) {
+    //FutureEvent fe = x.writeAndFlush(o);
+    FutureEvent fe = x.write(o).channelWrite(new DefaultLastHttpContent()).channelWriteAndFlush(Unpooled.EMPTY_BUFFER);
+    if(isHttpConnectionClose(o)) {
+      fe.channelClose();
+    }
   }
   
 }

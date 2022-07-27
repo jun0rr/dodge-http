@@ -53,7 +53,19 @@ public class User {
     this.groups = Match.notNull(groups).getOrFail("Bad null Groups List");
     this.created = Instant.now();
   }
-
+  
+  public static User create(String name, String email, char[] password, LocalDate birthday, List<Group> groups) {
+    return new User(name, email, Password.of(new Login(email, password)), birthday, groups);
+  }
+  
+  public static User create(String name, String email, char[] password, LocalDate birthday) {
+    return new User(name, email, Password.of(new Login(email, password)), birthday);
+  }
+  
+  public static User create(String name, String email, char[] password) {
+    return new User(name, email, Password.of(new Login(email, password)));
+  }
+  
   public String getName() {
     return name;
   }

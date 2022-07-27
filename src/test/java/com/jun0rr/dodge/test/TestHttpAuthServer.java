@@ -9,16 +9,17 @@ import com.jun0rr.dodge.http.auth.AllowRole;
 import com.jun0rr.dodge.http.auth.Group;
 import com.jun0rr.dodge.http.auth.HttpAccessFilter;
 import com.jun0rr.dodge.http.auth.HttpAuthFilter;
-import com.jun0rr.dodge.http.auth.HttpBindGroupHandler;
-import com.jun0rr.dodge.http.auth.HttpDeleteGroupHandler;
-import com.jun0rr.dodge.http.auth.HttpDeleteUserHandler;
-import com.jun0rr.dodge.http.auth.HttpGetAllGroupsHandler;
-import com.jun0rr.dodge.http.auth.HttpGetAllRolesHandler;
-import com.jun0rr.dodge.http.auth.HttpGetAllUsersHandler;
-import com.jun0rr.dodge.http.auth.HttpGetUserHandler;
+import com.jun0rr.dodge.http.auth.HttpGroupsBindHandler;
+import com.jun0rr.dodge.http.auth.HttpGroupsDeleteHandler;
+import com.jun0rr.dodge.http.auth.HttpUsersDeleteHandler;
+import com.jun0rr.dodge.http.auth.HttpGroupsGetAllHandler;
+import com.jun0rr.dodge.http.auth.HttpRolesGetAllHandler;
+import com.jun0rr.dodge.http.auth.HttpUsersGetAllHandler;
+import com.jun0rr.dodge.http.auth.HttpUserGetHandler;
 import com.jun0rr.dodge.http.auth.HttpLoginHandler;
-import com.jun0rr.dodge.http.auth.HttpPutGroupHandler;
-import com.jun0rr.dodge.http.auth.HttpPutUserHandler;
+import com.jun0rr.dodge.http.auth.HttpGroupsPutHandler;
+import com.jun0rr.dodge.http.auth.HttpRolesPutHandler;
+import com.jun0rr.dodge.http.auth.HttpUsersPutHandler;
 import com.jun0rr.dodge.http.auth.HttpShutdownHandler;
 import com.jun0rr.dodge.http.auth.Login;
 import com.jun0rr.dodge.http.auth.Password;
@@ -26,8 +27,10 @@ import com.jun0rr.dodge.http.auth.Role;
 import com.jun0rr.dodge.http.auth.User;
 import com.jun0rr.dodge.tcp.ChannelEvent;
 import com.jun0rr.util.Host;
+import com.jun0rr.util.Unchecked;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
+import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -51,23 +54,25 @@ public class TestHttpAuthServer {
   
   private static final User user = new User("Juno", email, Password.of(new Login(email, "32132155".toCharArray())), LocalDate.of(1980, 7, 7), List.of(auth, admin));
   
-  private static final Role authUser = new AllowRole(HttpGetUserHandler.ROUTE, auth);
+  private static final Role authUser = new AllowRole(HttpUserGetHandler.ROUTE, auth);
   
-  private static final Role allUsers = new AllowRole(HttpGetAllUsersHandler.ROUTE, admin);
+  private static final Role allUsers = new AllowRole(HttpUsersGetAllHandler.ROUTE, admin);
   
-  private static final Role delUser = new AllowRole(HttpDeleteUserHandler.ROUTE, admin);
+  private static final Role delUser = new AllowRole(HttpUsersDeleteHandler.ROUTE, admin);
   
-  private static final Role allGroups = new AllowRole(HttpGetAllGroupsHandler.ROUTE, admin);
+  private static final Role allGroups = new AllowRole(HttpGroupsGetAllHandler.ROUTE, admin);
   
-  private static final Role delGroup = new AllowRole(HttpDeleteGroupHandler.ROUTE, admin);
+  private static final Role delGroup = new AllowRole(HttpGroupsDeleteHandler.ROUTE, admin);
   
-  private static final Role bindGroups = new AllowRole(HttpBindGroupHandler.ROUTE, admin);
+  private static final Role bindGroups = new AllowRole(HttpGroupsBindHandler.ROUTE, admin);
   
-  private static final Role allRoles = new AllowRole(HttpGetAllRolesHandler.ROUTE, admin);
+  private static final Role allRoles = new AllowRole(HttpRolesGetAllHandler.ROUTE, admin);
   
-  private static final Role putGroup = new AllowRole(HttpPutGroupHandler.ROUTE, admin);
+  private static final Role putRoles = new AllowRole(HttpRolesPutHandler.ROUTE, admin);
   
-  private static final Role putUser = new AllowRole(HttpPutUserHandler.ROUTE, admin);
+  private static final Role putGroup = new AllowRole(HttpGroupsPutHandler.ROUTE, admin);
+  
+  private static final Role putUser = new AllowRole(HttpUsersPutHandler.ROUTE, admin);
   
   private static final Role shutdownServer = new AllowRole(HttpShutdownHandler.ROUTE, admin);
   
@@ -75,26 +80,27 @@ public class TestHttpAuthServer {
   public void test() {
     try {
       HttpServer server = new HttpServer();
-      //if(Files.exists(server.getStoragePath())) {
-        //Files.walk(server.getStoragePath())
-            //.filter(p->!Files.isDirectory(p))
-            //.forEach(p->Unchecked.call(()->Files.delete(p)));
-        //Files.walk(server.getStoragePath())
-            //.filter(p->!server.getStoragePath().equals(p))
-            //.forEach(p->Unchecked.call(()->Files.delete(p)));
-      //}
+      if(Files.exists(server.getStoragePath())) {
+        Files.walk(server.getStoragePath())
+            .filter(p->!Files.isDirectory(p))
+            .forEach(p->Unchecked.call(()->Files.delete(p)));
+        Files.walk(server.getStoragePath())
+            .filter(p->!server.getStoragePath().equals(p))
+            .forEach(p->Unchecked.call(()->Files.delete(p)));
+      }
       server.addHandler(ChannelEvent.Inbound.READ, HttpObject.class, HttpLoginHandler::get)
           .addHandler(ChannelEvent.Inbound.READ, HttpRequest.class, HttpAuthFilter::get)
           .addHandler(ChannelEvent.Inbound.READ, HttpRequest.class, HttpAccessFilter::get)
-          .addRoute(HttpPutGroupHandler.ROUTE, HttpObject.class, HttpPutGroupHandler::get)
-          .addRoute(HttpPutUserHandler.ROUTE, HttpObject.class, HttpPutUserHandler::get)
-          .addRoute(HttpGetUserHandler.ROUTE, HttpRequest.class, HttpGetUserHandler::get)
-          .addRoute(HttpGetAllUsersHandler.ROUTE, HttpRequest.class, HttpGetAllUsersHandler::get)
-          .addRoute(HttpDeleteUserHandler.ROUTE, HttpRequest.class, HttpDeleteUserHandler::get)
-          .addRoute(HttpGetAllGroupsHandler.ROUTE, HttpRequest.class, HttpGetAllGroupsHandler::get)
-          .addRoute(HttpDeleteGroupHandler.ROUTE, HttpRequest.class, HttpDeleteGroupHandler::get)
-          .addRoute(HttpGetAllRolesHandler.ROUTE, HttpRequest.class, HttpGetAllRolesHandler::get)
-          .addRoute(HttpBindGroupHandler.ROUTE, HttpRequest.class, HttpBindGroupHandler::get)
+          .addRoute(HttpUserGetHandler.ROUTE, HttpRequest.class, HttpUserGetHandler::get)
+          .addRoute(HttpUsersGetAllHandler.ROUTE, HttpRequest.class, HttpUsersGetAllHandler::get)
+          .addRoute(HttpUsersPutHandler.ROUTE, HttpObject.class, HttpUsersPutHandler::get)
+          .addRoute(HttpUsersDeleteHandler.ROUTE, HttpRequest.class, HttpUsersDeleteHandler::get)
+          .addRoute(HttpGroupsGetAllHandler.ROUTE, HttpRequest.class, HttpGroupsGetAllHandler::get)
+          .addRoute(HttpGroupsPutHandler.ROUTE, HttpObject.class, HttpGroupsPutHandler::get)
+          .addRoute(HttpGroupsBindHandler.ROUTE, HttpRequest.class, HttpGroupsBindHandler::get)
+          .addRoute(HttpGroupsDeleteHandler.ROUTE, HttpRequest.class, HttpGroupsDeleteHandler::get)
+          .addRoute(HttpRolesGetAllHandler.ROUTE, HttpRequest.class, HttpRolesGetAllHandler::get)
+          .addRoute(HttpRolesPutHandler.ROUTE, HttpObject.class, HttpRolesPutHandler::get)
           .addRoute(HttpShutdownHandler.ROUTE, HttpRequest.class, HttpShutdownHandler::get)
           ;
       server.startStorage()
@@ -107,6 +113,7 @@ public class TestHttpAuthServer {
           .set(delGroup)
           .set(bindGroups)
           .set(allRoles)
+          .set(putRoles)
           .set(putGroup)
           .set(putUser)
           .set(shutdownServer)

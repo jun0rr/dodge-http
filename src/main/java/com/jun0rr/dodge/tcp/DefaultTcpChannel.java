@@ -247,7 +247,9 @@ public class DefaultTcpChannel implements TcpChannel {
   
   @Override
   public Storage startStorage() {
-    this.storage = new Storage(storagePath);
+    if(storage == null) {
+      this.storage = new Storage(storagePath);
+    }
     return storage;
   }
   

@@ -36,7 +36,7 @@ public class HttpRoute implements Predicate<HttpRequest> {
   
   private final List<HttpMethod> methods;
   
-  private final transient Pattern pattern;
+  private transient Pattern pattern;
   
   public HttpRoute(String regex, List<HttpMethod> meths) {
     this.regex = Match.notEmpty(regex).getOrFail("Bad empty pattern");
@@ -72,7 +72,10 @@ public class HttpRoute implements Predicate<HttpRequest> {
     return regex;
   }
   
-  public Matcher matcher(String uri) {
+  private Matcher matcher(String uri) {
+    if(pattern == null) {
+      pattern = Pattern.compile(regex);
+    }
     return pattern.matcher(uri);
   }
   

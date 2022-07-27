@@ -6,13 +6,14 @@ package com.jun0rr.dodge.http.auth;
 
 import com.jun0rr.util.match.Match;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Stream;
 import one.microstream.storage.embedded.types.EmbeddedStorage;
 import one.microstream.storage.embedded.types.EmbeddedStorageManager;
@@ -26,6 +27,13 @@ import org.slf4j.LoggerFactory;
 public class Storage {
   
   static final Logger logger = LoggerFactory.getLogger(Storage.class);
+  
+  public static final Group GROUP_AUTH = new Group("auth");
+  
+  public static final Group GROUP_ADMIN = new Group("admin");
+  
+  public static final User USER_ADMIN = User.create("admin", "admin@dodgehttp.com", "admin".toCharArray())
+      .setGroups(List.of(GROUP_AUTH, GROUP_ADMIN));
   
   private final transient EmbeddedStorageManager manager;
   
@@ -43,10 +51,11 @@ public class Storage {
     this.roles = Match.notNull(roles).getOrFail("Bad null Role List");
     this.map = Match.notNull(map).getOrFail("Bad null Map<String,Object>");
     this.manager = EmbeddedStorage.start(this, Match.exists(path).getOrFail("Path does not exists"));
+    this.set(GROUP_AUTH).set(GROUP_ADMIN).set(USER_ADMIN);
   }
   
   public Storage(Path path) {
-    this(path, new LinkedList<>(), new LinkedList<>(), new LinkedList<>(), new HashMap<>());
+    this(path, new CopyOnWriteArrayList<>(), new CopyOnWriteArrayList<>(), new CopyOnWriteArrayList<>(), new ConcurrentHashMap<>());
   }
   
   public Storage set(User u) {
@@ -61,6 +70,9 @@ public class Storage {
     manager.store(u);
     manager.store(users);
     manager.store(this);
+    if(!USER_ADMIN.equals(u) && u.getGroups().contains(GROUP_ADMIN)) {
+      rmUser(USER_ADMIN.getEmail());
+    }
     return this;
   }
   
@@ -79,10 +91,6 @@ public class Storage {
   
   public Storage set(Role r) {
     Match.notNull(r).failIfNotMatch("Bad null Role");
-    roles.stream()
-        .filter(o->o.route().equals(r.route()))
-        .findFirst()
-        .ifPresent(o->roles.remove(o));
     roles.add(r);
     manager.store(r);
     manager.store(roles);
@@ -90,23 +98,26 @@ public class Storage {
     return this;
   }
   
-  public Storage rmUser(String email) {
+  public boolean rmUser(String email) {
     Match.notEmpty(email).failIfNotMatch("Bad null User email");
-    users.stream()
+    boolean ok = users.stream()
         .filter(u->u.getEmail().equals(email))
-        .forEach(users::remove);
+        .findAny()
+        .map(users::remove)
+        .orElse(Boolean.FALSE);
     manager.store(users);
     manager.store(this);
-    return this;
+    return ok;
   }
   
-  public Storage rmGroup(String name) {
+  public boolean rmGroup(String name) {
     Match.notNull(name).failIfNotMatch("Bad null Group name");
     Optional<Group> opt = groups.stream()
         .filter(o->o.getName().equals(name))
         .findAny();
+    boolean ok = false;
     if(opt.isPresent()) {
-      groups.remove(opt.get());
+      ok = groups.remove(opt.get());
       users.stream()
           .filter(u->u.getGroups().contains(opt.get()))
           .forEach(u->rmUserGroup(u, opt.get()));
@@ -116,7 +127,7 @@ public class Storage {
     }
     manager.store(groups);
     manager.store(this);
-    return this;
+    return ok;
   }
   
   private void rmUserGroup(User u, Group g) {
@@ -137,12 +148,12 @@ public class Storage {
     set(r);
   }
   
-  public Storage rm(Role r) {
+  public boolean rm(Role r) {
     Match.notNull(r).failIfNotMatch("Bad null Role");
-    roles.remove(r);
+    boolean ok = roles.remove(r);
     manager.store(roles);
     manager.store(this);
-    return this;
+    return ok;
   }
   
   public Storage set(String key, Object obj) {

@@ -4,6 +4,23 @@
  */
 package com.jun0rr.dodge.http;
 
+import com.jun0rr.dodge.http.auth.AllowRole;
+import com.jun0rr.dodge.http.auth.HttpAccessFilter;
+import com.jun0rr.dodge.http.auth.HttpAuthFilter;
+import com.jun0rr.dodge.http.auth.HttpGroupsBindHandler;
+import com.jun0rr.dodge.http.auth.HttpGroupsDeleteHandler;
+import com.jun0rr.dodge.http.auth.HttpGroupsGetAllHandler;
+import com.jun0rr.dodge.http.auth.HttpGroupsPutHandler;
+import com.jun0rr.dodge.http.auth.HttpLoginHandler;
+import com.jun0rr.dodge.http.auth.HttpRolesGetAllHandler;
+import com.jun0rr.dodge.http.auth.HttpRolesPutHandler;
+import com.jun0rr.dodge.http.auth.HttpShutdownHandler;
+import com.jun0rr.dodge.http.auth.HttpUserGetHandler;
+import com.jun0rr.dodge.http.auth.HttpUsersDeleteHandler;
+import com.jun0rr.dodge.http.auth.HttpUsersGetAllHandler;
+import com.jun0rr.dodge.http.auth.HttpUsersGetOneHandler;
+import com.jun0rr.dodge.http.auth.HttpUsersPutHandler;
+import com.jun0rr.dodge.http.auth.Storage;
 import com.jun0rr.dodge.http.handler.EventInboundHandler;
 import com.jun0rr.dodge.http.handler.EventOutboundHandler;
 import com.jun0rr.dodge.http.handler.HttpMessageLogger;
@@ -17,8 +34,6 @@ import com.jun0rr.dodge.metrics.TcpMetricsHandler;
 import com.jun0rr.dodge.tcp.ChannelEvent;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import com.jun0rr.dodge.tcp.ConsumerType;
-import com.jun0rr.dodge.tcp.TcpChannel;
-import com.jun0rr.util.match.Match;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
@@ -39,6 +54,8 @@ import org.slf4j.LoggerFactory;
 public class HttpServer extends Http {
   
   private static final Logger logger = LoggerFactory.getLogger(HttpServer.class);
+  
+  private boolean authEnabled = true;
   
   public HttpServer() {
     super(SERVER_BOOTSTRAP);
@@ -72,9 +89,126 @@ public class HttpServer extends Http {
     return this;
   }
   
+  public boolean isAuthenticationEnabled() {
+    return authEnabled;
+  }
+  
+  public HttpServer setAuthenticationEnabled(boolean enabled) {
+    this.authEnabled = enabled;
+    return this;
+  }
+  
+  private void enableAuthetication(SocketChannel c) {
+    c.pipeline().addLast(HttpLoginHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpObject.class, new HttpLoginHandler())
+        )
+    );
+    c.pipeline().addLast(HttpAuthFilter.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpAuthFilter())
+        )
+    );
+    c.pipeline().addLast(HttpAccessFilter.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpAccessFilter())
+        )
+    );
+    c.pipeline().addLast(HttpUserGetHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpUserGetHandler.ROUTE, new HttpUserGetHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpUsersGetAllHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpUsersGetAllHandler.ROUTE, new HttpUsersGetAllHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpUsersGetOneHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpUsersGetOneHandler.ROUTE, new HttpUsersGetOneHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpUsersPutHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpUsersPutHandler.ROUTE, new HttpUsersPutHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpUsersDeleteHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpUsersDeleteHandler.ROUTE, new HttpUsersDeleteHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpGroupsGetAllHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpGroupsGetAllHandler.ROUTE, new HttpGroupsGetAllHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpGroupsPutHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpGroupsPutHandler.ROUTE, new HttpGroupsPutHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpGroupsBindHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpGroupsBindHandler.ROUTE, new HttpGroupsBindHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpGroupsDeleteHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpGroupsDeleteHandler.ROUTE, new HttpGroupsDeleteHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpRolesGetAllHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpRolesGetAllHandler.ROUTE, new HttpRolesGetAllHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpRolesPutHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpRolesPutHandler.ROUTE, new HttpRolesPutHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpShutdownHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpShutdownHandler.ROUTE, new HttpShutdownHandler()))
+        )
+    );
+  }
+  
   @Override
   public ChannelInitializer<SocketChannel> createInitializer() {
-    Match.notEmpty(handlers).failIfNotMatch("Bad empty ChannelHandler List");
+    if(authEnabled) {
+      startStorage()
+          .set(new AllowRole(HttpUserGetHandler.ROUTE, Storage.GROUP_AUTH))
+          .set(new AllowRole(HttpUserGetHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpUsersGetAllHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpUsersGetOneHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpUsersPutHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpUsersDeleteHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpGroupsGetAllHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpGroupsPutHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpGroupsBindHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpGroupsDeleteHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpRolesGetAllHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpRolesPutHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpShutdownHandler.ROUTE, Storage.GROUP_ADMIN));
+    }
     return new ChannelInitializer<>() {
       @Override
       protected void initChannel(SocketChannel c) throws Exception {
@@ -103,10 +237,13 @@ public class HttpServer extends Http {
               )
           );
         }
+        if(authEnabled) {
+          enableAuthetication(c);
+        }
         initHandlers(c);
         c.pipeline().addLast(new HttpRequestNotFoundHandler());
         c.pipeline().addLast(new ReleaseInboundHandler());
-        //c.pipeline().forEach(e->logger.debug("PIPELINE: {} >> {} - {}", e.getKey(), e.getValue(), e.getValue().getClass()));
+        c.pipeline().forEach(e->logger.debug("Pipeline: {} - {}", e.getKey(), e.getValue().getClass()));
       }
     };
   }

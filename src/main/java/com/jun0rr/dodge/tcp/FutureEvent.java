@@ -38,6 +38,7 @@ public interface FutureEvent {
   }
   
   public default FutureEvent channelClose() {
+    logger.debug("Closing Channel!");
     return applyNext(f->f.channel().close());
   }
   

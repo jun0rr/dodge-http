@@ -33,6 +33,7 @@ import static com.jun0rr.dodge.http.util.RequestParam.LOCAL_DATE_YYYYMMDD_TEST;
 import static com.jun0rr.dodge.http.util.RequestParam.LONG_TEST;
 import static com.jun0rr.dodge.http.util.RequestParam.OFFSET_DATE_TIME_FORMAT;
 import static com.jun0rr.dodge.http.util.RequestParam.OFFSET_DATE_TIME_TEST;
+import com.jun0rr.util.match.Match;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -57,11 +58,7 @@ public class UriParam {
   private final List<String> params;
   
   public UriParam(String uri) {
-    if(uri == null || uri.trim().isEmpty() 
-        || !uri.trim().contains("/")) {
-      throw new IllegalArgumentException("Bad URI: "+ uri);
-    }
-    this.uri = uri;
+    this.uri = Match.notEmpty(uri).and(u->u.contains("/")).getOrFail("Bad URI: ", uri);
     params = List.of(this.uri.startsWith("/") 
         ? this.uri.substring(1).split("/") 
         : this.uri.split("/")

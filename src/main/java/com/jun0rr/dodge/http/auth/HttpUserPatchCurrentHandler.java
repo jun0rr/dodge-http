@@ -17,6 +17,7 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObject;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
@@ -29,38 +30,45 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpUsersPutHandler implements Consumer<ChannelExchange<HttpObject>> {
+public class HttpUserPatchCurrentHandler implements Consumer<ChannelExchange<HttpObject>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpUsersPutHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpUserPatchCurrentHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/users/?", HttpMethod.PUT);
+  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/user/?", HttpMethod.PATCH);
   
-  public static HttpUsersPutHandler get() {
-    return new HttpUsersPutHandler();
+  public static HttpUserPatchCurrentHandler get() {
+    return new HttpUserPatchCurrentHandler();
   }
   
   @Override
   public void accept(ChannelExchange<HttpObject> x) {
     if(HttpConstants.isValidHttpContent(x.message())) {
+      HttpRequest req = x.attributes().get(HttpRequest.class).get();
+      User user = x.attributes().get(User.class).get();
       ByteBuf cont = ((HttpContent)x.message()).content();
       String json = cont.toString(StandardCharsets.UTF_8);
       try {
         CreatingUser u = ((Http)x.channel()).gson().fromJson(json, CreatingUser.class);
-        User user = u.toUser();
-        if(!user.getGroups().isEmpty()) {
-          user.getGroups().stream()
-              .filter(g->!Storage.GROUP_AUTH.getName().equals(g.getName()))
-              .filter(g->!Storage.GROUP_ADMIN.getName().equals(g.getName()))
-              .forEach(x.channel().storage()::set);
+        if(u.getEmail() != null) {
+          user.setEmail(u.getEmail());
         }
-        if(user.getGroups().stream()
-            .noneMatch(g->Storage.GROUP_AUTH.getName().equals(g.getName()))) {
-          user.getGroups().add(Storage.GROUP_AUTH);
+        if(u.getBirthday() != null) {
+          user.setBirthday(u.getBirthday());
+        }
+        if(u.getName() != null) {
+          user.setName(u.getName());
+        }
+        if(u.getPassword() != null) {
+          user.setPassword(Password.of(new Login(u.getEmail(), u.getPassword())));
+        }
+        if(u.getGroups() != null && !u.getGroups().isEmpty()) {
+          user.setGroups(u.getGroups());
         }
         x.channel().storage().set(user);
         json = ((Http)x.channel()).gson().toJson(user);
         ByteBuf buf = x.context().alloc().buffer(json.length());
-        HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED, buf);
+        buf.writeCharSequence(json, StandardCharsets.UTF_8);
+        HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
         res.headers()
             .add(new JsonContentHeader(buf.readableBytes()))
             .add(new ConnectionHeaders(x))

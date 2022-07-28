@@ -19,6 +19,7 @@ import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.util.ReferenceCountUtil;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -28,29 +29,37 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpRolesPutHandler implements Consumer<ChannelExchange<HttpObject>> {
+public class HttpRolesPostHandler implements Consumer<ChannelExchange<HttpObject>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpRolesPutHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpRolesPostHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/roles/?", HttpMethod.PUT);
+  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/roles/?", HttpMethod.POST);
   
-  public static HttpRolesPutHandler get() {
-    return new HttpRolesPutHandler();
+  public static HttpRolesPostHandler get() {
+    return new HttpRolesPostHandler();
   }
   
   @Override
   public void accept(ChannelExchange<HttpObject> x) {
     if(HttpConstants.isValidHttpContent(x.message())) {
       ByteBuf buf = ((HttpContent)x.message()).content();
-      Role role = ((Http)x.channel()).gson().fromJson(buf.toString(StandardCharsets.UTF_8), Role.class);
-      //logger.debug("Put Role: {}", role);
-      x.channel().storage().set(role);
-      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
-      res.headers()
-          .add(new ConnectionHeaders(x))
-          .add(new DateHeader())
-          .add(new ServerHeader());
-      HttpConstants.sendAndCheckConnection(x, res);
+      try {
+        Role role = ((Http)x.channel()).gson().fromJson(buf.toString(StandardCharsets.UTF_8), Role.class);
+        ReferenceCountUtil.release(buf);
+        //logger.debug("Put Role: {}", role);
+        x.channel().storage().set(role);
+        HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
+        res.headers()
+            .add(new ConnectionHeaders(x))
+            .add(new DateHeader())
+            .add(new ServerHeader());
+        HttpConstants.sendAndCheckConnection(x, res);
+      }
+      catch(Exception e) {
+        HttpConstants.sendError(x, new ErrMessage(HttpResponseStatus.BAD_REQUEST, e.getMessage())
+            .put("type", e.getClass())
+            .put("cause", e.getCause()));
+      }
     }
   }
   

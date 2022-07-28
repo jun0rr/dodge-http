@@ -38,7 +38,6 @@ public interface FutureEvent {
   }
   
   public default FutureEvent channelClose() {
-    logger.debug("Closing Channel!");
     return applyNext(f->f.channel().close());
   }
   
@@ -117,6 +116,7 @@ public interface FutureEvent {
       this.channel = Match.notNull(c).getOrFail("Bad null Channel");
     }
     
+    @Override
     public TcpChannel tcpChannel() {
       return tcp;
     }

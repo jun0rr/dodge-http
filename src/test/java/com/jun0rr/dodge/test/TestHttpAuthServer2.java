@@ -18,7 +18,7 @@ import com.jun0rr.dodge.http.auth.HttpUsersGetAllHandler;
 import com.jun0rr.dodge.http.auth.HttpUserGetHandler;
 import com.jun0rr.dodge.http.auth.HttpLoginHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsPutHandler;
-import com.jun0rr.dodge.http.auth.HttpRolesPutHandler;
+import com.jun0rr.dodge.http.auth.HttpRolesPostHandler;
 import com.jun0rr.dodge.http.auth.HttpUsersPutHandler;
 import com.jun0rr.dodge.http.auth.HttpShutdownHandler;
 import com.jun0rr.dodge.http.auth.Login;

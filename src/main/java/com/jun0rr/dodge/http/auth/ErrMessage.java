@@ -44,7 +44,7 @@ public class ErrMessage {
   
   public ErrMessage put(String key, Object obj) {
     if(key != null && !key.isBlank() && obj != null) {
-      this.properties.put(key, obj);
+      this.properties.put(key, Objects.toString(obj));
     }
     return this;
   }

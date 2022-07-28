@@ -18,7 +18,7 @@ import com.jun0rr.dodge.http.auth.HttpUsersGetAllHandler;
 import com.jun0rr.dodge.http.auth.HttpUserGetHandler;
 import com.jun0rr.dodge.http.auth.HttpLoginHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsPutHandler;
-import com.jun0rr.dodge.http.auth.HttpRolesPutHandler;
+import com.jun0rr.dodge.http.auth.HttpRolesPostHandler;
 import com.jun0rr.dodge.http.auth.HttpUsersPutHandler;
 import com.jun0rr.dodge.http.auth.HttpShutdownHandler;
 import com.jun0rr.dodge.http.auth.Login;
@@ -68,7 +68,7 @@ public class TestHttpAuthServer {
   
   private static final Role allRoles = new AllowRole(HttpRolesGetAllHandler.ROUTE, admin);
   
-  private static final Role putRoles = new AllowRole(HttpRolesPutHandler.ROUTE, admin);
+  private static final Role putRoles = new AllowRole(HttpRolesPostHandler.ROUTE, admin);
   
   private static final Role putGroup = new AllowRole(HttpGroupsPutHandler.ROUTE, admin);
   
@@ -100,7 +100,7 @@ public class TestHttpAuthServer {
           .addRoute(HttpGroupsBindHandler.ROUTE, HttpRequest.class, HttpGroupsBindHandler::get)
           .addRoute(HttpGroupsDeleteHandler.ROUTE, HttpRequest.class, HttpGroupsDeleteHandler::get)
           .addRoute(HttpRolesGetAllHandler.ROUTE, HttpRequest.class, HttpRolesGetAllHandler::get)
-          .addRoute(HttpRolesPutHandler.ROUTE, HttpObject.class, HttpRolesPutHandler::get)
+          .addRoute(HttpRolesPostHandler.ROUTE, HttpObject.class, HttpRolesPostHandler::get)
           .addRoute(HttpShutdownHandler.ROUTE, HttpRequest.class, HttpShutdownHandler::get)
           ;
       server.startStorage()

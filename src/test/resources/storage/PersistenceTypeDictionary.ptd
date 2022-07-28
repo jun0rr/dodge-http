@@ -449,13 +449,22 @@
 0000000000001000065 java.util.Collections$EmptySet{}
 0000000000001000066 java.util.Collections$EmptyMap{}
 0000000000001000067 com.jun0rr.dodge.http.auth.Storage{
-	java.util.List com.jun0rr.dodge.http.auth.Storage#users,
-	java.util.List com.jun0rr.dodge.http.auth.Storage#roles,
-	java.util.Map  com.jun0rr.dodge.http.auth.Storage#map  ,
+	java.util.List com.jun0rr.dodge.http.auth.Storage#users ,
+	java.util.List com.jun0rr.dodge.http.auth.Storage#groups,
+	java.util.List com.jun0rr.dodge.http.auth.Storage#roles ,
+	java.util.Map  com.jun0rr.dodge.http.auth.Storage#map   ,
 }
 0000000000001000068 java.util.List{}
 0000000000001000069 java.util.Map{}
-0000000000001000070 com.jun0rr.dodge.http.auth.User{
+0000000000001000070 com.jun0rr.dodge.http.auth.Group{
+	java.lang.String  com.jun0rr.dodge.http.auth.Group#name   ,
+	java.time.Instant com.jun0rr.dodge.http.auth.Group#created,
+}
+0000000000001000071 java.time.Instant{
+	long java.time.Instant#seconds,
+	int  java.time.Instant#nanos  ,
+}
+0000000000001000072 com.jun0rr.dodge.http.auth.User{
 	java.lang.String                    com.jun0rr.dodge.http.auth.User#name    ,
 	java.lang.String                    com.jun0rr.dodge.http.auth.User#email   ,
 	com.jun0rr.dodge.http.auth.Password com.jun0rr.dodge.http.auth.User#password,
@@ -463,33 +472,25 @@
 	java.util.List                      com.jun0rr.dodge.http.auth.User#groups  ,
 	java.time.Instant                   com.jun0rr.dodge.http.auth.User#created ,
 }
-0000000000001000071 com.jun0rr.dodge.http.auth.Password{
+0000000000001000073 com.jun0rr.dodge.http.auth.Password{
 	[B com.jun0rr.dodge.http.auth.Password#salt,
 	[B com.jun0rr.dodge.http.auth.Password#hash,
 }
-0000000000001000072 java.time.LocalDate{
+0000000000001000074 java.time.LocalDate{
 	int   java.time.LocalDate#year ,
 	short java.time.LocalDate#month,
 	short java.time.LocalDate#day  ,
 }
-0000000000001000073 java.time.Instant{
-	long java.time.Instant#seconds,
-	int  java.time.Instant#nanos  ,
-}
-0000000000001000074 java.util.ImmutableCollections$List12{
+0000000000001000075 java.util.ImmutableCollections$List12{
 	java.lang.Object java.util.ImmutableCollections$List12#e0,
 	java.lang.Object java.util.ImmutableCollections$List12#e1,
-}
-0000000000001000077 com.jun0rr.dodge.http.auth.Group{
-	java.lang.String  com.jun0rr.dodge.http.auth.Group#name   ,
-	java.time.Instant com.jun0rr.dodge.http.auth.Group#created,
 }
 0000000000001000078 com.jun0rr.dodge.http.auth.AllowRole{
 	com.jun0rr.dodge.http.handler.HttpRoute com.jun0rr.dodge.http.auth.Role#route ,
 	java.util.List                          com.jun0rr.dodge.http.auth.Role#groups,
 }
 0000000000001000080 com.jun0rr.dodge.http.handler.HttpRoute{
-	java.lang.String com.jun0rr.dodge.http.handler.HttpRoute#pattern,
+	java.lang.String com.jun0rr.dodge.http.handler.HttpRoute#regex  ,
 	java.util.List   com.jun0rr.dodge.http.handler.HttpRoute#methods,
 }
 0000000000001000081 java.util.ImmutableCollections$ListN{

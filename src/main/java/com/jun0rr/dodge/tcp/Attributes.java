@@ -6,12 +6,16 @@ package com.jun0rr.dodge.tcp;
 
 import com.jun0rr.util.match.Match;
 import io.netty.channel.Channel;
+import io.netty.util.ReferenceCountUtil;
+import io.netty.util.ReferenceCounted;
 import java.util.AbstractMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -51,8 +55,8 @@ public class Attributes {
   public Attributes clearChannel(Channel ch) {
     attrs.entrySet().stream()
         .filter(e->e.getKey().startsWith(ch.id().asShortText()))
+        .peek(e->ReferenceCountUtil.safeRelease(e.getValue()))
         .map(Map.Entry::getKey)
-        //.collect(Collectors.toList())
         .forEach(attrs::remove);
     return this;
   }
@@ -66,15 +70,13 @@ public class Attributes {
   }
   
   public Attributes put(Class cls, Object val) {
-    Match.notNull(cls).failIfNotMatch("Bad null Class key");
-    Match.notNull(val).failIfNotMatch("Bad null value Object");
-    attrs.put(key(cls.getName()), val);
-    return this;
+    return put(cls.getName(), val);
   }
   
   public Attributes put(String key, Object val) {
-    Match.notEmpty(key).failIfNotMatch("Bad null/empty key String");
+    Match.notEmpty(key).failIfNotMatch("Bad null/empty key");
     Match.notNull(val).failIfNotMatch("Bad null value Object");
+    Optional.ofNullable(attrs.get(key(key))).
     attrs.put(key(key), val);
     return this;
   }

@@ -66,6 +66,10 @@ public class EventInboundHandler extends ChannelInboundHandlerAdapter {
     chc.fireChannelUnregistered();
   }
   
+  private void clearChannelAttrs(ChannelFuture f) {
+    attrs.
+  }
+  
   @Override
   public void channelActive(ChannelHandlerContext chc) throws Exception {
     GenericFutureListener<ChannelFuture> rmattrs = f->attrs.clearChannel(f.channel());

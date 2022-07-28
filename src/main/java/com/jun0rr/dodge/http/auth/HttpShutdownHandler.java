@@ -4,25 +4,17 @@
  */
 package com.jun0rr.dodge.http.auth;
 
-import com.google.gson.JsonArray;
-import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
-import com.jun0rr.dodge.http.header.JsonContentHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
-import com.jun0rr.dodge.http.util.RequestParam;
-import com.jun0rr.dodge.http.util.UriParam;
 import com.jun0rr.dodge.tcp.ChannelExchange;
-import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
-import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -39,7 +31,7 @@ public class HttpShutdownHandler implements Consumer<ChannelExchange<HttpRequest
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.ACCEPTED);
     res.headers()
         .add(new ConnectionCloseHeaders())
         .add(new DateHeader())

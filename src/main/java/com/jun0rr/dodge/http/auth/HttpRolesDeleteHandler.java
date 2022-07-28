@@ -42,7 +42,7 @@ public class HttpRolesDeleteHandler implements Consumer<ChannelExchange<HttpRequ
         .forEach(r->array.add( ((Http)x.channel()).gson().toJsonTree(r) ));
     ByteBuf buf = x.context().alloc().directBuffer();
     buf.writeCharSequence(((Http)x.channel()).gson().toJson(array), StandardCharsets.UTF_8);
-    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
+    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NO_CONTENT, buf);
     res.headers()
         .add(new JsonContentHeader(buf.readableBytes()))
         .add(new ConnectionHeaders(x))

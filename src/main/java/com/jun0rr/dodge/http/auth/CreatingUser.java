@@ -5,7 +5,6 @@
 package com.jun0rr.dodge.http.auth;
 
 import com.jun0rr.util.match.Match;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
@@ -97,6 +96,9 @@ public class CreatingUser {
   }
   
   public User toUser() {
+    Match.notEmpty(name).failIfNotMatch("Bad user name");
+    Match.notEmpty(email).failIfNotMatch("Bad user email");
+    Match.notNull(password).and(p->p.length > 0).failIfNotMatch("Bad user password");
     return new User(name, email, Password.of(new Login(email, password)), birthday, groups);
   }
   

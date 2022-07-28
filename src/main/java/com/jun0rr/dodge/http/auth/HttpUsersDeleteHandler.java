@@ -41,7 +41,7 @@ public class HttpUsersDeleteHandler implements Consumer<ChannelExchange<HttpRequ
     RequestParam pars = new UriParam(x.message().uri()).asRequestParam("/auth/users/email");
     String email = pars.get("email");
     if(email != null && x.channel().storage().rmUser(email)) {
-      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NO_CONTENT);
       res.headers()
           .add(new ConnectionHeaders(x))
           .add(new DateHeader())

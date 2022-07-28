@@ -41,7 +41,7 @@ public class HttpGroupsDeleteHandler implements Consumer<ChannelExchange<HttpReq
     RequestParam pars = new UriParam(x.message().uri()).asRequestParam("/auth/groups/name");
     String name = pars.get("name");
     if(name != null && x.channel().storage().rmGroup(name)) {
-      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NO_CONTENT);
       res.headers()
           .add(new ConnectionHeaders(x))
           .add(new DateHeader())

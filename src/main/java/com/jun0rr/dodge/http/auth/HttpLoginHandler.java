@@ -13,7 +13,7 @@ import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.jsonwebtoken.Jwts;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -26,6 +26,7 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
+import io.netty.util.ReferenceCountUtil;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -67,10 +68,12 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<HttpObject>> {
     }
     Optional<HttpRequest> req = x.attributes().get(HttpRequest.class);
     if(req.isPresent() && ROUTE.test(req.get())) {
-      if(HttpContent.class.isAssignableFrom(x.message().getClass())) {
-        HttpContent c = (HttpContent) x.message();
-        Gson gson = ((Http)x.channel()).gson();
-        login(x, gson.fromJson(c.content().toString(StandardCharsets.UTF_8), Login.class));
+      if(HttpConstants.isValidHttpContent(x.message())) {
+        ByteBuf c = ((HttpContent)x.message()).content();
+        Login l = ((Http)x.channel()).gson().fromJson(c.toString(StandardCharsets.UTF_8), Login.class);
+        ReferenceCountUtil.release(c);
+        ReferenceCountUtil.release(req.get());
+        login(x, l);
       }
     }
     else {
@@ -85,7 +88,7 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<HttpObject>> {
         .findAny();
     HttpResponse res;
     if(user.isPresent()) {
-      res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.EMPTY_BUFFER);
+      res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NO_CONTENT);
       Instant now = Instant.now();
       String jwt = Jwts.builder()
           .setId(user.get().getEmail())
@@ -106,9 +109,7 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<HttpObject>> {
       );
     }
     else {
-      res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, 
-          HttpResponseStatus.UNAUTHORIZED, Unpooled.EMPTY_BUFFER
-      );
+      res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.UNAUTHORIZED);
     }
     res.headers()
         .add(new ConnectionHeaders(x))

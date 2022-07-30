@@ -14,6 +14,8 @@ import java.util.Objects;
  */
 public class Group {
   
+  public static final String REGEX_NAME = "[a-zA-Z_]+[a-zA-Z0-9_\\-\\.]*";
+  
   private String name;
   
   private Instant created;

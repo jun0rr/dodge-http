@@ -31,7 +31,7 @@ import java.util.function.Consumer;
  */
 public class HttpUsersGetOneHandler implements Consumer<ChannelExchange<HttpRequest>> {
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/users/[a-zA-Z_]+[a-zA-Z0-9_\\.\\-]*@[a-zA-Z_]+\\.[a-zA-Z0-9_.]+/?", HttpMethod.GET);
+  public static final HttpRoute ROUTE = HttpRoute.of(String.format("/?auth/users/%s/?", User.REGEX_EMAIL), HttpMethod.GET);
   
   public static HttpUsersGetOneHandler get() {
     return new HttpUsersGetOneHandler();

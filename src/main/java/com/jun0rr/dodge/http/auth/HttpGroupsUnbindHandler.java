@@ -36,7 +36,7 @@ public class HttpGroupsUnbindHandler implements Consumer<ChannelExchange<HttpReq
   
   static final Logger logger = LoggerFactory.getLogger(HttpGroupsUnbindHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/groups/bind/[a-zA-Z_]+[a-zA-Z0-9_\\.\\-]*@[a-zA-Z_]+\\.[a-zA-Z0-9_.]+/.+/?", HttpMethod.DELETE);
+  public static final HttpRoute ROUTE = HttpRoute.of(String.format("/?auth/groups/bind/%s/%s/?", User.REGEX_EMAIL, Group.REGEX_NAME), HttpMethod.DELETE);
   
   public static final String ALIAS_URI = "/auth/groups/bind/email/group";
   
@@ -52,17 +52,13 @@ public class HttpGroupsUnbindHandler implements Consumer<ChannelExchange<HttpReq
         .findAny();
     Optional<Group> grp = usr.map(User::getGroups)
         .map(List::stream)
-        .map(s->s.filter(g->!g.getName().equals(rp.get("group"))).findAny())
+        .map(s->s.filter(g->g.getName().equals(rp.get("group"))).findAny())
         .orElseGet(Optional::empty);
     if(usr.isPresent() && grp.isPresent()) {
       usr.get().getGroups().remove(grp.get());
       x.channel().storage().set(usr.get());
-      String json = ((Http)x.channel()).gson().toJson(usr.get());
-      ByteBuf buf = x.context().alloc().buffer(json.length());
-      buf.writeCharSequence(json, StandardCharsets.UTF_8);
-      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
+      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NO_CONTENT);
       res.headers()
-          .add(new JsonContentHeader(buf.readableBytes()))
           .add(new ConnectionHeaders(x))
           .add(new DateHeader())
           .add(new ServerHeader());

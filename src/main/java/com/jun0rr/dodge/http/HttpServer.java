@@ -10,15 +10,19 @@ import com.jun0rr.dodge.http.auth.HttpAuthFilter;
 import com.jun0rr.dodge.http.auth.HttpGroupsBindHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsDeleteHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsGetAllHandler;
+import com.jun0rr.dodge.http.auth.HttpGroupsGetOneHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsPutHandler;
+import com.jun0rr.dodge.http.auth.HttpGroupsUnbindHandler;
 import com.jun0rr.dodge.http.auth.HttpLoginHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesGetAllHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesPostHandler;
 import com.jun0rr.dodge.http.auth.HttpShutdownHandler;
 import com.jun0rr.dodge.http.auth.HttpUserGetHandler;
+import com.jun0rr.dodge.http.auth.HttpUserPatchCurrentHandler;
 import com.jun0rr.dodge.http.auth.HttpUsersDeleteHandler;
 import com.jun0rr.dodge.http.auth.HttpUsersGetAllHandler;
 import com.jun0rr.dodge.http.auth.HttpUsersGetOneHandler;
+import com.jun0rr.dodge.http.auth.HttpUsersPatchHandler;
 import com.jun0rr.dodge.http.auth.HttpUsersPutHandler;
 import com.jun0rr.dodge.http.auth.Storage;
 import com.jun0rr.dodge.http.handler.EventInboundHandler;
@@ -141,6 +145,18 @@ public class HttpServer extends Http {
             ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpUsersPutHandler.ROUTE, new HttpUsersPutHandler()))
         )
     );
+    c.pipeline().addLast(HttpUsersPatchHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpUsersPatchHandler.ROUTE, new HttpUsersPatchHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpUserPatchCurrentHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpUserPatchCurrentHandler.ROUTE, new HttpUserPatchCurrentHandler()))
+        )
+    );
     c.pipeline().addLast(HttpUsersDeleteHandler.class.getSimpleName().concat("#1"),
         new EventInboundHandler(HttpServer.this, attributes(), 
             ChannelEvent.Inbound.READ, 
@@ -165,10 +181,22 @@ public class HttpServer extends Http {
             ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpGroupsBindHandler.ROUTE, new HttpGroupsBindHandler()))
         )
     );
+    c.pipeline().addLast(HttpGroupsUnbindHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpGroupsUnbindHandler.ROUTE, new HttpGroupsUnbindHandler()))
+        )
+    );
     c.pipeline().addLast(HttpGroupsDeleteHandler.class.getSimpleName().concat("#1"),
         new EventInboundHandler(HttpServer.this, attributes(), 
             ChannelEvent.Inbound.READ, 
             ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpGroupsDeleteHandler.ROUTE, new HttpGroupsDeleteHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpGroupsGetOneHandler.class.getSimpleName().concat("#1"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpGroupsGetOneHandler.ROUTE, new HttpGroupsGetOneHandler()))
         )
     );
     c.pipeline().addLast(HttpRolesGetAllHandler.class.getSimpleName().concat("#1"),
@@ -201,9 +229,13 @@ public class HttpServer extends Http {
           .set(new AllowRole(HttpUsersGetOneHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpUsersPutHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpUsersDeleteHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpUsersPatchHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpUserPatchCurrentHandler.ROUTE, Storage.GROUP_AUTH))
           .set(new AllowRole(HttpGroupsGetAllHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpGroupsGetOneHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpGroupsPutHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpGroupsBindHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpGroupsUnbindHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpGroupsDeleteHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpRolesGetAllHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpRolesPostHandler.ROUTE, Storage.GROUP_ADMIN))

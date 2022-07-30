@@ -30,7 +30,7 @@ public class HttpGroupsDeleteHandler implements Consumer<ChannelExchange<HttpReq
   
   static final Logger logger = LoggerFactory.getLogger(HttpGroupsDeleteHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/groups/.+/?", HttpMethod.DELETE);
+  public static final HttpRoute ROUTE = HttpRoute.of(String.format("/?auth/groups/%s/?", Group.REGEX_NAME), HttpMethod.DELETE);
   
   public static HttpGroupsDeleteHandler get() {
     return new HttpGroupsDeleteHandler();

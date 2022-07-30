@@ -17,7 +17,7 @@ import java.util.Objects;
  */
 public class User {
   
-  public static final String EMAIL_REGEX = "[a-zA-Z_]+[a-zA-Z0-9_\\.\\-]*@[a-zA-Z_]+\\.[a-zA-Z0-9_.]+";
+  public static final String REGEX_EMAIL = "[a-zA-Z_]+[a-zA-Z0-9_\\.\\-]*@[a-zA-Z_]+\\.[a-zA-Z0-9_.]+";
   
   private String name;
   
@@ -81,7 +81,7 @@ public class User {
 
   public User setEmail(String email) {
     this.email = Match.notEmpty(email)
-        .and(e->e.matches(EMAIL_REGEX))
+        .and(e->e.matches(REGEX_EMAIL))
         .getOrFail("Bad e-mail format: %s", email);
     return this;
   }

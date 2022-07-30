@@ -4,20 +4,24 @@
  */
 package com.jun0rr.dodge.http.auth;
 
+import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
+import com.jun0rr.dodge.http.header.JsonContentHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.http.util.RequestParam;
 import com.jun0rr.dodge.http.util.UriParam;
 import com.jun0rr.dodge.tcp.ChannelExchange;
+import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +37,7 @@ public class HttpGroupsBindHandler implements Consumer<ChannelExchange<HttpReque
   
   static final Logger logger = LoggerFactory.getLogger(HttpGroupsBindHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/groups/bind/[a-zA-Z_]+[a-zA-Z0-9_\\.\\-]*@[a-zA-Z_]+\\.[a-zA-Z0-9_.]+/.+/?", HttpMethod.GET);
+  public static final HttpRoute ROUTE = HttpRoute.of(String.format("/?auth/groups/bind/%s/%s/?", User.REGEX_EMAIL, Group.REGEX_NAME), HttpMethod.GET);
   
   public static final String ALIAS_URI = "/auth/groups/bind/email/group";
   
@@ -58,7 +62,7 @@ public class HttpGroupsBindHandler implements Consumer<ChannelExchange<HttpReque
           .forEach(gs::add);
       usr.get().setGroups(gs);
       x.channel().storage().set(usr.get());
-      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
+      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NO_CONTENT);
       res.headers()
           .add(new ConnectionHeaders(x))
           .add(new DateHeader())

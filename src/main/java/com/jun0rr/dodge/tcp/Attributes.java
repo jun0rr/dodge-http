@@ -4,25 +4,29 @@
  */
 package com.jun0rr.dodge.tcp;
 
+import com.jun0rr.dodge.http.auth.User;
+import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.util.match.Match;
 import io.netty.channel.Channel;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.ReferenceCountUtil;
-import io.netty.util.ReferenceCounted;
 import java.util.AbstractMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author F6036477
  */
 public class Attributes {
+  
+  static final Logger logger = LoggerFactory.getLogger(Attributes.class);
   
   private final Map<String,Object> attrs;
   
@@ -55,6 +59,14 @@ public class Attributes {
   public Attributes clearChannel(Channel ch) {
     attrs.entrySet().stream()
         .filter(e->e.getKey().startsWith(ch.id().asShortText()))
+        .peek(e->{
+          if(HttpConstants.isHttpRequest(e.getValue())) {
+            logger.debug("Releasing HttpRequest: {}", ((HttpRequest)e.getValue()).uri());
+          }
+          else if(User.class.isAssignableFrom(e.getValue().getClass())) {
+            logger.debug("Releasing User: {}", ((User)e.getValue()).getEmail());
+          }
+        })
         .peek(e->ReferenceCountUtil.safeRelease(e.getValue()))
         .map(Map.Entry::getKey)
         .forEach(attrs::remove);
@@ -76,7 +88,17 @@ public class Attributes {
   public Attributes put(String key, Object val) {
     Match.notEmpty(key).failIfNotMatch("Bad null/empty key");
     Match.notNull(val).failIfNotMatch("Bad null value Object");
-    Optional.ofNullable(attrs.get(key(key))).
+    Optional.ofNullable(attrs.get(key(key)))
+        .map(o->{
+          if(HttpConstants.isHttpRequest(o)) {
+            logger.debug("Releasing HttpRequest: {}", ((HttpRequest)o).uri());
+          }
+          else if(User.class.isAssignableFrom(o.getClass())) {
+            logger.debug("Releasing User: {}", ((User)o).getEmail());
+          }
+          return o;
+        })
+        .ifPresent(ReferenceCountUtil::safeRelease);
     attrs.put(key(key), val);
     return this;
   }

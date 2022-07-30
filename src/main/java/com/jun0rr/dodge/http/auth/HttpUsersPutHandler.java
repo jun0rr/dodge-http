@@ -60,6 +60,7 @@ public class HttpUsersPutHandler implements Consumer<ChannelExchange<HttpObject>
         x.channel().storage().set(user);
         json = ((Http)x.channel()).gson().toJson(user);
         ByteBuf buf = x.context().alloc().buffer(json.length());
+        buf.writeCharSequence(json, StandardCharsets.UTF_8);
         HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED, buf);
         res.headers()
             .add(new JsonContentHeader(buf.readableBytes()))

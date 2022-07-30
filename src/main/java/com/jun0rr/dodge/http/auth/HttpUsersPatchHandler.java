@@ -37,7 +37,7 @@ public class HttpUsersPatchHandler implements Consumer<ChannelExchange<HttpObjec
   
   static final Logger logger = LoggerFactory.getLogger(HttpUsersPatchHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/users/[a-zA-Z_]+[a-zA-Z0-9_\\.\\-]*@[a-zA-Z_]+\\.[a-zA-Z0-9_.]+/?", HttpMethod.PATCH);
+  public static final HttpRoute ROUTE = HttpRoute.of(String.format("/?auth/users/%s/?", User.REGEX_EMAIL), HttpMethod.PATCH);
   
   public static HttpUsersPatchHandler get() {
     return new HttpUsersPatchHandler();

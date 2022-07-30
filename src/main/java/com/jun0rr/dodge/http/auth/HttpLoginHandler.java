@@ -4,10 +4,9 @@
  */
 package com.jun0rr.dodge.http.auth;
 
-import com.google.gson.Gson;
 import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.handler.HttpRoute;
-import com.jun0rr.dodge.http.header.ConnectionHeaders;
+import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
@@ -112,7 +111,8 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<HttpObject>> {
       res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.UNAUTHORIZED);
     }
     res.headers()
-        .add(new ConnectionHeaders(x))
+        .add(HttpHeaderNames.WWW_AUTHENTICATE, "Bearer realm=\"dodge-http authentication\"")
+        .add(new ConnectionCloseHeaders())
         .add(new DateHeader())
         .add(new ServerHeader());
     HttpConstants.sendAndCheckConnection(x, res);

@@ -31,7 +31,7 @@ import java.util.function.Consumer;
  */
 public class HttpGroupsGetOneHandler implements Consumer<ChannelExchange<HttpRequest>> {
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/groups/.+/?", HttpMethod.GET);
+  public static final HttpRoute ROUTE = HttpRoute.of(String.format("/?auth/groups/%s/?", Group.REGEX_NAME), HttpMethod.GET);
   
   public static HttpGroupsGetOneHandler get() {
     return new HttpGroupsGetOneHandler();

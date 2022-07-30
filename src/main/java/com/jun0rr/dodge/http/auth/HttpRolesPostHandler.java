@@ -8,6 +8,7 @@ import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
+import com.jun0rr.dodge.http.header.JsonContentHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
@@ -44,12 +45,17 @@ public class HttpRolesPostHandler implements Consumer<ChannelExchange<HttpObject
     if(HttpConstants.isValidHttpContent(x.message())) {
       ByteBuf buf = ((HttpContent)x.message()).content();
       try {
-        Role role = ((Http)x.channel()).gson().fromJson(buf.toString(StandardCharsets.UTF_8), Role.class);
+        String json = buf.toString(StandardCharsets.UTF_8);
+        Role role = ((Http)x.channel()).gson().fromJson(json, Role.class);
         ReferenceCountUtil.release(buf);
         //logger.debug("Put Role: {}", role);
         x.channel().storage().set(role);
-        HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
+        json = ((Http)x.channel()).gson().toJson(role);
+        buf = x.context().alloc().buffer(json.length());
+        buf.writeCharSequence(json, StandardCharsets.UTF_8);
+        HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED, buf);
         res.headers()
+            .add(new JsonContentHeader(buf.readableBytes()))
             .add(new ConnectionHeaders(x))
             .add(new DateHeader())
             .add(new ServerHeader());

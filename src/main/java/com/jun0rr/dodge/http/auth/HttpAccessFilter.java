@@ -4,20 +4,10 @@
  */
 package com.jun0rr.dodge.http.auth;
 
-import com.jun0rr.dodge.http.Http;
-import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
-import com.jun0rr.dodge.http.header.DateHeader;
-import com.jun0rr.dodge.http.header.JsonContentHeader;
-import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
-import io.netty.buffer.ByteBuf;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpVersion;
-import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +37,7 @@ public class HttpAccessFilter implements Consumer<ChannelExchange<HttpRequest>> 
     }
     else {
       HttpConstants.sendError(x, 
-          new ErrMessage(HttpResponseStatus.UNAUTHORIZED, "Unauthorized resource")
+          new ErrMessage(HttpResponseStatus.FORBIDDEN, "Forbidden Access")
               .put("user", user.getEmail())
               .put("method", x.message().method().name())
               .put("uri", x.message().uri()));

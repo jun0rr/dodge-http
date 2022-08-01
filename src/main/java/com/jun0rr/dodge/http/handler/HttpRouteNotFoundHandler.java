@@ -7,7 +7,6 @@ package com.jun0rr.dodge.http.handler;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
-import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;

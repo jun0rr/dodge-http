@@ -62,7 +62,12 @@ public class UriParam {
     params = List.of(this.uri.startsWith("/") 
         ? this.uri.substring(1).split("/") 
         : this.uri.split("/")
-    );
+    )
+        .stream()
+        .map(s->{
+          if(s.contains("?")) return s.substring(0, s.indexOf("?"));
+        })
+        ;
   }
   
   public int size() {

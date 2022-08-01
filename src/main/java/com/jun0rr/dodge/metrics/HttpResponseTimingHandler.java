@@ -4,7 +4,6 @@
  */
 package com.jun0rr.dodge.metrics;
 
-import static com.jun0rr.dodge.metrics.HttpRequestTimingHandler.ATTR_REQUEST;
 import static com.jun0rr.dodge.metrics.HttpRequestTimingHandler.ATTR_TIMING;
 import static com.jun0rr.dodge.metrics.HttpRequestTimingHandler.LABEL_URI;
 import com.jun0rr.dodge.tcp.ChannelExchange;
@@ -15,6 +14,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static com.jun0rr.dodge.metrics.HttpRequestTimingHandler.ATTR_REQUEST_URI;
 
 /**
  *
@@ -34,7 +34,7 @@ public class HttpResponseTimingHandler implements Consumer<ChannelExchange<HttpR
   
   @Override
   public void accept(ChannelExchange<HttpResponse> x) {
-    Optional<String> req = x.attributes().remove(ATTR_REQUEST);
+    Optional<String> req = x.attributes().remove(ATTR_REQUEST_URI);
     Optional<Instant> timing = x.attributes().remove(ATTR_TIMING);
     if(req.isPresent() && timing.isPresent()) {
       Optional<Metric> opt = x.channel().metrics().stream()

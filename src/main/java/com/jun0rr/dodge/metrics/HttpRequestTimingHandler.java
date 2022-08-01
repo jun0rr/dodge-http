@@ -26,7 +26,7 @@ public class HttpRequestTimingHandler implements Consumer<ChannelExchange<HttpRe
   
   public static final String LABEL_URI = "uri";
   
-  public static final String ATTR_REQUEST = "request_uri";
+  public static final String ATTR_REQUEST_URI = "request_uri";
   
   public static final String ATTR_TIMING = "timing_uri";
   
@@ -44,7 +44,7 @@ public class HttpRequestTimingHandler implements Consumer<ChannelExchange<HttpRe
       x.channel().metrics().add(metric);
     }
     x.attributes()
-        .put(ATTR_REQUEST, x.message().uri())
+        .put(ATTR_REQUEST_URI, x.message().uri())
         .put(ATTR_TIMING, Instant.now());
     x.forwardMessage();
   }

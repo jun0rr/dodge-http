@@ -53,9 +53,7 @@ public class HttpAuthFilter implements Consumer<ChannelExchange<HttpRequest>> {
         .map(Optional::get)
         .findAny();
     if(opt.isPresent()) {
-      x.attributes()
-          .put(HttpRequest.class, x.message())
-          .put(User.class, opt.get());
+      x.attributes().put(User.class, opt.get());
       x.forwardMessage();
     }
     else {

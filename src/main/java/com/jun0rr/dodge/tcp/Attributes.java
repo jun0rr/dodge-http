@@ -11,6 +11,7 @@ import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.ReferenceCountUtil;
 import java.util.AbstractMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -88,18 +89,10 @@ public class Attributes {
   public Attributes put(String key, Object val) {
     Match.notEmpty(key).failIfNotMatch("Bad null/empty key");
     Match.notNull(val).failIfNotMatch("Bad null value Object");
-    Optional.ofNullable(attrs.get(key(key)))
-        .map(o->{
-          if(HttpConstants.isHttpRequest(o)) {
-            logger.debug("Releasing HttpRequest: {}", ((HttpRequest)o).uri());
-          }
-          else if(User.class.isAssignableFrom(o.getClass())) {
-            logger.debug("Releasing User: {}", ((User)o).getEmail());
-          }
-          return o;
-        })
+    String k = key(key);
+    Optional.ofNullable(attrs.get(k))
         .ifPresent(ReferenceCountUtil::safeRelease);
-    attrs.put(key(key), val);
+    attrs.put(k, val);
     return this;
   }
   

@@ -6,7 +6,7 @@ package com.jun0rr.dodge.http.auth;
 
 import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.handler.HttpRoute;
-import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
+import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
@@ -62,7 +62,7 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<HttpObject>> {
   
   @Override
   public void accept(ChannelExchange<HttpObject> x) {
-    if(HttpRequest.class.isAssignableFrom(x.message().getClass())) {
+    if(HttpConstants.isHttpRequest(x.message())) {
       x.attributes().put(HttpRequest.class, x.message());
     }
     Optional<HttpRequest> req = x.attributes().get(HttpRequest.class);
@@ -112,7 +112,7 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<HttpObject>> {
     }
     res.headers()
         .add(HttpHeaderNames.WWW_AUTHENTICATE, "Bearer realm=\"dodge-http authentication\"")
-        .add(new ConnectionCloseHeaders())
+        .add(new ConnectionHeaders(x))
         .add(new DateHeader())
         .add(new ServerHeader());
     HttpConstants.sendAndCheckConnection(x, res);

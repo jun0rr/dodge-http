@@ -5,6 +5,7 @@
 package com.jun0rr.dodge.http.auth;
 
 import com.jun0rr.dodge.http.Http;
+import com.jun0rr.dodge.http.handler.HttpRequestException;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
@@ -22,7 +23,9 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.ReferenceCountUtil;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,8 +50,16 @@ public class HttpRolesPostHandler implements Consumer<ChannelExchange<HttpObject
       try {
         String json = buf.toString(StandardCharsets.UTF_8);
         Role role = ((Http)x.channel()).gson().fromJson(json, Role.class);
-        ReferenceCountUtil.release(buf);
-        //logger.debug("Put Role: {}", role);
+        ReferenceCountUtil.safeRelease(buf);
+        if(role.route().methods() == null || role.route().methods().isEmpty()) {
+          throw new HttpRequestException(new ErrMessage(HttpResponseStatus.BAD_REQUEST, "HttpRoute methods missing"));
+        }
+        role.setGroups(role.getGroups().stream()
+            .map(Group::getName)
+            .map(n->x.channel().storage().groups().filter(g->g.getName().equals(n)).findFirst())
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toList()));
         x.channel().storage().set(role);
         json = ((Http)x.channel()).gson().toJson(role);
         buf = x.context().alloc().buffer(json.length());
@@ -61,10 +72,14 @@ public class HttpRolesPostHandler implements Consumer<ChannelExchange<HttpObject
             .add(new ServerHeader());
         HttpConstants.sendAndCheckConnection(x, res);
       }
+      catch(HttpRequestException e) {
+        HttpConstants.sendError(x, e.errMessage());
+      }
       catch(Exception e) {
-        HttpConstants.sendError(x, new ErrMessage(HttpResponseStatus.BAD_REQUEST, e.getMessage())
+        ErrMessage msg = new ErrMessage(HttpResponseStatus.BAD_REQUEST, e.getMessage())
             .put("type", e.getClass())
-            .put("cause", e.getCause()));
+            .put("cause", e.getCause());
+        HttpConstants.sendError(x, msg);
       }
     }
   }

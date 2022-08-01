@@ -121,7 +121,8 @@ public class RequestParam {
   }
   
   public String get(String key) {
-    return pars.get(key).get(0);
+    List<String> ls = pars.get(key);
+    return ls != null ? ls.get(0) : null;
   }
   
   public Number getNumber(String key) {

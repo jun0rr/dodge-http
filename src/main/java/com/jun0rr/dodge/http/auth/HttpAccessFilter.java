@@ -8,7 +8,9 @@ import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,19 +30,27 @@ public class HttpAccessFilter implements Consumer<ChannelExchange<HttpRequest>> 
   public void accept(ChannelExchange<HttpRequest> x) {
     User user = x.attributes().get(User.class).get();
     //logger.debug("{}", user);
-    if(x.channel().storage().roles()
-        //.peek(r->logger.debug("FILTER ROLE: {}", r))
+    Optional<Role> opt = x.channel().storage().roles()
         .filter(r->r.match(x.message()))
-        //.peek(r->logger.debug("ACCESS ROLE: {}", r))
-        .anyMatch(r->r.allow(user))) {
-      x.forwardMessage();
+        .findAny();
+    if(opt.isPresent()) {
+      if(opt.get().allow(user)) {
+        x.forwardMessage();
+      }
+      else {
+        HttpConstants.sendError(x, 
+            new ErrMessage(HttpResponseStatus.FORBIDDEN, "Forbidden Access")
+                .put("user", user.getEmail())
+                .put("uri", x.message().uri())
+                .put("method", x.message().method().name())
+                .put("groups", opt.get().getGroups().stream().map(Group::getName).collect(Collectors.toList())));
+      }
     }
     else {
       HttpConstants.sendError(x, 
-          new ErrMessage(HttpResponseStatus.FORBIDDEN, "Forbidden Access")
-              .put("user", user.getEmail())
-              .put("method", x.message().method().name())
-              .put("uri", x.message().uri()));
+          new ErrMessage(HttpResponseStatus.NOT_FOUND, "Resource Not Found")
+              .put("uri", x.message().uri())
+              .put("method", x.message().method().name()));
     }
   }
   

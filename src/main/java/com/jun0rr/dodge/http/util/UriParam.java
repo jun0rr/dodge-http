@@ -44,6 +44,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -52,6 +54,8 @@ import java.util.stream.Collectors;
  * @version 0.0 - 22/07/2016
  */
 public class UriParam {
+  
+  public static final String REGEX_PARSE = "^(/?[\\w_\\-\\.\\:\\,]+)+";
 
   private final String uri;
   
@@ -59,15 +63,13 @@ public class UriParam {
   
   public UriParam(String uri) {
     this.uri = Match.notEmpty(uri).and(u->u.contains("/")).getOrFail("Bad URI: ", uri);
-    params = List.of(this.uri.startsWith("/") 
-        ? this.uri.substring(1).split("/") 
-        : this.uri.split("/")
-    )
-        .stream()
-        .map(s->{
-          if(s.contains("?")) return s.substring(0, s.indexOf("?"));
-        })
-        ;
+    Matcher m = Pattern.compile(REGEX_PARSE).matcher(uri);
+    if(!m.find()) {
+      throw new IllegalArgumentException("Uri does not match expected pattern");
+    }
+    this.params = List.of(m.group().split("/")).stream()
+        .filter(s->!s.isBlank())
+        .collect(Collectors.toList());
   }
   
   public int size() {

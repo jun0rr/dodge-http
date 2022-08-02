@@ -14,6 +14,7 @@ import com.jun0rr.dodge.http.auth.HttpGroupsGetOneHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsPutHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsUnbindHandler;
 import com.jun0rr.dodge.http.auth.HttpLoginHandler;
+import com.jun0rr.dodge.http.auth.HttpRolesDeleteHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesGetAllHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesGetHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesPostHandler;
@@ -210,6 +211,12 @@ public class HttpServer extends Http {
         new EventInboundHandler(HttpServer.this, attributes(), 
             ChannelEvent.Inbound.READ, 
             ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpRolesGetHandler.ROUTE, new HttpRolesGetHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpRolesDeleteHandler.class.getSimpleName().concat("#0"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpRolesDeleteHandler.ROUTE, new HttpRolesDeleteHandler()))
         )
     );
     c.pipeline().addLast(HttpRolesPostHandler.class.getSimpleName().concat("#0"),

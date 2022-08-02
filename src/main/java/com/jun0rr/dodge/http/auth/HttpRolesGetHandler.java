@@ -22,7 +22,6 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.codec.http.QueryStringDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -42,7 +41,7 @@ public class HttpRolesGetHandler implements Consumer<ChannelExchange<HttpRequest
   
   static final Logger logger = LoggerFactory.getLogger(HttpRolesGetHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("\\/?auth\\/roles\\/(allow|deny)\\/?([\\?\\&]uri=[a-zA-Z0-9\\/\\-_]+)?([\\?\\&]methods=[A-Z\\,]+)?([\\?\\&]group=[a-zA-Z_]+[a-zA-Z0-9_\\\\-\\\\.]*)?", HttpMethod.GET);
+  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/roles/(allow|deny)/?([\\?\\&]((uri=[a-zA-Z0-9\\/\\-_]+)|(methods=[A-Z\\,]+)|(group=[a-zA-Z_]+[a-zA-Z0-9_\\-\\.]*)))*", HttpMethod.GET);
   
   public static HttpRolesGetHandler get() {
     return new HttpRolesGetHandler();
@@ -50,32 +49,20 @@ public class HttpRolesGetHandler implements Consumer<ChannelExchange<HttpRequest
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    QueryStringDecoder qd = new QueryStringDecoder(x.message().uri());
-    qd.
     UriParam up = new UriParam(x.message().uri());
-    logger.debug("uri.getParam(1)={}", up.getParam(1));
     RequestParam pars = new RequestParam(x.message().uri());
     String uri = pars.get("uri");
-    logger.debug("uri={}", uri);
     List<Object> ls = pars.getList("methods");
     List<HttpMethod> meths = ls != null 
         ? ls.stream().map(Objects::toString).map(HttpMethod::valueOf).collect(Collectors.toList())
         : Collections.EMPTY_LIST;
-    logger.debug("meths={}", meths);
     String group = pars.get("group");
-    logger.debug("group={}", group);
     Predicate<Role> type = up.getParam(1).equals("allow") ? r->!r.isDeny() : r->r.isDeny();
     Stream<Role> roles = x.channel().storage().roles().filter(type);
     if(uri != null) {
       roles = roles.filter(r->uri.matches(r.route().regexString()));
     }
     if(!meths.isEmpty()) {
-      x.channel().storage().roles()
-          .filter(type)
-          .filter(r->r.route().methods().stream().anyMatch(meths::contains))
-          .forEach(r->logger.debug("methods.anyMatch( {} ): {}", meths, r));
-      x.channel().storage().roles().forEach(r->r.route().methods()
-          .forEach(m->logger.debug("{}.contains( {} )={}", meths, m, meths.contains(m))));
       roles = roles.filter(r->r.route().methods().stream().anyMatch(meths::contains));
     }
     if(group != null) {

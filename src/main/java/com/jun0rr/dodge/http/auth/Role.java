@@ -16,7 +16,7 @@ import java.util.Objects;
  */
 public abstract class Role {
   
-  protected final HttpRoute route;
+  protected HttpRoute route;
 
   protected List<Group> groups;
 
@@ -29,12 +29,17 @@ public abstract class Role {
     return route;
   }
   
-  public List<Group> getGroups() {
+  public List<Group> groups() {
     return groups;
   }
   
   public Role setGroups(List<Group> gs) {
-    groups = gs;
+    this.groups = gs;
+    return this;
+  }
+
+  public Role setRoute(HttpRoute r) {
+    this.route = r;
     return this;
   }
 

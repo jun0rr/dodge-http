@@ -17,6 +17,7 @@ import com.jun0rr.dodge.http.auth.HttpLoginHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesDeleteHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesGetAllHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesGetHandler;
+import com.jun0rr.dodge.http.auth.HttpRolesPatchHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesPostHandler;
 import com.jun0rr.dodge.http.auth.HttpShutdownHandler;
 import com.jun0rr.dodge.http.auth.HttpUserGetHandler;
@@ -225,6 +226,12 @@ public class HttpServer extends Http {
             ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpRolesPostHandler.ROUTE, new HttpRolesPostHandler()))
         )
     );
+    c.pipeline().addLast(HttpRolesPatchHandler.class.getSimpleName().concat("#0"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpRolesPatchHandler.ROUTE, new HttpRolesPatchHandler()))
+        )
+    );
     c.pipeline().addLast(HttpShutdownHandler.class.getSimpleName().concat("#0"),
         new EventInboundHandler(HttpServer.this, attributes(), 
             ChannelEvent.Inbound.READ, 
@@ -237,8 +244,7 @@ public class HttpServer extends Http {
   public ChannelInitializer<SocketChannel> createInitializer() {
     if(authEnabled) {
       startStorage()
-          .set(new AllowRole(HttpUserGetHandler.ROUTE, Storage.GROUP_AUTH))
-          .set(new AllowRole(HttpUserGetHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpUserGetHandler.ROUTE, Storage.GROUP_AUTH, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpUsersGetAllHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpUsersGetOneHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpUsersPutHandler.ROUTE, Storage.GROUP_ADMIN))
@@ -254,6 +260,8 @@ public class HttpServer extends Http {
           .set(new AllowRole(HttpRolesGetAllHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpRolesGetHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpRolesPostHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpRolesDeleteHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpRolesPatchHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpShutdownHandler.ROUTE, Storage.GROUP_ADMIN));
     }
     return new ChannelInitializer<>() {

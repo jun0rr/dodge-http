@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
  */
 public class UriParam {
   
-  public static final String REGEX_PARSE = "^(/?[\\w_\\-\\.\\:\\,]+)+";
+  public static final String REGEX_PARSE = "^(/?[\\w_\\-\\.\\:\\,@]+)+";
 
   private final String uri;
   

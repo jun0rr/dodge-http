@@ -43,7 +43,7 @@ public class HttpAccessFilter implements Consumer<ChannelExchange<HttpRequest>> 
                 .put("user", user.getEmail())
                 .put("uri", x.message().uri())
                 .put("method", x.message().method().name())
-                .put("groups", opt.get().getGroups().stream().map(Group::getName).collect(Collectors.toList())));
+                .put("groups", opt.get().groups().stream().map(Group::getName).collect(Collectors.toList())));
       }
     }
     else {

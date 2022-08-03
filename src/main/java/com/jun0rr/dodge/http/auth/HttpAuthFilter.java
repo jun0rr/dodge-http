@@ -5,15 +5,21 @@
 package com.jun0rr.dodge.http.auth;
 
 import com.jun0rr.dodge.http.Http;
+import com.jun0rr.dodge.http.header.ConnectionHeaders;
+import com.jun0rr.dodge.http.header.DateHeader;
+import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.InvalidClaimException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import java.time.Instant;
@@ -57,10 +63,14 @@ public class HttpAuthFilter implements Consumer<ChannelExchange<HttpRequest>> {
       x.forwardMessage();
     }
     else {
-      HttpConstants.sendError(x, 
-          new ErrMessage(HttpResponseStatus.FORBIDDEN, "Unauthenticated user")
-              .put("method", x.message().method().name())
-              .put("uri", x.message().uri()));
+      HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.UNAUTHORIZED);
+      res.headers()
+          .add(HttpHeaderNames.WWW_AUTHENTICATE, "Bearer realm=\"dodge-http authentication\"")
+          .add(new ConnectionHeaders(x))
+          .addInt(HttpHeaderNames.CONTENT_LENGTH, 0)
+          .add(new DateHeader())
+          .add(new ServerHeader());
+      HttpConstants.sendAndCheckConnection(x, res);
     }
   }
   

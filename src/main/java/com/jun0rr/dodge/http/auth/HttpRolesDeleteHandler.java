@@ -66,7 +66,7 @@ public class HttpRolesDeleteHandler implements Consumer<ChannelExchange<HttpRequ
       roles = roles.filter(r->r.route().methods().stream().anyMatch(meths::contains));
     }
     if(group != null) {
-      roles = roles.filter(r->r.getGroups().stream().anyMatch(g->g.getName().equals(group)));
+      roles = roles.filter(r->r.groups().stream().anyMatch(g->g.getName().equals(group)));
     }
     JsonArray array = new JsonArray();
     roles.collect(Collectors.toList()).stream()

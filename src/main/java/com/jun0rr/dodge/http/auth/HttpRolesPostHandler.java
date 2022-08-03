@@ -54,7 +54,7 @@ public class HttpRolesPostHandler implements Consumer<ChannelExchange<HttpObject
         if(role.route().methods() == null || role.route().methods().isEmpty()) {
           throw new HttpRequestException(new ErrMessage(HttpResponseStatus.BAD_REQUEST, "HttpRoute methods missing"));
         }
-        role.setGroups(role.getGroups().stream()
+        role.setGroups(role.groups().stream()
             .map(Group::getName)
             .map(n->x.channel().storage().groups().filter(g->g.getName().equals(n)).findFirst())
             .filter(Optional::isPresent)

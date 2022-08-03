@@ -16,6 +16,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
@@ -109,10 +110,12 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<HttpObject>> {
     }
     else {
       res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.UNAUTHORIZED);
+      res.headers()
+        .add(HttpHeaderNames.WWW_AUTHENTICATE, "Bearer realm=\"dodge-http authentication\"");
     }
     res.headers()
-        .add(HttpHeaderNames.WWW_AUTHENTICATE, "Bearer realm=\"dodge-http authentication\"")
         .add(new ConnectionHeaders(x))
+        .addInt(HttpHeaderNames.CONTENT_LENGTH, 0)
         .add(new DateHeader())
         .add(new ServerHeader());
     HttpConstants.sendAndCheckConnection(x, res);

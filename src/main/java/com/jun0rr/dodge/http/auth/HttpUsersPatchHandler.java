@@ -48,6 +48,12 @@ public class HttpUsersPatchHandler implements Consumer<ChannelExchange<HttpObjec
     if(HttpConstants.isValidHttpContent(x.message())) {
       HttpRequest req = x.attributes().get(HttpRequest.class).get();
       RequestParam pars = new UriParam(req.uri()).asRequestParam("/auth/users/email");
+      //logger.debug("patching e-mail: {}", pars.get("email"));
+      //x.channel().storage().users()
+          //.peek(u->logger.debug("  SEARCING => {}", u.getEmail()))
+          //.filter(u->u.getEmail().equals(pars.get("email")))
+          //.peek(u->logger.debug("     FOUND => {}", u.getEmail()))
+          //.findAny();
       Optional<User> opt = x.channel().storage().users()
           .filter(u->u.getEmail().equals(pars.get("email")))
           .findAny();

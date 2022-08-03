@@ -66,7 +66,7 @@ public class HttpRolesGetHandler implements Consumer<ChannelExchange<HttpRequest
       roles = roles.filter(r->r.route().methods().stream().anyMatch(meths::contains));
     }
     if(group != null) {
-      roles = roles.filter(r->r.getGroups().stream().anyMatch(g->g.getName().equals(group)));
+      roles = roles.filter(r->r.groups().stream().anyMatch(g->g.getName().equals(group)));
     }
     JsonArray array = new JsonArray();
     roles.forEach(r->array.add( ((Http)x.channel()).gson().toJsonTree(r) ));

@@ -29,7 +29,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -45,7 +44,7 @@ public class HttpRolesPatchHandler implements Consumer<ChannelExchange<HttpObjec
   
   static final Logger logger = LoggerFactory.getLogger(HttpRolesPatchHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/roles/?", HttpMethod.PATCH);
+  public static final HttpRoute ROUTE = HttpRoute.of("/?auth/roles/(allow|deny)/?([\\?\\&]((uri=[a-zA-Z0-9\\/\\-_]+)|(methods=[A-Z\\,]+)|(group=[a-zA-Z_]+[a-zA-Z0-9_\\-\\.]*)))*", HttpMethod.PATCH);
   
   public static HttpRolesPatchHandler get() {
     return new HttpRolesPatchHandler();
@@ -60,7 +59,10 @@ public class HttpRolesPatchHandler implements Consumer<ChannelExchange<HttpObjec
       String uri = pars.get("uri");
       List<Object> ls = pars.getList("methods");
       List<HttpMethod> meths = ls != null 
-          ? ls.stream().map(Objects::toString).map(HttpMethod::valueOf).collect(Collectors.toList())
+          ? ls.stream()
+              .map(Objects::toString)
+              .map(HttpMethod::valueOf)
+              .collect(Collectors.toList())
           : Collections.EMPTY_LIST;
       String group = pars.get("group");
       Predicate<Role> type = up.getParam(1).equals("allow") ? r->!r.isDeny() : r->r.isDeny();
@@ -72,7 +74,7 @@ public class HttpRolesPatchHandler implements Consumer<ChannelExchange<HttpObjec
         roles = roles.filter(r->r.route().methods().stream().anyMatch(meths::contains));
       }
       if(group != null) {
-        roles = roles.filter(r->r.getGroups().stream().anyMatch(g->g.getName().equals(group)));
+        roles = roles.filter(r->r.groups().stream().anyMatch(g->g.getName().equals(group)));
       }
       ByteBuf buf = ((HttpContent)x.message()).content();
       try {
@@ -81,17 +83,16 @@ public class HttpRolesPatchHandler implements Consumer<ChannelExchange<HttpObjec
         String json = buf.toString(StandardCharsets.UTF_8);
         Role newRole = ((Http)x.channel()).gson().fromJson(json, Role.class);
         ReferenceCountUtil.safeRelease(buf);
-        //if(newRole.route().methods() != null && !newRole.route().methods().isEmpty()) {
-          //role.s
-        //}
-        newRole.setGroups(newRole.getGroups().stream()
-            .map(Group::getName)
-            .map(n->x.channel().storage().groups().filter(g->g.getName().equals(n)).findFirst())
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(Collectors.toList()));
-        x.channel().storage().set(newRole);
-        json = ((Http)x.channel()).gson().toJson(newRole);
+        if(newRole.route() != null) {
+          role.setRoute(newRole.route());
+        }
+        if(newRole.groups() != null && !newRole.groups().isEmpty()) {
+          role.setGroups(x.channel().storage().groups()
+              .filter(g->newRole.groups().stream().anyMatch(h->g.getName().equals(h.getName())))
+              .collect(Collectors.toList()));
+        }
+        x.channel().storage().set(role);
+        json = ((Http)x.channel()).gson().toJson(role);
         buf = x.context().alloc().buffer(json.length());
         buf.writeCharSequence(json, StandardCharsets.UTF_8);
         HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED, buf);

@@ -60,13 +60,13 @@ public class Storage {
   
   public Storage set(User u) {
     Match.notNull(u).failIfNotMatch("Bad null User");
-    users.stream()
-        //.map(Indexed.mapper())
-        //.filter(i->i.get().getEmail().equals(u.getEmail()))
-        .filter(o->o.getEmail().equals(u.getEmail()))
-        .findFirst()
-        .ifPresent(users::remove);
-    users.add(u);
+    if(!users.contains(u)) {
+      users.stream()
+          .filter(o->o.getEmail().equals(u.getEmail()))
+          .findFirst()
+          .ifPresent(users::remove);
+      users.add(u);
+    }
     manager.store(u);
     manager.store(users);
     manager.store(this);
@@ -78,11 +78,13 @@ public class Storage {
   
   public Storage set(Group g) {
     Match.notNull(g).failIfNotMatch("Bad null Group");
-    groups.stream()
-        .filter(o->o.getName().equals(g.getName()))
-        .findFirst()
-        .ifPresent(groups::remove);
-    groups.add(g);
+    if(!groups.contains(g)) {
+      groups.stream()
+          .filter(o->o.getName().equals(g.getName()))
+          .findFirst()
+          .ifPresent(groups::remove);
+      groups.add(g);
+    }
     manager.store(g);
     manager.store(groups);
     manager.store(this);
@@ -91,7 +93,9 @@ public class Storage {
   
   public Storage set(Role r) {
     Match.notNull(r).failIfNotMatch("Bad null Role");
-    roles.add(r);
+    if(!roles.contains(r)) {
+      roles.add(r);
+    }
     manager.store(r);
     manager.store(roles);
     manager.store(this);
@@ -122,7 +126,7 @@ public class Storage {
           .filter(u->u.getGroups().contains(opt.get()))
           .forEach(u->rmUserGroup(u, opt.get()));
       roles.stream()
-          .filter(r->r.getGroups().contains(opt.get()))
+          .filter(r->r.groups().contains(opt.get()))
           .forEach(r->rmRoleGroup(r, opt.get()));
     }
     manager.store(groups);
@@ -141,7 +145,7 @@ public class Storage {
   
   private void rmRoleGroup(Role r, Group g) {
     List<Group> gs = new LinkedList<>();
-    r.getGroups().stream()
+    r.groups().stream()
         .filter(o->!o.equals(g))
         .forEach(gs::add);
     r.setGroups(gs);

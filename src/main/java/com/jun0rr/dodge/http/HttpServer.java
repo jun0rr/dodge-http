@@ -7,6 +7,7 @@ package com.jun0rr.dodge.http;
 import com.jun0rr.dodge.http.auth.AllowRole;
 import com.jun0rr.dodge.http.auth.HttpAccessFilter;
 import com.jun0rr.dodge.http.auth.HttpAuthFilter;
+import com.jun0rr.dodge.http.auth.HttpBannedHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsBindHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsDeleteHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsGetAllHandler;
@@ -35,6 +36,7 @@ import com.jun0rr.dodge.http.handler.HttpRequestNotFoundHandler;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.handler.HttpRouteHandler;
 import com.jun0rr.dodge.http.handler.ReleaseInboundHandler;
+import com.jun0rr.dodge.metrics.HttpMetricsRequestHandler;
 import com.jun0rr.dodge.metrics.HttpRequestTimingHandler;
 import com.jun0rr.dodge.metrics.HttpResponseTimingHandler;
 import com.jun0rr.dodge.metrics.TcpMetricsHandler;
@@ -106,6 +108,12 @@ public class HttpServer extends Http {
   }
   
   private void enableAuthetication(SocketChannel c) {
+    c.pipeline().addLast(HttpBannedHandler.class.getSimpleName().concat("#0"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.REGISTERED, 
+            ConsumerType.of(Object.class, new HttpBannedHandler())
+        )
+    );
     c.pipeline().addLast(HttpLoginHandler.class.getSimpleName().concat("#0"),
         new EventInboundHandler(HttpServer.this, attributes(), 
             ChannelEvent.Inbound.READ, 
@@ -279,16 +287,22 @@ public class HttpServer extends Http {
           c.pipeline().addLast(new HttpMessageLogger());
         }
         if(isMetricsEnabled()) {
-          c.pipeline().addLast(HttpResponseTimingHandler.class.getSimpleName().concat("#1"), 
+          c.pipeline().addLast(HttpResponseTimingHandler.class.getSimpleName().concat("#0"), 
               new EventOutboundHandler(HttpServer.this, attributes(), 
                   ChannelEvent.Outbound.WRITE, 
                   ConsumerType.of(HttpResponse.class, new HttpResponseTimingHandler())
               )
           );
-          c.pipeline().addLast(HttpRequestTimingHandler.class.getSimpleName().concat("#1"),
+          c.pipeline().addLast(HttpRequestTimingHandler.class.getSimpleName().concat("#0"),
               new EventInboundHandler(HttpServer.this, attributes(), 
                   ChannelEvent.Inbound.READ, 
                   ConsumerType.of(HttpRequest.class, new HttpRequestTimingHandler())
+              )
+          );
+          c.pipeline().addLast(HttpMetricsRequestHandler.class.getSimpleName().concat("#0"),
+              new EventInboundHandler(HttpServer.this, attributes(), 
+                  ChannelEvent.Inbound.READ, 
+                  ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpMetricsRequestHandler.ROUTE, new HttpMetricsRequestHandler(HttpServer.this)))
               )
           );
         }
@@ -298,7 +312,7 @@ public class HttpServer extends Http {
         initHandlers(c);
         c.pipeline().addLast(new HttpRequestNotFoundHandler());
         c.pipeline().addLast(new ReleaseInboundHandler());
-        c.pipeline().forEach(e->logger.debug("Pipeline: {} - {}", e.getKey(), e.getValue().getClass()));
+        //c.pipeline().forEach(e->logger.debug("Pipeline: {} - {}", e.getKey(), e.getValue().getClass()));
       }
     };
   }

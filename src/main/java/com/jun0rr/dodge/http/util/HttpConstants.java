@@ -8,7 +8,7 @@ import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.header.ProxyAuthorizationHeader;
 import com.jun0rr.dodge.http.HttpClient;
 import com.jun0rr.dodge.http.auth.ErrMessage;
-import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
+import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.JsonContentHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
@@ -16,10 +16,8 @@ import com.jun0rr.dodge.tcp.ChannelExchange;
 import com.jun0rr.dodge.tcp.FutureEvent;
 import com.jun0rr.util.match.Match;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
@@ -31,6 +29,7 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.AsciiString;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 /**
  *
@@ -177,7 +176,7 @@ public abstract class HttpConstants {
     buf.writeCharSequence(json, StandardCharsets.UTF_8);
     HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, msg.getStatus(), buf);
     res.headers()
-        .add(new ConnectionCloseHeaders())
+        .add(new ConnectionHeaders(x))
         .add(new DateHeader())
         .add(new ServerHeader())
         .add(new JsonContentHeader(buf.readableBytes()));

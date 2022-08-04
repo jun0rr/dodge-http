@@ -5,6 +5,7 @@
 package com.jun0rr.dodge.http.auth;
 
 import com.jun0rr.dodge.http.Http;
+import static com.jun0rr.dodge.http.auth.HttpLoginHandler.logger;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
@@ -63,6 +64,17 @@ public class HttpAuthFilter implements Consumer<ChannelExchange<HttpRequest>> {
       x.forwardMessage();
     }
     else {
+      AuthTry t = AuthTry.of(x);
+      Optional<AuthTry> tries = x.attributes().parent().get(t.attributeKey());
+      if(tries.isPresent()) {
+        if(tries.get().incrementAndBan()) {
+          tries.get().sendBan(x);
+          return;
+        }
+      }
+      else {
+        x.attributes().parent().put(t.attributeKey(), t.increment());
+      }
       HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.UNAUTHORIZED);
       res.headers()
           .add(HttpHeaderNames.WWW_AUTHENTICATE, "Bearer realm=\"dodge-http authentication\"")

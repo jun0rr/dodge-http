@@ -14,6 +14,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.concurrent.GenericFutureListener;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,19 +32,19 @@ public class EventInboundHandler extends ChannelInboundHandlerAdapter {
   
   private final ChannelEvent.Inbound event;
   
-  private final ConsumerType cons;
+  private final ConsumerType ctype;
   
   public EventInboundHandler(TcpChannel ch, Attributes attrs, ChannelEvent.Inbound evt, ConsumerType cons) {
     this.tcp = Match.notNull(ch).getOrFail("Bad null TcpChannel");
     this.attrs = Match.notNull(attrs).getOrFail("Bad null attributes Map");
-    this.cons = Match.notNull(cons).getOrFail("Bad null handler ConsumerType");
+    this.ctype = Match.notNull(cons).getOrFail("Bad null handler ConsumerType");
     this.event = Match.notNull(evt).getOrFail("Bad null ChannelEvent");
   }
   
   @Override
   public void channelRead(ChannelHandlerContext chc, Object o) throws Exception {
-    if(ChannelEvent.Inbound.READ == event && cons.isTypeOf(o.getClass()) && chc.channel().isOpen()) {
-      cons.cast(o).ifPresent(m->cons.accept(ChannelExchange.of(tcp, event, chc, m, attrs.channelAttrs(chc.channel()))));
+    if(ChannelEvent.Inbound.READ == event && ctype.isTypeOf(o.getClass()) && chc.channel().isOpen()) {
+      ctype.cast(o).ifPresent(m->ctype.accept(ChannelExchange.of(tcp, event, chc, m, attrs.channelAttrs(chc.channel()))));
     }
     else {
       chc.fireChannelRead(o);
@@ -52,8 +53,9 @@ public class EventInboundHandler extends ChannelInboundHandlerAdapter {
   
   @Override
   public void channelRegistered(ChannelHandlerContext chc) throws Exception {
+    //logger.debug("channelRegistered: {}", Instant.now());
     if(ChannelEvent.Inbound.REGISTERED == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
+      ctype.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
     }
     chc.fireChannelRegistered();
   }
@@ -61,17 +63,18 @@ public class EventInboundHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelUnregistered(ChannelHandlerContext chc) throws Exception {
     if(ChannelEvent.Inbound.UNREGISTERED == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
+      ctype.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
     }
     chc.fireChannelUnregistered();
   }
   
   @Override
   public void channelActive(ChannelHandlerContext chc) throws Exception {
+    //logger.debug("channelActive: {}", Instant.now());
     GenericFutureListener<ChannelFuture> rmattrs = f->attrs.clearChannel(f.channel());
     chc.channel().closeFuture().addListener(rmattrs);
     if(ChannelEvent.Inbound.ACTIVE == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
+      ctype.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
     }
     chc.fireChannelActive();
   }
@@ -79,7 +82,7 @@ public class EventInboundHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelInactive(ChannelHandlerContext chc) throws Exception {
     if(ChannelEvent.Inbound.INACTIVE == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
+      ctype.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
     }
     chc.fireChannelInactive();
   }
@@ -87,7 +90,7 @@ public class EventInboundHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelReadComplete(ChannelHandlerContext chc) throws Exception {
     if(ChannelEvent.Inbound.READ_COMPLETE == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
+      ctype.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
     }
     chc.fireChannelReadComplete();
   }
@@ -95,7 +98,7 @@ public class EventInboundHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void userEventTriggered(ChannelHandlerContext chc, Object o) throws Exception {
     if(ChannelEvent.Inbound.USER_EVENT == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, o, attrs.channelAttrs(chc.channel())));
+      ctype.accept(ChannelExchange.of(tcp, event, chc, o, attrs.channelAttrs(chc.channel())));
     }
     chc.fireUserEventTriggered(o);
   }
@@ -103,7 +106,7 @@ public class EventInboundHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelWritabilityChanged(ChannelHandlerContext chc) throws Exception {
     if(ChannelEvent.Inbound.WRITABILITY_CHANGED == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
+      ctype.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
     }
     chc.fireChannelWritabilityChanged();
   }
@@ -111,14 +114,14 @@ public class EventInboundHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void exceptionCaught(ChannelHandlerContext chc, Throwable th) throws Exception {
     if(ChannelEvent.Inbound.EXCEPTION == event) {
-      cons.accept(ChannelExchange.of(tcp, event, chc, th, attrs.channelAttrs(chc.channel())));
+      ctype.accept(ChannelExchange.of(tcp, event, chc, th, attrs.channelAttrs(chc.channel())));
     }
     chc.fireExceptionCaught(th);
   }
 
   @Override
   public String toString() {
-    return "EventInboundHandler{" + "attrs=" + attrs + ", event=" + event + ", cons=" + cons + '}';
+    return "EventInboundHandler{" + "attrs=" + attrs + ", event=" + event + ", cons=" + ctype + '}';
   }
   
 }

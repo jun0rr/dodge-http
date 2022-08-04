@@ -11,12 +11,12 @@ import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
+import com.jun0rr.util.Host;
 import io.jsonwebtoken.Jwts;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
@@ -109,6 +109,17 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<HttpObject>> {
       );
     }
     else {
+      AuthTry t = AuthTry.of(x);
+      Optional<AuthTry> opt = x.attributes().parent().get(t.attributeKey());
+      if(opt.isPresent()) {
+        if(opt.get().incrementAndBan()) {
+          opt.get().sendBan(x);
+          return;
+        }
+      }
+      else {
+        x.attributes().parent().put(t.attributeKey(), t.increment());
+      }
       res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.UNAUTHORIZED);
       res.headers()
         .add(HttpHeaderNames.WWW_AUTHENTICATE, "Bearer realm=\"dodge-http authentication\"");

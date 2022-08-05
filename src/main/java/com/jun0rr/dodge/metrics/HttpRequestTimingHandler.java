@@ -39,7 +39,7 @@ public class HttpRequestTimingHandler implements Consumer<ChannelExchange<HttpRe
         .findAny();
     Metric metric = opt.orElseGet(()->HTTP_REQUEST_COUNT
         .newCopy(LABEL_URI, x.message().uri()))
-        .update(i->i + 1);
+        .updateLong(i->i + 1);
     if(opt.isEmpty()) {
       x.channel().metrics().add(metric);
     }

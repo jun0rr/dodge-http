@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.function.DoubleUnaryOperator;
-import java.util.function.UnaryOperator;
+import java.util.function.LongUnaryOperator;
 
 /**
  *
@@ -20,6 +20,12 @@ public interface Metric<N extends Number> {
   
   public String help();
   
+  public String type();
+  
+  public default String helpAndType() {
+    return help().concat("\n").concat(type());
+  }
+  
   public N value();
   
   public Instant timestamp();
@@ -30,11 +36,15 @@ public interface Metric<N extends Number> {
   
   //public Metric<N> update(UnaryOperator<N> fn);
   
-  public Metric<N> update(DoubleUnaryOperator fn);
+  public Metric<N> updateDouble(DoubleUnaryOperator fn);
+  
+  public Metric<N> updateLong(LongUnaryOperator fn);
   
   //public N updateAndGet(UnaryOperator<N> fn);
   
-  public double updateAndGet(DoubleUnaryOperator fn);
+  public double updateAndGetDouble(DoubleUnaryOperator fn);
+  
+  public long updateAndGetLong(LongUnaryOperator fn);
   
   public void collect(List<String> ls);
   

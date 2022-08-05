@@ -16,7 +16,6 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.LongUnaryOperator;
-import java.util.function.UnaryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,9 +31,13 @@ public abstract class AbstractMetric<N extends Number> implements Metric<N> {
   
   public static final String TYPE_FORMAT = "# TYPE %s %s";
   
-  public static final String COUNTER_VALUE_FORMAT = "%s{%s} %d %d";
+  public static final String COUNTER_VALUE_LABEL_FORMAT = "%s{%s} %d";
   
-  public static final String GAUGE_VALUE_FORMAT = "%s{%s} %s %d";
+  public static final String COUNTER_VALUE_FORMAT = "%s %d";
+  
+  public static final String GAUGE_VALUE_LABEL_FORMAT = "%s{%s} %s";
+  
+  public static final String GAUGE_VALUE_FORMAT = "%s %s";
   
   public static final DecimalFormat GAUGE_FORMAT = new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.US));
   
@@ -68,7 +71,12 @@ public abstract class AbstractMetric<N extends Number> implements Metric<N> {
   
   @Override
   public String help() {
-    return help;
+    return String.format(HELP_FORMAT, name, help);
+  }
+  
+  @Override
+  public String type() {
+    return String.format(TYPE_FORMAT, name, getClass().getSimpleName().toLowerCase());
   }
   
   @Override
@@ -100,9 +108,13 @@ public abstract class AbstractMetric<N extends Number> implements Metric<N> {
     labels.entrySet().stream()
         .map(e->String.format("%s=\"%s\", ", e.getKey(), e.getValue()))
         .forEach(s->lbs.append(s));
-    if(lbs.length() > 0) lbs.delete(lbs.length()-2, lbs.length());
+    if(lbs.length() > 0) {
+      lbs.delete(lbs.length()-2, lbs.length());
+    }
     return lbs.toString();
   }
+  
+  
   
   @Override
   public void collect(List<String> ls) {
@@ -110,28 +122,28 @@ public abstract class AbstractMetric<N extends Number> implements Metric<N> {
     ls.add(String.format(TYPE_FORMAT, name, getClass().getSimpleName().toLowerCase()));
   }
 
-  //@Override
-  //public Metric<N> update(UnaryOperator<N> fn) {
-    //updateAndGet(fn);
-    //return this;
-  //}
-  
   @Override
-  public Metric<N> update(DoubleUnaryOperator fn) {
-    updateAndGet(fn);
+  public Metric<N> updateDouble(DoubleUnaryOperator fn) {
+    updateAndGetDouble(fn);
     return this;
   }
   
-  //@Override
-  //public N updateAndGet(UnaryOperator<N> fn) {
-    //time.set(Instant.now());
-    //return value.updateAndGet(fn);
-  //}
+  @Override
+  public Metric<N> updateLong(LongUnaryOperator fn) {
+    updateAndGetLong(fn);
+    return this;
+  }
   
   @Override
-  public double updateAndGet(DoubleUnaryOperator fn) {
+  public double updateAndGetDouble(DoubleUnaryOperator fn) {
     time.set(Instant.now());
     return value.updateAndGet(n->(N)Double.valueOf(fn.applyAsDouble(n.doubleValue()))).doubleValue();
+  }
+  
+  @Override
+  public long updateAndGetLong(LongUnaryOperator fn) {
+    time.set(Instant.now());
+    return value.updateAndGet(n->(N)Long.valueOf(fn.applyAsLong(n.longValue()))).longValue();
   }
   
   @Override

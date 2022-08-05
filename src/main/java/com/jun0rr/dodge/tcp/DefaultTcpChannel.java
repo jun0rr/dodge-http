@@ -24,6 +24,8 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -80,11 +82,14 @@ public class DefaultTcpChannel implements TcpChannel {
   
   protected final List<Metric> metrics;
   
+  protected final Instant startup;
+  
   public DefaultTcpChannel(Function<TcpChannel,AbstractBootstrap> bootstrap) {
     this.bootstrap = Match.notNull(bootstrap).getOrFail("Bad null Bootstrap");
     this.handlers = new LinkedList<>();
     this.metrics = new CopyOnWriteArrayList<>();
     this.attrs = new Attributes();
+    this.startup = Instant.now();
   }
   
   @Override
@@ -268,6 +273,16 @@ public class DefaultTcpChannel implements TcpChannel {
   public Storage storage() {
     return storage;
   }
+  
+  @Override
+  public Instant startup() {
+    return startup;
+  }
+  
+  @Override
+  public Duration uptime() {
+    return Duration.between(startup, Instant.now());
+  }
 
   @Override
   public <T> TcpChannel addHandler(ChannelEvent evt, Class<T> type, Supplier<Consumer<ChannelExchange<T>>> cs) {
@@ -330,6 +345,9 @@ public class DefaultTcpChannel implements TcpChannel {
   
   @Override
   public FutureEvent start() {
+    if(this.isMetricsEnabled()) {
+      
+    }
     AbstractBootstrap boot = bootstrap.apply(this);
     if(ServerBootstrap.class.isAssignableFrom(boot.getClass())) {
       if(sslEnabled) {

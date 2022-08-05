@@ -45,7 +45,7 @@ public class HttpResponseTimingHandler implements Consumer<ChannelExchange<HttpR
       double duration = Duration.between(timing.get(), Instant.now()).toMillis();
       Metric metric = opt.orElseGet(()->HTTP_RESPONSE_TIMING.newCopy(LABEL_URI, req.get()))
           .putLabel(LABEL_STATUS, x.message().status().code())
-          .update(d->duration);
+          .updateDouble(d->(d + duration) / 2);
       if(opt.isEmpty()) x.channel().metrics().add(metric);
       opt = x.channel().metrics().stream()
           .filter(m->m.name().equals(HTTP_RESPONSE_COUNT.name()))
@@ -54,14 +54,14 @@ public class HttpResponseTimingHandler implements Consumer<ChannelExchange<HttpR
           .findAny();
       metric = opt.orElseGet(()->HTTP_RESPONSE_COUNT.newCopy(LABEL_URI, req.get()))
           .putLabel(LABEL_STATUS, x.message().status().code())
-          .update(i->i+1);
+          .updateLong(i->i+1);
       if(opt.isEmpty()) x.channel().metrics().add(metric);
       opt = x.channel().metrics().stream()
           .filter(m->m.name().equals(HTTP_RESPONSE_TIMING_AVG.name()))
-          .filter(m->req.get().equals(m.labels().get(LABEL_URI)))
+          //.filter(m->req.get().equals(m.labels().get(LABEL_URI)))
           .findAny();
-      metric = opt.orElseGet(()->HTTP_RESPONSE_TIMING_AVG.newCopy(LABEL_URI, req.get()))
-          .update(d->(duration + d) / (d < 1 ? 1 : 2));
+      metric = opt.orElseGet(()->HTTP_RESPONSE_TIMING_AVG
+          .updateDouble(d->(duration + d) / (d < 1 ? 1 : 2)));
       if(opt.isEmpty()) x.channel().metrics().add(metric);
     }
     x.forwardMessage();

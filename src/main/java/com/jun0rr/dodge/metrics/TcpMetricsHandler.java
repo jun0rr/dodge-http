@@ -46,14 +46,12 @@ public class TcpMetricsHandler extends ChannelDuplexHandler {
     Optional<Metric> opt = server.metrics().stream()
           .filter(m->m.name().equals(CONNECTIONS_COUNT.name()))
           .findAny();
-    Metric metric = opt.orElseGet(()->CONNECTIONS_COUNT)
-        .update(d->d + 1);
+    Metric metric = opt.orElseGet(()->CONNECTIONS_COUNT).updateDouble(d->d + 1);
     if(opt.isEmpty()) server.metrics().add(metric);
     opt = server.metrics().stream()
           .filter(m->m.name().equals(CONNECTIONS_TOTAL.name()))
           .findAny();
-    metric = opt.orElseGet(()->CONNECTIONS_TOTAL)
-        .update(d->d + 1);
+    metric = opt.orElseGet(()->CONNECTIONS_TOTAL).updateLong(d->d + 1);
     if(opt.isEmpty()) server.metrics().add(metric);
     chc.fireChannelActive();
   }
@@ -64,7 +62,7 @@ public class TcpMetricsHandler extends ChannelDuplexHandler {
           .filter(m->m.name().equals(CONNECTIONS_COUNT.name()))
           .findAny();
     Metric metric = opt.orElseGet(()->CONNECTIONS_COUNT)
-        .update(d->d - 1);
+        .updateDouble(d->d - 1);
     if(opt.isEmpty()) server.metrics().add(metric);
     chc.fireChannelInactive();
   }
@@ -76,7 +74,7 @@ public class TcpMetricsHandler extends ChannelDuplexHandler {
             .filter(m->m.name().equals(INBOUND_BYTES_TOTAL.name()))
             .findAny();
       Metric metric = opt.orElseGet(()->INBOUND_BYTES_TOTAL)
-          .update(i->((ByteBuf)o).readableBytes() + i);
+          .updateLong(i->((ByteBuf)o).readableBytes() + i);
       if(opt.isEmpty()) server.metrics().add(metric);
     }
     chc.fireChannelRead(o);
@@ -89,7 +87,7 @@ public class TcpMetricsHandler extends ChannelDuplexHandler {
             .filter(m->m.name().equals(OUTBOUND_BYTES_TOTAL.name()))
             .findAny();
       Metric metric = opt.orElseGet(()->OUTBOUND_BYTES_TOTAL)
-          .update(i->((ByteBuf)o).readableBytes() + i);
+          .updateLong(i->((ByteBuf)o).readableBytes() + i);
       if(opt.isEmpty()) server.metrics().add(metric);
     }
     //logger.debug("metrics.size() = {}", server.metrics().size());

@@ -9,12 +9,13 @@ import com.jun0rr.dodge.http.header.CacheControlHeaders;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
+import com.jun0rr.dodge.http.util.DistinctBy;
 import com.jun0rr.dodge.http.util.HttpConstants;
+import com.jun0rr.dodge.http.util.SortBy;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import com.jun0rr.dodge.tcp.TcpChannel;
 import com.jun0rr.util.match.Match;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
@@ -27,13 +28,17 @@ import io.netty.util.ReferenceCountUtil;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  *
  * @author F6036477
  */
 public class HttpMetricsRequestHandler implements Consumer<ChannelExchange<HttpRequest>> {
+  
+  public static final Counter UPTIME = new Counter("dodge_uptime", "Uptime Seconds");
   
   public static final HttpRoute ROUTE = HttpRoute.of("/?metrics/?", HttpMethod.GET);
   
@@ -46,7 +51,22 @@ public class HttpMetricsRequestHandler implements Consumer<ChannelExchange<HttpR
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
     List<String> ls = new LinkedList<>();
-    channel.metrics().forEach(m->m.collect(ls));
+    ls.add(UPTIME.helpAndType());
+    UPTIME.updateLong(d->channel.uptime().toSeconds()).collect(ls);
+    channel.metrics().stream().map(Metric::name).forEach(System.out::println);
+    channel.metrics().stream()
+        .map(m->SortBy.of(m, Metric::name))
+        .sorted()
+        .distinct()
+        .map(SortBy::get)
+        .peek(m->ls.add(m.helpAndType()))
+        .forEach(m->channel.metrics().stream()
+            .filter(n->n.name().equals(m.name()))
+            .map(n->SortBy.of(n, Metric::name))
+            .sorted()
+            .map(SortBy::get)
+            .forEach(n->n.collect(ls))
+        );
     int mlen = ls.stream().mapToInt(s->s.length() + 1).sum();
     ByteBuf content = x.context().alloc().directBuffer(mlen);
     ls.stream()

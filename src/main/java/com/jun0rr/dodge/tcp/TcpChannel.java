@@ -18,6 +18,8 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -90,6 +92,10 @@ public interface TcpChannel {
   public TcpChannel setStoragePath(Path path);
   
   public Storage storage();
+  
+  public Duration uptime();
+  
+  public Instant startup();
 
   
   public <T> TcpChannel addHandler(ChannelEvent evt, Class<T> type, Supplier<Consumer<ChannelExchange<T>>> cs);

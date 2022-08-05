@@ -33,7 +33,7 @@ public class TestHttpAuthServer2 {
             .filter(p->!server.getStoragePath().equals(p))
             .forEach(p->Unchecked.call(()->Files.delete(p)));
       }
-      server.setAddress(Host.localhost(8090))
+      server.setAddress(Host.of("0.0.0.0", 8090))
           .start()
           .acceptNext(f->logger.info("HttpServer started and listening on {}", f.channel().localAddress()))
           .acceptOnClose(f->logger.info("HttpServer stopped!"));

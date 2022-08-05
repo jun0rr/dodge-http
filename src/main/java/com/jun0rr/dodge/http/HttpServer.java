@@ -15,12 +15,16 @@ import com.jun0rr.dodge.http.auth.HttpGroupsGetOneHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsPutHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsUnbindHandler;
 import com.jun0rr.dodge.http.auth.HttpLoginHandler;
+import com.jun0rr.dodge.http.auth.HttpRequestAttrHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesDeleteHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesGetAllHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesGetHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesPatchHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesPostHandler;
 import com.jun0rr.dodge.http.auth.HttpShutdownHandler;
+import com.jun0rr.dodge.http.auth.HttpStoreDeleteHandler;
+import com.jun0rr.dodge.http.auth.HttpStoreGetHandler;
+import com.jun0rr.dodge.http.auth.HttpStorePutHandler;
 import com.jun0rr.dodge.http.auth.HttpUserGetHandler;
 import com.jun0rr.dodge.http.auth.HttpUserPatchCurrentHandler;
 import com.jun0rr.dodge.http.auth.HttpUsersDeleteHandler;
@@ -240,6 +244,24 @@ public class HttpServer extends Http {
             ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpRolesPatchHandler.ROUTE, new HttpRolesPatchHandler()))
         )
     );
+    c.pipeline().addLast(HttpStoreGetHandler.class.getSimpleName().concat("#0"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpStoreGetHandler.ROUTE, new HttpStoreGetHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpStoreDeleteHandler.class.getSimpleName().concat("#0"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpStoreDeleteHandler.ROUTE, new HttpStoreDeleteHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpStorePutHandler.class.getSimpleName().concat("#0"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpStorePutHandler.ROUTE, new HttpStorePutHandler()))
+        )
+    );
     c.pipeline().addLast(HttpShutdownHandler.class.getSimpleName().concat("#0"),
         new EventInboundHandler(HttpServer.this, attributes(), 
             ChannelEvent.Inbound.READ, 
@@ -270,6 +292,9 @@ public class HttpServer extends Http {
           .set(new AllowRole(HttpRolesPostHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpRolesDeleteHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpRolesPatchHandler.ROUTE, Storage.GROUP_ADMIN))
+          .set(new AllowRole(HttpStoreGetHandler.ROUTE, Storage.GROUP_AUTH))
+          .set(new AllowRole(HttpStoreDeleteHandler.ROUTE, Storage.GROUP_AUTH))
+          .set(new AllowRole(HttpStorePutHandler.ROUTE, Storage.GROUP_AUTH))
           .set(new AllowRole(HttpShutdownHandler.ROUTE, Storage.GROUP_ADMIN));
     }
     return new ChannelInitializer<>() {
@@ -283,6 +308,12 @@ public class HttpServer extends Http {
         if(isFullHttpMessageEnabled()) {
           c.pipeline().addLast(new HttpObjectAggregator(getBufferSize()));
         }
+        c.pipeline().addLast(HttpRequestAttrHandler.class.getSimpleName().concat("#0"),
+            new EventInboundHandler(HttpServer.this, attributes(), 
+                ChannelEvent.Inbound.READ, 
+                ConsumerType.of(HttpRequest.class, new HttpRequestAttrHandler())
+            )
+        );
         if(isHttpMessageLoggerEnabled()) {
           c.pipeline().addLast(new HttpMessageLogger());
         }
@@ -312,7 +343,7 @@ public class HttpServer extends Http {
         initHandlers(c);
         c.pipeline().addLast(new HttpRequestNotFoundHandler());
         c.pipeline().addLast(new ReleaseInboundHandler());
-        //c.pipeline().forEach(e->logger.debug("Pipeline: {} - {}", e.getKey(), e.getValue().getClass()));
+        c.pipeline().forEach(e->logger.debug("Pipeline: {} - {}", e.getKey(), e.getValue().getClass()));
       }
     };
   }

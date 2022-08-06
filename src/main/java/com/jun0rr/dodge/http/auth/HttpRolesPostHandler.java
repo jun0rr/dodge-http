@@ -50,7 +50,7 @@ public class HttpRolesPostHandler implements Consumer<ChannelExchange<HttpObject
       try {
         String json = buf.toString(StandardCharsets.UTF_8);
         Role role = ((Http)x.channel()).gson().fromJson(json, Role.class);
-        ReferenceCountUtil.safeRelease(buf);
+        ReferenceCountUtil.safeRelease(x.message());
         if(role.route().methods() == null || role.route().methods().isEmpty()) {
           throw new HttpRequestException(new ErrMessage(HttpResponseStatus.BAD_REQUEST, "HttpRoute methods missing"));
         }

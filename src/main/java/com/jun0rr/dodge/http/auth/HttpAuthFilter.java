@@ -5,7 +5,6 @@
 package com.jun0rr.dodge.http.auth;
 
 import com.jun0rr.dodge.http.Http;
-import static com.jun0rr.dodge.http.auth.HttpLoginHandler.logger;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;

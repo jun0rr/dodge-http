@@ -25,7 +25,7 @@ public class HttpBannedHandler implements Consumer<ChannelExchange<Object>> {
       x.context().channel().close();
     }
     else {
-      x.context().fireChannelActive();
+      x.context().fireChannelRegistered();
     }
   }
   

@@ -7,8 +7,6 @@ package com.jun0rr.dodge.metrics;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.netty.handler.codec.http.HttpRequest;
 import java.time.Instant;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -26,22 +24,24 @@ public class HttpRequestTimingHandler implements Consumer<ChannelExchange<HttpRe
   
   public static final String LABEL_URI = "uri";
   
+  public static final String LABEL_METHOD = "method";
+  
   public static final String ATTR_REQUEST_URI = "request_uri";
   
   public static final String ATTR_TIMING = "timing_uri";
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    Optional<Metric> opt = x.channel().metrics().stream()
-        .filter(m->m.name().equals(HTTP_REQUEST_COUNT.name()))
-        .filter(m->m.labels().containsKey(LABEL_URI))
-        .filter(m->x.message().uri().equals(m.labels().get(LABEL_URI)))
-        .findAny();
+    Optional<Metric> opt = x.channel().metrics().get(HTTP_REQUEST_COUNT.name(), 
+        LABEL_URI, x.message().uri(),
+        LABEL_METHOD, x.message().method().name()
+    );
     Metric metric = opt.orElseGet(()->HTTP_REQUEST_COUNT
         .newCopy(LABEL_URI, x.message().uri()))
+        .putLabel(LABEL_METHOD, x.message().method().name())
         .updateLong(i->i + 1);
     if(opt.isEmpty()) {
-      x.channel().metrics().add(metric);
+      x.channel().metrics().put(metric);
     }
     x.attributes()
         .put(ATTR_REQUEST_URI, x.message().uri())

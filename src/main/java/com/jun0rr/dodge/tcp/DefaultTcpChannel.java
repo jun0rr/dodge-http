@@ -13,6 +13,7 @@ import com.jun0rr.dodge.metrics.Metric;
 import com.jun0rr.dodge.metrics.TcpMetricsHandler;
 import com.jun0rr.util.Host;
 import com.jun0rr.util.ResourceLoader;
+import com.jun0rr.util.crypto.Hash;
 import com.jun0rr.util.match.Match;
 import io.netty.bootstrap.AbstractBootstrap;
 import io.netty.bootstrap.Bootstrap;
@@ -28,8 +29,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -80,14 +83,14 @@ public class DefaultTcpChannel implements TcpChannel {
   
   protected final Attributes attrs;
   
-  protected final List<Metric> metrics;
+  protected final Metrics metrics;
   
   protected final Instant startup;
   
   public DefaultTcpChannel(Function<TcpChannel,AbstractBootstrap> bootstrap) {
     this.bootstrap = Match.notNull(bootstrap).getOrFail("Bad null Bootstrap");
     this.handlers = new LinkedList<>();
-    this.metrics = new CopyOnWriteArrayList<>();
+    this.metrics = new Metrics();
     this.attrs = new Attributes();
     this.startup = Instant.now();
   }
@@ -171,8 +174,8 @@ public class DefaultTcpChannel implements TcpChannel {
   }
   
   @Override
-  public List<Metric> metrics() {
-    return this.metrics;
+  public Metrics metrics() {
+    return metrics;
   }
   
   @Override

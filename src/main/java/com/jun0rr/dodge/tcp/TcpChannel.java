@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -63,7 +64,7 @@ public interface TcpChannel {
   
   public boolean isMetricsEnabled();
   
-  public List<Metric> metrics();
+  public Metrics metrics();
   
   public Host getAddress();
 

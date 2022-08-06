@@ -28,9 +28,7 @@ import io.netty.util.ReferenceCountUtil;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -50,28 +48,11 @@ public class HttpMetricsRequestHandler implements Consumer<ChannelExchange<HttpR
 
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    List<String> ls = new LinkedList<>();
-    ls.add(UPTIME.helpAndType());
-    UPTIME.updateLong(d->channel.uptime().toSeconds()).collect(ls);
-    channel.metrics().stream().map(Metric::name).forEach(System.out::println);
-    channel.metrics().stream()
-        .map(m->SortBy.of(m, Metric::name))
-        .sorted()
-        .distinct()
-        .map(SortBy::get)
-        .peek(m->ls.add(m.helpAndType()))
-        .forEach(m->channel.metrics().stream()
-            .filter(n->n.name().equals(m.name()))
-            .map(n->SortBy.of(n, Metric::name))
-            .sorted()
-            .map(SortBy::get)
-            .forEach(n->n.collect(ls))
-        );
-    int mlen = ls.stream().mapToInt(s->s.length() + 1).sum();
-    ByteBuf content = x.context().alloc().directBuffer(mlen);
-    ls.stream()
-        .map(s->s.concat("\n"))
-        .forEach(s->content.writeCharSequence(s, StandardCharsets.UTF_8));
+    if(!channel.metrics().contains(UPTIME)) {
+      channel.metrics().put(UPTIME);
+    }
+    UPTIME.updateLong(d->channel.uptime().toSeconds());
+    ByteBuf content = channel.metrics().collect(x.context().alloc());
     HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, content);
     res.headers()
         .add(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
@@ -80,7 +61,6 @@ public class HttpMetricsRequestHandler implements Consumer<ChannelExchange<HttpR
         .add(new ConnectionHeaders(x))
         .add(new DateHeader())
         .add(new ServerHeader());
-    ReferenceCountUtil.safeRelease(x.message());
     HttpConstants.sendAndCheckConnection(x, res);
   }
   

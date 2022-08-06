@@ -34,35 +34,30 @@ public class HttpResponseTimingHandler implements Consumer<ChannelExchange<HttpR
   
   @Override
   public void accept(ChannelExchange<HttpResponse> x) {
-    Optional<String> req = x.attributes().remove(ATTR_REQUEST_URI);
+    Optional<String> uri = x.attributes().remove(ATTR_REQUEST_URI);
     Optional<Instant> timing = x.attributes().remove(ATTR_TIMING);
-    if(req.isPresent() && timing.isPresent()) {
-      Optional<Metric> opt = x.channel().metrics().stream()
-          .filter(m->m.name().equals(HTTP_RESPONSE_TIMING.name()))
-          .filter(m->req.get().equals(m.labels().get(LABEL_URI)))
-          .filter(m->String.valueOf(x.message().status().code()).equals(m.labels().get(LABEL_STATUS)))
-          .findAny();
+    if(uri.isPresent() && timing.isPresent()) {
+      if(!x.channel().metrics().contains(HTTP_RESPONSE_TIMING_AVG)) {
+        x.channel().metrics().put(HTTP_RESPONSE_TIMING_AVG);
+      }
       double duration = Duration.between(timing.get(), Instant.now()).toMillis();
-      Metric metric = opt.orElseGet(()->HTTP_RESPONSE_TIMING.newCopy(LABEL_URI, req.get()))
+      HTTP_RESPONSE_TIMING_AVG.updateDouble(d->(duration + d) / (d < 1 ? 1 : 2));
+      Optional<Metric> opt = x.channel().metrics().get(HTTP_RESPONSE_TIMING.name(), 
+          LABEL_URI, uri.get(), 
+          LABEL_STATUS, String.valueOf(x.message().status().code())
+      );
+      Metric metric = opt.orElseGet(()->HTTP_RESPONSE_TIMING.newCopy(LABEL_URI, uri.get()))
           .putLabel(LABEL_STATUS, x.message().status().code())
-          .updateDouble(d->(d + duration) / 2);
-      if(opt.isEmpty()) x.channel().metrics().add(metric);
-      opt = x.channel().metrics().stream()
-          .filter(m->m.name().equals(HTTP_RESPONSE_COUNT.name()))
-          .filter(m->req.get().equals(m.labels().get(LABEL_URI)))
-          .filter(m->String.valueOf(x.message().status().code()).equals(m.labels().get(LABEL_STATUS)))
-          .findAny();
-      metric = opt.orElseGet(()->HTTP_RESPONSE_COUNT.newCopy(LABEL_URI, req.get()))
+          .updateDouble(d->(duration + d) / (d < 1 ? 1 : 2));
+      if(opt.isEmpty()) x.channel().metrics().put(metric);
+      opt = x.channel().metrics().get(HTTP_RESPONSE_COUNT.name(), 
+          LABEL_URI, uri.get(), 
+          LABEL_STATUS, String.valueOf(x.message().status().code())
+      );
+      metric = opt.orElseGet(()->HTTP_RESPONSE_COUNT.newCopy(LABEL_URI, uri.get()))
           .putLabel(LABEL_STATUS, x.message().status().code())
           .updateLong(i->i+1);
-      if(opt.isEmpty()) x.channel().metrics().add(metric);
-      opt = x.channel().metrics().stream()
-          .filter(m->m.name().equals(HTTP_RESPONSE_TIMING_AVG.name()))
-          //.filter(m->req.get().equals(m.labels().get(LABEL_URI)))
-          .findAny();
-      metric = opt.orElseGet(()->HTTP_RESPONSE_TIMING_AVG
-          .updateDouble(d->(duration + d) / (d < 1 ? 1 : 2)));
-      if(opt.isEmpty()) x.channel().metrics().add(metric);
+      if(opt.isEmpty()) x.channel().metrics().put(metric);
     }
     x.forwardMessage();
   }

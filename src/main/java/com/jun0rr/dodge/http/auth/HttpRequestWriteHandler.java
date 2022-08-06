@@ -5,18 +5,20 @@
 package com.jun0rr.dodge.http.auth;
 
 import com.jun0rr.dodge.tcp.ChannelExchange;
+import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.util.ReferenceCountUtil;
 import java.util.function.Consumer;
 
 /**
  *
  * @author F6036477
  */
-public class HttpRequestAttrHandler implements Consumer<ChannelExchange<HttpRequest>> {
+public class HttpRequestWriteHandler implements Consumer<ChannelExchange<HttpObject>> {
 
   @Override
-  public void accept(ChannelExchange<HttpRequest> x) {
-    x.attributes().put(HttpRequest.class, x.message());
+  public void accept(ChannelExchange<HttpObject> x) {
+    x.attributes().remove(HttpRequest.class).ifPresent(ReferenceCountUtil::safeRelease);
     x.forwardMessage();
   }
   

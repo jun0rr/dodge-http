@@ -4,9 +4,12 @@
  */
 package com.jun0rr.dodge.http.handler;
 
+import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import com.jun0rr.util.match.Match;
+import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpRequest;
+import java.util.Optional;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,10 +33,9 @@ public class HttpRouteHandler<T> implements Consumer<ChannelExchange<T>> {
   
   @Override
   public void accept(ChannelExchange<T> x) {
-    HttpRequest req = x.attributes().get(HttpRequest.class).orElseThrow(()->
-        new IllegalStateException("HttpRequest not present in channel attributes")
-    );
-    if(route.test(req)) {
+    //logger.debug("msgType: {}, isContent: {}, handlerType: {}", x.message().getClass(), HttpConstants.isValidHttpContent(x.message()) ? ((HttpContent)x.message()).content().readableBytes() : "false", handler.getClass());
+    Optional<HttpRequest> req = x.attributes().get(HttpRequest.class);
+    if(req.isPresent() && route.test(req.get())) {
       handler.accept(x);
     }
     else {

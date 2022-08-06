@@ -21,6 +21,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.util.ReferenceCountUtil;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -47,6 +48,7 @@ public class HttpUserPatchCurrentHandler implements Consumer<ChannelExchange<Htt
       User user = x.attributes().get(User.class).get();
       ByteBuf cont = ((HttpContent)x.message()).content();
       String json = cont.toString(StandardCharsets.UTF_8);
+      ReferenceCountUtil.safeRelease(x.message());
       try {
         CreatingUser u = ((Http)x.channel()).gson().fromJson(json, CreatingUser.class);
         if(u.getEmail() != null) {

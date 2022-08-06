@@ -45,7 +45,9 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
     if(ChannelEvent.Outbound.BIND == event) {
       cons.accept(ChannelExchange.of(tcp, event, chc, sa, attrs.channelAttrs(chc.channel()), cp));
     }
-    chc.bind(sa, cp);
+    else {
+      chc.bind(sa, cp);
+    }
   }
   
   @Override
@@ -53,7 +55,9 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
     if(ChannelEvent.Outbound.CONNECT == event) {
       cons.accept(ChannelExchange.of(tcp, event, chc, sa, attrs.channelAttrs(chc.channel()), cp));
     }
-    chc.connect(sa, sa1, cp);
+    else {
+      chc.connect(sa, sa1, cp);
+    }
   }
   
   @Override
@@ -61,7 +65,9 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
     if(ChannelEvent.Outbound.DISCONNECT == event) {
       cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel()), cp));
     }
-    chc.disconnect(cp);
+    else {
+      chc.disconnect(cp);
+    }
   }
   
   @Override
@@ -69,7 +75,9 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
     if(ChannelEvent.Outbound.CLOSE == event) {
       cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel()), cp));
     }
-    chc.close(cp);
+    else {
+      chc.close(cp);
+    }
   }
   
   @Override
@@ -77,7 +85,9 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
     if(ChannelEvent.Outbound.DEREGISTER == event) {
       cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel()), cp));
     }
-    chc.deregister(cp);
+    else {
+      chc.deregister(cp);
+    }
   }
   
   @Override
@@ -85,7 +95,9 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
     if(ChannelEvent.Outbound.READ == event) {
       cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
     }
-    chc.read();
+    else {
+      chc.read();
+    }
   }
   
   @Override
@@ -103,7 +115,9 @@ public class EventOutboundHandler extends ChannelOutboundHandlerAdapter {
     if(ChannelEvent.Outbound.FLUSH == event) {
       cons.accept(ChannelExchange.of(tcp, event, chc, null, attrs.channelAttrs(chc.channel())));
     }
-    chc.flush();
+    else {
+      chc.flush();
+    }
   }
 
   @Override

@@ -4,8 +4,6 @@
  */
 package com.jun0rr.dodge.http.auth;
 
-import com.google.gson.JsonElement;
-import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
@@ -53,7 +51,6 @@ public class HttpStorePutHandler implements Consumer<ChannelExchange<HttpObject>
       RequestParam par = new UriParam(req.uri()).asRequestParam("/store/key");
       try {
         x.channel().storage().set(par.get("key"), json);
-        ReferenceCountUtil.safeRelease(req);
         ReferenceCountUtil.safeRelease(x.message());
         HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
         res.headers()

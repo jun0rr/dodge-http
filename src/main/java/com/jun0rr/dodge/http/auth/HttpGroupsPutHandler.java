@@ -13,7 +13,6 @@ import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpMethod;
@@ -48,7 +47,7 @@ public class HttpGroupsPutHandler implements Consumer<ChannelExchange<HttpObject
     if(HttpConstants.isValidHttpContent(x.message())) {
       ByteBuf cont = ((HttpContent)x.message()).content();
       String json = cont.toString(StandardCharsets.UTF_8);
-      ReferenceCountUtil.release(cont);
+      ReferenceCountUtil.safeRelease(cont);
       try {
         Group g = ((Http)x.channel()).gson().fromJson(json, Group.class);
         x.channel().storage().set(g);

@@ -27,6 +27,7 @@ public class TestMapStream {
     Map<String,Integer> map = createMap();
     System.out.println("map.size=" + map.size());
     map.entrySet().stream()
+        .peek(e->System.out.println(e.toString()))
         .peek(e->System.out.printf("  - %s = %s%n", e.getKey(), e.getValue()))
         .filter(e->e.getValue() % 2 == 0)
         .map(Map.Entry::getKey)

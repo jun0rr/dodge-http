@@ -60,6 +60,7 @@ public class Storage {
   
   public Storage set(User u) {
     Match.notNull(u).failIfNotMatch("Bad null User");
+    //same object reference check
     if(!users.contains(u)) {
       users.stream()
           .filter(o->o.getEmail().equals(u.getEmail()))
@@ -78,6 +79,7 @@ public class Storage {
   
   public Storage set(Group g) {
     Match.notNull(g).failIfNotMatch("Bad null Group");
+    //same object reference check
     if(!groups.contains(g)) {
       groups.stream()
           .filter(o->o.getName().equals(g.getName()))
@@ -93,6 +95,7 @@ public class Storage {
   
   public Storage set(Role r) {
     Match.notNull(r).failIfNotMatch("Bad null Role");
+    //same object reference check
     if(!roles.contains(r)) {
       roles.add(r);
     }

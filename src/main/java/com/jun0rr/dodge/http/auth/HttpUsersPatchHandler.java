@@ -23,6 +23,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.util.ReferenceCountUtil;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -48,12 +49,6 @@ public class HttpUsersPatchHandler implements Consumer<ChannelExchange<HttpObjec
     if(HttpConstants.isValidHttpContent(x.message())) {
       HttpRequest req = x.attributes().get(HttpRequest.class).get();
       RequestParam pars = new UriParam(req.uri()).asRequestParam("/auth/users/email");
-      //logger.debug("patching e-mail: {}", pars.get("email"));
-      //x.channel().storage().users()
-          //.peek(u->logger.debug("  SEARCING => {}", u.getEmail()))
-          //.filter(u->u.getEmail().equals(pars.get("email")))
-          //.peek(u->logger.debug("     FOUND => {}", u.getEmail()))
-          //.findAny();
       Optional<User> opt = x.channel().storage().users()
           .filter(u->u.getEmail().equals(pars.get("email")))
           .findAny();
@@ -97,6 +92,9 @@ public class HttpUsersPatchHandler implements Consumer<ChannelExchange<HttpObjec
           HttpConstants.sendError(x, new ErrMessage(HttpResponseStatus.BAD_REQUEST, e.getMessage())
               .put("type", e.getClass())
               .put("cause", e.getCause()));
+        }
+        finally {
+          ReferenceCountUtil.safeRelease(x.message());
         }
       }
     }

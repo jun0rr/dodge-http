@@ -82,7 +82,7 @@ public class HttpRolesPatchHandler implements Consumer<ChannelExchange<HttpObjec
             new ErrMessage(HttpResponseStatus.NOT_FOUND, "Role Not Found")));
         String json = buf.toString(StandardCharsets.UTF_8);
         Role newRole = ((Http)x.channel()).gson().fromJson(json, Role.class);
-        ReferenceCountUtil.safeRelease(buf);
+        ReferenceCountUtil.safeRelease(x.message());
         if(newRole.route() != null) {
           role.setRoute(newRole.route());
         }

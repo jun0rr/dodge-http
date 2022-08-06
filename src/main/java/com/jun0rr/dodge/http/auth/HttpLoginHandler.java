@@ -11,7 +11,6 @@ import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
-import com.jun0rr.util.Host;
 import io.jsonwebtoken.Jwts;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -71,8 +70,7 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<HttpObject>> {
       if(HttpConstants.isValidHttpContent(x.message())) {
         ByteBuf c = ((HttpContent)x.message()).content();
         Login l = ((Http)x.channel()).gson().fromJson(c.toString(StandardCharsets.UTF_8), Login.class);
-        ReferenceCountUtil.release(c);
-        ReferenceCountUtil.release(req.get());
+        ReferenceCountUtil.safeRelease(x.message());
         login(x, l);
       }
     }

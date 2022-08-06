@@ -18,6 +18,7 @@ import com.jun0rr.util.match.Match;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
@@ -29,7 +30,6 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.AsciiString;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 /**
  *
@@ -102,6 +102,10 @@ public abstract class HttpConstants {
   
   public static boolean isHttpRequest(Object o) {
     return HttpRequest.class.isAssignableFrom(o.getClass());
+  }
+  
+  public static boolean isFullHttpRequest(Object o) {
+    return FullHttpRequest.class.isAssignableFrom(o.getClass());
   }
   
   public static boolean isHttpResponse(Object o) {
@@ -180,7 +184,7 @@ public abstract class HttpConstants {
         .add(new DateHeader())
         .add(new ServerHeader())
         .add(new JsonContentHeader(buf.readableBytes()));
-    x.writeAndFlush(res).channelClose();
+    sendAndCheckConnection(x, res);
   }
   
   public static boolean isHttpConnectionClose(Object o) {

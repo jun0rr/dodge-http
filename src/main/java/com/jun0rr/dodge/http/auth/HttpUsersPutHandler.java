@@ -10,6 +10,7 @@ import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.JsonContentHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
+import com.jun0rr.dodge.http.util.DistinctStream;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.netty.buffer.ByteBuf;
@@ -20,8 +21,12 @@ import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.util.ReferenceCountUtil;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,13 +49,19 @@ public class HttpUsersPutHandler implements Consumer<ChannelExchange<HttpObject>
     if(HttpConstants.isValidHttpContent(x.message())) {
       ByteBuf cont = ((HttpContent)x.message()).content();
       String json = cont.toString(StandardCharsets.UTF_8);
+      ReferenceCountUtil.safeRelease(x.message());
       try {
         CreatingUser u = ((Http)x.channel()).gson().fromJson(json, CreatingUser.class);
         User user = u.toUser();
         if(!user.getGroups().isEmpty()) {
-          user.getGroups().stream()
-              .filter(g->!Storage.GROUP_AUTH.getName().equals(g.getName()))
-              .filter(g->!Storage.GROUP_ADMIN.getName().equals(g.getName()))
+          List<Group> gs = new LinkedList<>();
+          user.setGroups(DistinctStream.of(user.getGroups().stream())
+              .sortBy(Group::getName)
+              .distinctBy(Group::getName)
+              .stream()
+              .collect(Collectors.toList()))
+              .getGroups().stream()
+              .filter(g->x.channel().storage().groups().noneMatch(h->h.getName().equals(g.getName())))
               .forEach(x.channel().storage()::set);
         }
         if(user.getGroups().stream()

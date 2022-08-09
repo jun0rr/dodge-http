@@ -71,11 +71,15 @@ public abstract class AbstractMetric<N extends Number> implements Metric<N> {
   
   @Override
   public String help() {
+    return help;
+  }
+  
+  public String formatHelp() {
     return String.format(HELP_FORMAT, name, help);
   }
   
   @Override
-  public String type() {
+  public String formatType() {
     return String.format(TYPE_FORMAT, name, getClass().getSimpleName().toLowerCase());
   }
   

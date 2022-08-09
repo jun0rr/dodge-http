@@ -13,8 +13,12 @@ import com.jun0rr.dodge.http.auth.JsonErrMsgAdapter;
 import com.jun0rr.dodge.http.auth.JsonHttpMethodAdapter;
 import com.jun0rr.dodge.http.auth.JsonIgnoreStrategy;
 import com.jun0rr.dodge.http.auth.JsonInstantAdapter;
+import com.jun0rr.dodge.http.auth.JsonMetricAdapter;
 import com.jun0rr.dodge.http.auth.JsonRoleAdapter;
 import com.jun0rr.dodge.http.auth.Role;
+import com.jun0rr.dodge.metrics.Counter;
+import com.jun0rr.dodge.metrics.Gauge;
+import com.jun0rr.dodge.metrics.Metric;
 import com.jun0rr.dodge.tcp.DefaultTcpChannel;
 import com.jun0rr.dodge.tcp.TcpChannel;
 import com.jun0rr.util.ResourceLoader;
@@ -51,6 +55,9 @@ public abstract class Http extends DefaultTcpChannel {
       .registerTypeAdapter(ErrMessage.class, new JsonErrMsgAdapter())
       .registerTypeAdapter(HttpMethod.class, new JsonHttpMethodAdapter())
       .registerTypeAdapter(Instant.class, new JsonInstantAdapter())
+      .registerTypeAdapter(Metric.class, new JsonMetricAdapter())
+      .registerTypeAdapter(Counter.class, new JsonMetricAdapter())
+      .registerTypeAdapter(Gauge.class, new JsonMetricAdapter())
       .setExclusionStrategies(new JsonIgnoreStrategy())
       .create();
   

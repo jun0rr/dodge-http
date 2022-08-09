@@ -14,12 +14,16 @@ import com.jun0rr.dodge.http.auth.DenyRole;
 import com.jun0rr.dodge.http.auth.Group;
 import com.jun0rr.dodge.http.auth.JsonHttpMethodAdapter;
 import com.jun0rr.dodge.http.auth.JsonIgnoreStrategy;
+import com.jun0rr.dodge.http.auth.JsonMetricAdapter;
 import com.jun0rr.dodge.http.auth.Password;
 import com.jun0rr.dodge.http.auth.Role;
 import com.jun0rr.dodge.http.auth.JsonRoleAdapter;
 import com.jun0rr.dodge.http.auth.Login;
 import com.jun0rr.dodge.http.auth.User;
 import com.jun0rr.dodge.http.handler.HttpRoute;
+import com.jun0rr.dodge.metrics.Counter;
+import com.jun0rr.dodge.metrics.Gauge;
+import com.jun0rr.dodge.metrics.Metric;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import java.time.LocalDate;
@@ -41,6 +45,9 @@ public class TestGson {
       .registerTypeAdapter(DenyRole.class, new JsonRoleAdapter())
       .registerTypeAdapter(Role.class, new JsonRoleAdapter())
       .registerTypeAdapter(HttpMethod.class, new JsonHttpMethodAdapter())
+      .registerTypeAdapter(Metric.class, new JsonMetricAdapter())
+      .registerTypeAdapter(Counter.class, new JsonMetricAdapter())
+      .registerTypeAdapter(Gauge.class, new JsonMetricAdapter())
       .setExclusionStrategies(new JsonIgnoreStrategy())
       .create();
   
@@ -55,6 +62,14 @@ public class TestGson {
   private static final Role roleCreateUser = new AllowRole(routeCreateUser, groupAdmin);
   
   private static final Login login = new Login("juno.rr@gmail.com", "32132155".toCharArray());
+  
+  private static final Metric metric1 = new Counter("metric_counter", "Some metric Counter", 550L)
+      .putLabel("foo", "bar").putLabel("baz", "foobar")
+      ;
+  
+  private static final Metric metric2 = new Gauge("metric_gauge", "Some metric Gauge", 5.50)
+      .putLabel("foo", "bar").putLabel("baz", "foobar")
+      ;
   
   private boolean jsonArrayContains(JsonArray array, Function<JsonElement,String> prop, String val) {
     for(int i = 0; i < array.size(); i++) {
@@ -141,6 +156,21 @@ public class TestGson {
     Login l = gson.fromJson(json, Login.class);
     System.out.printf("fromJson: Login{email=%s, password=%s}%n", l.getEmail(), Arrays.toString(l.getPassword()));
     Assertions.assertEquals(login, l);
+  }
+  
+  @Test
+  public void testMetric() {
+    System.out.println("------ testMetric ------");
+    System.out.println("counter.........: " + metric1);
+    String scounter = gson.toJson(metric1);
+    System.out.println("counter.toJson..: " + scounter);
+    System.out.println("gauge...........: " + metric2);
+    String sgauge = gson.toJson(metric2);
+    System.out.println("gauge.toJson....: " + sgauge);
+    Counter counter = gson.fromJson(scounter, Counter.class);
+    System.out.println("counter.fromJson: " + counter);
+    Gauge gauge = gson.fromJson(sgauge, Gauge.class);
+    System.out.println("gauge.fromJson..: " + gauge);
   }
   
 }

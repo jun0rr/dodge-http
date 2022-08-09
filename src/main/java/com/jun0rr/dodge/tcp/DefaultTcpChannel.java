@@ -4,6 +4,7 @@
  */
 package com.jun0rr.dodge.tcp;
 
+import com.jun0rr.dodge.metrics.Metrics;
 import ch.qos.logback.classic.LoggerContext;
 import com.jun0rr.dodge.http.auth.Storage;
 import com.jun0rr.dodge.http.handler.EventInboundHandler;

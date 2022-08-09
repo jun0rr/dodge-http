@@ -15,8 +15,10 @@ import com.jun0rr.dodge.http.auth.HttpGroupsGetOneHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsPutHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsUnbindHandler;
 import com.jun0rr.dodge.http.auth.HttpLoginHandler;
+import com.jun0rr.dodge.http.auth.HttpMetricDeleteHandler;
+import com.jun0rr.dodge.http.auth.HttpMetricGetHandler;
+import com.jun0rr.dodge.http.auth.HttpMetricPutHandler;
 import com.jun0rr.dodge.http.auth.HttpRequestAttributeHandler;
-import com.jun0rr.dodge.http.auth.HttpRequestWriteHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesDeleteHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesGetAllHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesGetHandler;
@@ -345,6 +347,24 @@ public class HttpServer extends Http {
                   ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpMetricsRequestHandler.ROUTE, new HttpMetricsRequestHandler(HttpServer.this)))
               )
           );
+          c.pipeline().addLast(HttpMetricGetHandler.class.getSimpleName().concat("#0"),
+              new EventInboundHandler(HttpServer.this, attributes(), 
+                  ChannelEvent.Inbound.READ, 
+                  ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpMetricGetHandler.ROUTE, new HttpMetricGetHandler()))
+              )
+          );
+          c.pipeline().addLast(HttpMetricDeleteHandler.class.getSimpleName().concat("#0"),
+              new EventInboundHandler(HttpServer.this, attributes(), 
+                  ChannelEvent.Inbound.READ, 
+                  ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpMetricDeleteHandler.ROUTE, new HttpMetricDeleteHandler()))
+              )
+          );
+          c.pipeline().addLast(HttpMetricPutHandler.class.getSimpleName().concat("#0"),
+              new EventInboundHandler(HttpServer.this, attributes(), 
+                  ChannelEvent.Inbound.READ, 
+                  ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpMetricPutHandler.ROUTE, new HttpMetricPutHandler()))
+              )
+          );
         }
         if(authEnabled) {
           enableAuthetication(c);
@@ -352,7 +372,7 @@ public class HttpServer extends Http {
         initHandlers(c);
         c.pipeline().addLast(new HttpRequestNotFoundHandler());
         c.pipeline().addLast(new ReleaseInboundHandler());
-        System.out.println("------ NEW CONNECTION ------");
+        System.out.printf("------ NEW CONNECTION: %s ------%n", c.id().asShortText());
         //c.pipeline().forEach(e->logger.debug("Pipeline: {} - {}", e.getKey(), e.getValue().getClass()));
       }
     };

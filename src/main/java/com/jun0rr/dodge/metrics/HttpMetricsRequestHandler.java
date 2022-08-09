@@ -9,9 +9,7 @@ import com.jun0rr.dodge.http.header.CacheControlHeaders;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
-import com.jun0rr.dodge.http.util.DistinctBy;
 import com.jun0rr.dodge.http.util.HttpConstants;
-import com.jun0rr.dodge.http.util.SortBy;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import com.jun0rr.dodge.tcp.TcpChannel;
 import com.jun0rr.util.match.Match;
@@ -24,10 +22,6 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.util.ReferenceCountUtil;
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.function.Consumer;
 
 /**

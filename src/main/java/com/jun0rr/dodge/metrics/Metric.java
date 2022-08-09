@@ -20,10 +20,12 @@ public interface Metric<N extends Number> {
   
   public String help();
   
-  public String type();
+  public String formatHelp();
+  
+  public String formatType();
   
   public default String helpAndType() {
-    return help().concat("\n").concat(type());
+    return formatHelp().concat("\n").concat(formatType());
   }
   
   public N value();

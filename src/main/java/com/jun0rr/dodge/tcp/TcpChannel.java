@@ -4,6 +4,7 @@
  */
 package com.jun0rr.dodge.tcp;
 
+import com.jun0rr.dodge.metrics.Metrics;
 import com.jun0rr.dodge.http.auth.Storage;
 import com.jun0rr.dodge.metrics.Metric;
 import com.jun0rr.util.Host;

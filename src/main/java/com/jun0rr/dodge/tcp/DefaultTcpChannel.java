@@ -10,11 +10,11 @@ import com.jun0rr.dodge.http.auth.Storage;
 import com.jun0rr.dodge.http.handler.EventInboundHandler;
 import com.jun0rr.dodge.http.handler.EventOutboundHandler;
 import com.jun0rr.dodge.http.handler.SSLConnectHandler;
-import com.jun0rr.dodge.metrics.Metric;
+import com.jun0rr.dodge.http.util.Indexed;
 import com.jun0rr.dodge.metrics.TcpMetricsHandler;
 import com.jun0rr.util.Host;
 import com.jun0rr.util.ResourceLoader;
-import com.jun0rr.util.crypto.Hash;
+import com.jun0rr.util.StringPad;
 import com.jun0rr.util.match.Match;
 import io.netty.bootstrap.AbstractBootstrap;
 import io.netty.bootstrap.Bootstrap;
@@ -30,10 +30,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -45,8 +42,6 @@ import org.slf4j.event.Level;
  * @author F6036477
  */
 public class DefaultTcpChannel implements TcpChannel {
-  
-  public static final int DEFAULT_BUFFER_SIZE = 128 * 1024 * 1024;
   
   private final Function<TcpChannel,AbstractBootstrap> bootstrap;
   
@@ -60,7 +55,7 @@ public class DefaultTcpChannel implements TcpChannel {
   
   private Host address;
   
-  private Level level = Level.INFO;
+  private Level level = Level.DEBUG;
   
   private Path keystorePath = ResourceLoader.caller().loadPath("keystore.jks");
   
@@ -78,7 +73,7 @@ public class DefaultTcpChannel implements TcpChannel {
   
   private SSLHandlerFactory sslFactory;
   
-  private int bufferSize = DEFAULT_BUFFER_SIZE;
+  protected final List<ConfLog> conflog;
   
   protected final List<Supplier<ChannelHandler>> handlers;
   
@@ -94,17 +89,35 @@ public class DefaultTcpChannel implements TcpChannel {
     this.metrics = new Metrics();
     this.attrs = new Attributes();
     this.startup = Instant.now();
+    this.conflog = new LinkedList<>();
+    ConfLog.ORDER = Indexed.Ints.dozens();
+    addConfLog("Dodge Version", ()->VERSION);                   //0
+    addConfLog("Log Level", this::getLogLevel);                 //10
+    addConfLog("Master Threads", this::getMasterThreads);       //20
+    addConfLog("Worker Threads", this::getWorkerThreads);       //30
+    addConfLog("SSL Enabled", this::isSslEnabled);              //40
+    addConfLog("Metrics Enabled", this::isMetricsEnabled);      //50
+    addConfLog("Storage Path", this::getStoragePath);           //60
+    addConfLog("Keystore Path", this::getKeystorePath);         //70
+    addConfLog(Integer.MAX_VALUE, "Address", this::getAddress); //MAX
   }
   
-  @Override
-  public TcpChannel setBufferSize(int size) {
-    this.bufferSize = Match.between(size, 1024, Integer.MAX_VALUE).getOrFail("Bad buffer size: " + size);
-    return this;
+  public void addConfLog(int order, String name, Supplier<?> sup) {
+    conflog.add(ConfLog.of(order, name, sup));
   }
   
-  @Override
-  public int getBufferSize() {
-    return bufferSize;
+  public void addConfLog(String name, Supplier<?> sup) {
+    conflog.add(ConfLog.of(name, sup));
+  }
+  
+  private void printConf() {
+    logger.info("\n\n{}\n", ASCII_ART);
+    logger.info("Dodge-Http:");
+    int maxlen = conflog.stream()
+        .mapToInt(c->c.key().length())
+        .max().getAsInt();
+    conflog.stream().sorted()
+        .forEach(c->logger.info(">>     {}: {}", StringPad.of(c.key()).rpad(".", maxlen), c.conf()));
   }
   
   @Override
@@ -218,6 +231,7 @@ public class DefaultTcpChannel implements TcpChannel {
         lc.getLoggerList().forEach(l->l.setLevel(ch.qos.logback.classic.Level.INFO));
         break;
     }
+    lc.getLogger("one.microstream").setLevel(ch.qos.logback.classic.Level.WARN);
     return this;
   }
   
@@ -349,10 +363,10 @@ public class DefaultTcpChannel implements TcpChannel {
   
   @Override
   public FutureEvent start() {
-    if(this.isMetricsEnabled()) {
-      
-    }
     AbstractBootstrap boot = bootstrap.apply(this);
+    addConfLog(1, "Dodge Mode", ()->ServerBootstrap.class.isAssignableFrom(boot.getClass()) ? "Server" : "Client");
+    printConf();
+    
     if(ServerBootstrap.class.isAssignableFrom(boot.getClass())) {
       if(sslEnabled) {
         sslFactory = SSLHandlerFactory.forServer(keystorePath, keystorePass);
@@ -380,7 +394,6 @@ public class DefaultTcpChannel implements TcpChannel {
     hash = 83 * hash + Objects.hashCode(this.level);
     hash = 83 * hash + Objects.hashCode(this.keystorePath);
     hash = 83 * hash + (this.sslEnabled ? 1 : 0);
-    hash = 83 * hash + this.bufferSize;
     return hash;
   }
 
@@ -405,9 +418,6 @@ public class DefaultTcpChannel implements TcpChannel {
     if (this.sslEnabled != other.sslEnabled) {
       return false;
     }
-    if (this.bufferSize != other.bufferSize) {
-      return false;
-    }
     if (!Objects.equals(this.address, other.address)) {
       return false;
     }
@@ -419,7 +429,7 @@ public class DefaultTcpChannel implements TcpChannel {
 
   @Override
   public String toString() {
-    return "TcpChannel{" + "masterThreads=" + masterThreads + ", workerThreads=" + workerThreads + ", address=" + address + ", logLevel=" + level + ", keystorePath=" + keystorePath + ", sslEnabled=" + sslEnabled + ", bufferSize=" + bufferSize + '}';
+    return "TcpChannel{" + "masterThreads=" + masterThreads + ", workerThreads=" + workerThreads + ", address=" + address + ", logLevel=" + level + ", keystorePath=" + keystorePath + ", sslEnabled=" + sslEnabled + '}';
   }
   
 }

@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 /**
  *
@@ -25,6 +26,7 @@ public class TestHttpAuthServer2 {
   public void test() {
     try {
       HttpServer server = new HttpServer();
+      server.setLogLevel(Level.INFO);
       if(Files.exists(server.getStoragePath())) {
         Files.walk(server.getStoragePath())
             .filter(p->!Files.isDirectory(p))
@@ -34,6 +36,7 @@ public class TestHttpAuthServer2 {
             .forEach(p->Unchecked.call(()->Files.delete(p)));
       }
       server.setAddress(Host.of("0.0.0.0", 8090))
+      //server.setAddress(Host.localhost(8090))
           .start()
           .acceptNext(f->logger.info("HttpServer started and listening on {}", f.channel().localAddress()))
           .acceptOnClose(f->logger.info("HttpServer stopped!"));

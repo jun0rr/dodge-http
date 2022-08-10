@@ -15,9 +15,9 @@ import com.jun0rr.dodge.http.auth.HttpGroupsGetOneHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsPutHandler;
 import com.jun0rr.dodge.http.auth.HttpGroupsUnbindHandler;
 import com.jun0rr.dodge.http.auth.HttpLoginHandler;
-import com.jun0rr.dodge.http.auth.HttpMetricDeleteHandler;
-import com.jun0rr.dodge.http.auth.HttpMetricGetHandler;
-import com.jun0rr.dodge.http.auth.HttpMetricPutHandler;
+import com.jun0rr.dodge.metrics.HttpMetricsDeleteHandler;
+import com.jun0rr.dodge.metrics.HttpMetricsGetHandler;
+import com.jun0rr.dodge.metrics.HttpMetricsPutHandler;
 import com.jun0rr.dodge.http.auth.HttpRequestAttributeHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesDeleteHandler;
 import com.jun0rr.dodge.http.auth.HttpRolesGetAllHandler;
@@ -76,6 +76,7 @@ public class HttpServer extends Http {
   
   public HttpServer() {
     super(SERVER_BOOTSTRAP);
+    addConfLog(51, "Authentication Enabled", this::isAuthenticationEnabled);
   }
   
   public HttpServer addRoute(HttpRoute route, Supplier<Consumer<ChannelExchange<HttpObject>>> sup) {
@@ -309,7 +310,7 @@ public class HttpServer extends Http {
           c.pipeline().addLast(new TcpMetricsHandler(HttpServer.this));
         }
         c.pipeline().addLast(new HttpServerCodec());
-        if(isFullHttpMessageEnabled()) {
+        if(isHttpMessageBufferEnabled()) {
           c.pipeline().addLast(new HttpObjectAggregator(getBufferSize()));
         }
         c.pipeline().addLast(HttpContentCache.class.getSimpleName().concat("#0"), new HttpContentCache());
@@ -347,22 +348,22 @@ public class HttpServer extends Http {
                   ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpMetricsRequestHandler.ROUTE, new HttpMetricsRequestHandler(HttpServer.this)))
               )
           );
-          c.pipeline().addLast(HttpMetricGetHandler.class.getSimpleName().concat("#0"),
+          c.pipeline().addLast(HttpMetricsGetHandler.class.getSimpleName().concat("#0"),
               new EventInboundHandler(HttpServer.this, attributes(), 
                   ChannelEvent.Inbound.READ, 
-                  ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpMetricGetHandler.ROUTE, new HttpMetricGetHandler()))
+                  ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpMetricsGetHandler.ROUTE, new HttpMetricsGetHandler()))
               )
           );
-          c.pipeline().addLast(HttpMetricDeleteHandler.class.getSimpleName().concat("#0"),
+          c.pipeline().addLast(HttpMetricsDeleteHandler.class.getSimpleName().concat("#0"),
               new EventInboundHandler(HttpServer.this, attributes(), 
                   ChannelEvent.Inbound.READ, 
-                  ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpMetricDeleteHandler.ROUTE, new HttpMetricDeleteHandler()))
+                  ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpMetricsDeleteHandler.ROUTE, new HttpMetricsDeleteHandler()))
               )
           );
-          c.pipeline().addLast(HttpMetricPutHandler.class.getSimpleName().concat("#0"),
+          c.pipeline().addLast(HttpMetricsPutHandler.class.getSimpleName().concat("#0"),
               new EventInboundHandler(HttpServer.this, attributes(), 
                   ChannelEvent.Inbound.READ, 
-                  ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpMetricPutHandler.ROUTE, new HttpMetricPutHandler()))
+                  ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpMetricsPutHandler.ROUTE, new HttpMetricsPutHandler()))
               )
           );
         }

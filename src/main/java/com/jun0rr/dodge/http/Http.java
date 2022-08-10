@@ -40,13 +40,17 @@ import java.util.function.Function;
  */
 public abstract class Http extends DefaultTcpChannel {
   
+  public static final int DEFAULT_BUFFER_SIZE = 128 * 1024 * 1024;
+  
   private Path privkeyPath = ResourceLoader.caller().loadPath("dodge-pk.der");
   
   private Path pubkeyPath = ResourceLoader.caller().loadPath("dodge-pub.der");
   
-  private boolean fullHttpMessage = false;
+  private boolean httpMessageEnabled = false;
   
   private boolean httpMessageLogger = true;
+  
+  private int bufferSize = DEFAULT_BUFFER_SIZE;
   
   private final Gson gson = new GsonBuilder()
       .registerTypeAdapter(AllowRole.class, new JsonRoleAdapter())
@@ -63,15 +67,29 @@ public abstract class Http extends DefaultTcpChannel {
   
   public Http(Function<TcpChannel, AbstractBootstrap> bootstrap) {
     super(bootstrap);
+    addConfLog(52, "HttpMessage Logger Enabled", this::isHttpMessageLoggerEnabled);
+    addConfLog(54, "HttpMessage Buffer Enabled", this::isHttpMessageBufferEnabled);
+    addConfLog(56, "HttpMessage Buffer Size", this::getBufferSize);
+    addConfLog("PrivateKey Path", this::getPrivateKeyPath);
+    addConfLog("PublicKey Path", this::getPublicKeyPath);
   }
   
-  public Http setFullHttpMessageEnabled(boolean enabled) {
-    this.fullHttpMessage = enabled;
+  public int getBufferSize() {
+    return bufferSize;
+  }
+  
+  public Http setBufferSize(int size) {
+    this.bufferSize = size;
     return this;
   }
   
-  public boolean isFullHttpMessageEnabled() {
-    return this.fullHttpMessage;
+  public Http setHttpMessageBufferEnabled(boolean enabled) {
+    this.httpMessageEnabled = enabled;
+    return this;
+  }
+  
+  public boolean isHttpMessageBufferEnabled() {
+    return this.httpMessageEnabled;
   }
   
   public Http setHttpMessageLoggerEnabled(boolean enabled) {
@@ -124,7 +142,7 @@ public abstract class Http extends DefaultTcpChannel {
     int hash = super.hashCode();
     hash = 37 * hash + Objects.hashCode(this.privkeyPath);
     hash = 37 * hash + Objects.hashCode(this.pubkeyPath);
-    hash = 37 * hash + (this.fullHttpMessage ? 1 : 0);
+    hash = 37 * hash + (this.httpMessageEnabled ? 1 : 0);
     hash = 37 * hash + (this.httpMessageLogger ? 1 : 0);
     return hash;
   }
@@ -141,7 +159,7 @@ public abstract class Http extends DefaultTcpChannel {
       return false;
     }
     final Http other = (Http) obj;
-    if (this.fullHttpMessage != other.fullHttpMessage) {
+    if (this.httpMessageEnabled != other.httpMessageEnabled) {
       return false;
     }
     if (this.httpMessageLogger != other.httpMessageLogger) {
@@ -155,7 +173,7 @@ public abstract class Http extends DefaultTcpChannel {
 
   @Override
   public String toString() {
-    return "Http{" + "masterThreads=" + getMasterThreads() + ", workerThreads=" + getWorkerThreads()  + ", address=" + getAddress() + ", logLevel=" + getLogLevel() + ", keystorePath=" + getKeystorePath() + ", sslEnabled=" + isSslEnabled() + ", bufferSize=" + getBufferSize() + ", privkeyPath=" + getPrivateKeyPath() + ", pubkeyPath=" + getPublicKeyPath() + ", fullHttpMessageEnabled=" + fullHttpMessage + ", httpMessageLoggerEnabled=" + httpMessageLogger + '}';
+    return "Http{" + "masterThreads=" + getMasterThreads() + ", workerThreads=" + getWorkerThreads()  + ", address=" + getAddress() + ", logLevel=" + getLogLevel() + ", keystorePath=" + getKeystorePath() + ", sslEnabled=" + isSslEnabled() + ", bufferSize=" + getBufferSize() + ", privkeyPath=" + getPrivateKeyPath() + ", pubkeyPath=" + getPublicKeyPath() + ", fullHttpMessageEnabled=" + httpMessageEnabled + ", httpMessageLoggerEnabled=" + httpMessageLogger + '}';
   }
   
 }

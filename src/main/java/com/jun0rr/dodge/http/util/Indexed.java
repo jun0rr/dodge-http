@@ -95,6 +95,26 @@ public class Indexed<T> {
       return new Ints(-1, -1, i->i+1);
     }
     
+    public static Ints odds() {
+      return new Ints(-1, -1, i->i+2);
+    }
+    
+    public static Ints evens() {
+      return new Ints(-2, -1, i->i+2);
+    }
+    
+    public static Ints dozens() {
+      return new Ints(-10, -1, i->i+10);
+    }
+    
+    public static Ints hundreds() {
+      return new Ints(-100, -1, i->i+100);
+    }
+    
+    public static Ints thousends() {
+      return new Ints(-1000, -1, i->i+1000);
+    }
+    
     public int next() {
       int n = oper.applyAsInt(index.get());
       if(end != -1 && n >= end) {

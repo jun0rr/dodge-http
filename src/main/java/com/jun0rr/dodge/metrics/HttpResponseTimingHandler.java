@@ -41,7 +41,7 @@ public class HttpResponseTimingHandler implements Consumer<ChannelExchange<HttpR
         x.channel().metrics().put(HTTP_RESPONSE_TIMING_AVG);
       }
       double duration = Duration.between(timing.get(), Instant.now()).toMillis();
-      HTTP_RESPONSE_TIMING_AVG.updateDouble(d->(duration + d) / (d < 1 ? 1 : 2));
+      HTTP_RESPONSE_TIMING_AVG.updateDouble(d->(duration + d) / (d < 1.0 ? 1.0 : 2.0));
       Optional<Metric> opt = x.channel().metrics().get(HTTP_RESPONSE_TIMING.name(), 
           LABEL_URI, uri.get(), 
           LABEL_STATUS, String.valueOf(x.message().status().code())

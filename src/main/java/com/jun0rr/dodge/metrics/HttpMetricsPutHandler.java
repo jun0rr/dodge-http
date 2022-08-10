@@ -2,9 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.jun0rr.dodge.http.auth;
+package com.jun0rr.dodge.metrics;
 
 import com.jun0rr.dodge.http.Http;
+import com.jun0rr.dodge.http.auth.ErrMessage;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
@@ -31,14 +32,14 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpMetricPutHandler implements Consumer<ChannelExchange<HttpObject>> {
+public class HttpMetricsPutHandler implements Consumer<ChannelExchange<HttpObject>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpMetricPutHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpMetricsPutHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?metric/?", HttpMethod.PUT);
+  public static final HttpRoute ROUTE = HttpRoute.of("/?metrics/?", HttpMethod.PUT);
   
-  public static HttpMetricPutHandler get() {
-    return new HttpMetricPutHandler();
+  public static HttpMetricsPutHandler get() {
+    return new HttpMetricsPutHandler();
   }
   
   @Override

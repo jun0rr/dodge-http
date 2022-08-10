@@ -6,7 +6,6 @@ package com.jun0rr.dodge.tcp;
 
 import com.jun0rr.dodge.metrics.Metrics;
 import com.jun0rr.dodge.http.auth.Storage;
-import com.jun0rr.dodge.metrics.Metric;
 import com.jun0rr.util.Host;
 import io.netty.bootstrap.AbstractBootstrap;
 import io.netty.bootstrap.Bootstrap;
@@ -21,8 +20,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -36,14 +33,12 @@ import org.slf4j.event.Level;
  */
 public interface TcpChannel {
   
-  public static final String VERSION = "0.1";
+  public static final String VERSION = "0.8";
+  
+  public static final String ASCII_ART = "    ____            __                 __  ____  __      \n   / __ \\____  ____/ /___ ____        / / / / /_/ /_____ \n  / / / / __ \\/ __  / __ `/ _ \\______/ /_/ / __/ __/ __ \\\n / /_/ / /_/ / /_/ / /_/ /  __/_____/ __  / /_/ /_/ /_/ /\n/_____/\\____/\\__,_/\\__, /\\___/     /_/ /_/\\__/\\__/ .___/ \n                  /____/                        /_/      \n";
   
   public static final Logger logger = LoggerFactory.getLogger(TcpChannel.class);
   
-  
-  public TcpChannel setBufferSize(int size);
-  
-  public int getBufferSize();
   
   public int getMasterThreads();
 
@@ -98,7 +93,7 @@ public interface TcpChannel {
   public Duration uptime();
   
   public Instant startup();
-
+  
   
   public <T> TcpChannel addHandler(ChannelEvent evt, Class<T> type, Supplier<Consumer<ChannelExchange<T>>> cs);
 

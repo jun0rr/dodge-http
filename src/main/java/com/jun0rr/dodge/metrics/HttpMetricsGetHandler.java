@@ -2,9 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.jun0rr.dodge.http.auth;
+package com.jun0rr.dodge.metrics;
 
 import com.jun0rr.dodge.http.Http;
+import com.jun0rr.dodge.http.auth.ErrMessage;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
@@ -35,14 +36,14 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpMetricGetHandler implements Consumer<ChannelExchange<HttpRequest>> {
+public class HttpMetricsGetHandler implements Consumer<ChannelExchange<HttpRequest>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpMetricGetHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpMetricsGetHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?metric/[a-zA-Z0-9_\\.\\-]+\\/?([\\?\\&][a-zA-Z0-9_\\.\\-]+=[a-zA-Z0-9_\\.\\-]+)*", HttpMethod.GET);
+  public static final HttpRoute ROUTE = HttpRoute.of("/?metrics/[a-zA-Z0-9_\\.\\-]+\\/?([\\?\\&][a-zA-Z0-9_\\.\\-]+=[a-zA-Z0-9_\\.\\-]+)*", HttpMethod.GET);
   
-  public static HttpMetricGetHandler get() {
-    return new HttpMetricGetHandler();
+  public static HttpMetricsGetHandler get() {
+    return new HttpMetricsGetHandler();
   }
   
   @Override

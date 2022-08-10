@@ -28,6 +28,9 @@ public class HttpClient extends Http {
   
   public HttpClient() {
     super(BOOTSTRAP);
+    addConfLog("Proxy Auth Enabled", this::isProxyAuthEnabled);
+    addConfLog("Proxy Address", this::getProxyAddress);
+    addConfLog("Proxy User", this::getProxyUser);
   }
   
   public Host getProxyAddress() {
@@ -72,7 +75,7 @@ public class HttpClient extends Http {
       protected void initChannel(SocketChannel c) throws Exception {
         initSslHandler(c);
         c.pipeline().addLast(new HttpClientCodec());
-        if(isFullHttpMessageEnabled()) {
+        if(isHttpMessageBufferEnabled()) {
           c.pipeline().addLast(new HttpObjectAggregator(getBufferSize()));
         }
         if(isHttpMessageLoggerEnabled()) {
@@ -118,7 +121,7 @@ public class HttpClient extends Http {
 
   @Override
   public String toString() {
-    return "HttpClient{" + "masterThreads=" + getMasterThreads() + ", workerThreads=" + getWorkerThreads()  + ", address=" + getAddress() + ", logLevel=" + getLogLevel() + ", keystorePath=" + getKeystorePath() + ", sslEnabled=" + isSslEnabled() + ", bufferSize=" + getBufferSize() + ", privkeyPath=" + getPrivateKeyPath() + ", pubkeyPath=" + getPublicKeyPath() + ", fullHttpMessageEnabled=" + isFullHttpMessageEnabled() + ", httpMessageLoggerEnabled=" + isHttpMessageLoggerEnabled() + ", proxyAddress=" + proxyAddress + ", proxyUser=" + proxyUser + ", proxyPass=" + proxyPass + '}';
+    return "HttpClient{" + "masterThreads=" + getMasterThreads() + ", workerThreads=" + getWorkerThreads()  + ", address=" + getAddress() + ", logLevel=" + getLogLevel() + ", keystorePath=" + getKeystorePath() + ", sslEnabled=" + isSslEnabled() + ", bufferSize=" + getBufferSize() + ", privkeyPath=" + getPrivateKeyPath() + ", pubkeyPath=" + getPublicKeyPath() + ", fullHttpMessageEnabled=" + isHttpMessageBufferEnabled() + ", httpMessageLoggerEnabled=" + isHttpMessageLoggerEnabled() + ", proxyAddress=" + proxyAddress + ", proxyUser=" + proxyUser + ", proxyPass=" + proxyPass + '}';
   }
   
 }

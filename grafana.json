@@ -61,7 +61,7 @@
       "id": 12,
       "options": {
         "colorMode": "none",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
@@ -71,7 +71,9 @@
           "fields": "",
           "values": false
         },
-        "text": {},
+        "text": {
+          "valueSize": 60
+        },
         "textMode": "auto"
       },
       "pluginVersion": "8.2.3",
@@ -153,7 +155,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed"
           },
           "mappings": [],
           "thresholds": {
@@ -209,26 +211,35 @@
     },
     {
       "datasource": null,
-      "description": "Average timing millis of Http Responses",
+      "description": "Average Http Response Time (millis)",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "mappings": [],
+          "max": 1000,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "light-green",
                 "value": null
               },
               {
-                "color": "#EAB839",
-                "value": 400
+                "color": "semi-dark-green",
+                "value": 150
               },
               {
-                "color": "red",
+                "color": "light-yellow",
+                "value": 300
+              },
+              {
+                "color": "light-red",
+                "value": 450
+              },
+              {
+                "color": "semi-dark-red",
                 "value": 600
               }
             ]
@@ -243,11 +254,8 @@
         "x": 18,
         "y": 0
       },
-      "id": 8,
+      "id": 25,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -256,29 +264,32 @@
           "fields": "",
           "values": false
         },
-        "text": {},
-        "textMode": "auto"
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
       },
       "pluginVersion": "8.2.3",
       "targets": [
         {
           "exemplar": true,
-          "expr": "dodge_http_response_timing_avg",
+          "expr": "avg(dodge_http_response_timing)",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Http Response Timing Avg",
-      "type": "stat"
+      "title": "Average Http Response Time",
+      "type": "gauge"
     },
     {
       "datasource": null,
-      "description": "Count of total Http Requests by URI",
+      "description": "Http Requests Rate / minute",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "fixedColor": "semi-dark-blue",
+            "mode": "fixed",
+            "seriesBy": "last"
           },
           "custom": {
             "axisLabel": "",
@@ -293,12 +304,12 @@
               "viz": false
             },
             "lineInterpolation": "linear",
-            "lineWidth": 2,
+            "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
+            "showPoints": "never",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -331,12 +342,322 @@
         "x": 0,
         "y": 5
       },
-      "id": 6,
+      "id": 27,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "last",
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
           "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dodge_http_request_rate",
+          "interval": "",
+          "legendFormat": "Hits",
+          "refId": "A"
+        }
+      ],
+      "title": "Http Request Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": null,
+      "description": "Http Requests Rate / second",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "light-green",
+                "value": null
+              },
+              {
+                "color": "semi-dark-yellow",
+                "value": 50
+              },
+              {
+                "color": "semi-dark-red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [
+            "max",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(rate(dodge_http_response_count[1m]))",
+          "interval": "",
+          "legendFormat": "HttpRequests",
+          "refId": "A"
+        }
+      ],
+      "title": "Http Requests Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": null,
+      "description": "Http Request Count by URI",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 19,
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "values": [
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dodge_http_request_count",
+          "interval": "",
+          "legendFormat": "{{uri}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Http Request Count by URI",
+      "type": "piechart"
+    },
+    {
+      "datasource": null,
+      "description": "Max Http Response Time (millis) by URI",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "light-green",
+                "value": null
+              },
+              {
+                "color": "semi-dark-green",
+                "value": 150
+              },
+              {
+                "color": "semi-dark-yellow",
+                "value": 300
+              },
+              {
+                "color": "light-red",
+                "value": 450
+              },
+              {
+                "color": "semi-dark-red",
+                "value": 600
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "id": 17,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "max"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "pluginVersion": "8.2.3",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "max by(uri) (dodge_http_response_timing)",
+          "format": "time_series",
+          "interval": "",
+          "legendFormat": "{{uri}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Max Http Response Time by URI",
+      "type": "bargauge"
+    },
+    {
+      "datasource": null,
+      "description": "Average Http Response Time (millis) by URI",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "right"
         },
         "tooltip": {
           "mode": "single"
@@ -346,19 +667,19 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "dodge_http_request_count{uri!=\"/metrics\"}",
+          "expr": "avg by(uri) (dodge_http_response_timing)",
           "format": "time_series",
           "interval": "",
           "legendFormat": "{{uri}}",
           "refId": "A"
         }
       ],
-      "title": "Http Requests by URI",
+      "title": "Http Response Time by URI",
       "type": "timeseries"
     },
     {
       "datasource": null,
-      "description": "Http Response Timing by URI",
+      "description": "Inbound/Outbound Tcp traffic byte rate / second",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -377,12 +698,12 @@
               "viz": false
             },
             "lineInterpolation": "linear",
-            "lineWidth": 2,
+            "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
+            "showPoints": "never",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -413,31 +734,41 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 5
+        "y": 23
       },
-      "id": 7,
+      "id": 23,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "mean",
+            "max",
+            "sum"
+          ],
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
           "mode": "single"
         }
       },
-      "pluginVersion": "8.2.3",
       "targets": [
         {
           "exemplar": true,
-          "expr": "dodge_http_response_timing",
-          "format": "time_series",
+          "expr": "sum(rate(dodge_inbound_bytes_total[1m]))",
           "interval": "",
-          "legendFormat": "{{uri}}",
+          "legendFormat": "Inbound Bytes",
           "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "sum(rate(dodge_outbound_bytes_total[1m]))",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Outbound Bytes",
+          "refId": "B"
         }
       ],
-      "title": "Http Response Timing by URI",
+      "title": "In/Out Traffic Byte Rate",
       "type": "timeseries"
     },
     {
@@ -464,13 +795,13 @@
             "lineStyle": {
               "fill": "solid"
             },
-            "lineWidth": 2,
+            "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
-            "spanNulls": true,
+            "showPoints": "never",
+            "spanNulls": false,
             "stacking": {
               "group": "A",
               "mode": "none"
@@ -501,13 +832,17 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 14
+        "y": 32
       },
       "id": 10,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "last",
+            "mean",
+            "sum"
+          ],
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
@@ -533,94 +868,6 @@
       ],
       "title": "Inbound/Outbound Traffic",
       "type": "timeseries"
-    },
-    {
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
-        "y": 14
-      },
-      "id": 14,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "exemplar": true,
-          "expr": "dodge_http_response_timing",
-          "interval": "",
-          "legendFormat": "{{uri}} ({{status}})",
-          "refId": "A"
-        },
-        {
-          "datasource": "__expr__",
-          "hide": false,
-          "reducer": "mean",
-          "refId": "B",
-          "type": "reduce"
-        }
-      ],
-      "title": "Panel Title",
-      "type": "timeseries"
     }
   ],
   "refresh": "30s",
@@ -631,12 +878,12 @@
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "America/Sao_Paulo",
   "title": "dodge-http",
   "uid": "blPsn_z4k",
-  "version": 7
+  "version": 13
 }

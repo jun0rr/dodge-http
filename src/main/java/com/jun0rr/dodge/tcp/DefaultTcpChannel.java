@@ -55,7 +55,7 @@ public class DefaultTcpChannel implements TcpChannel {
   
   private Host address;
   
-  private Level level = Level.DEBUG;
+  private Level level;
   
   private Path keystorePath = ResourceLoader.caller().loadPath("keystore.jks");
   
@@ -90,6 +90,7 @@ public class DefaultTcpChannel implements TcpChannel {
     this.attrs = new Attributes();
     this.startup = Instant.now();
     this.conflog = new LinkedList<>();
+    setLogLevel(Level.DEBUG);
     ConfLog.ORDER = Indexed.Ints.dozens();
     addConfLog("Dodge Version", ()->VERSION);                   //0
     addConfLog("Log Level", this::getLogLevel);                 //10
@@ -210,6 +211,7 @@ public class DefaultTcpChannel implements TcpChannel {
 
   @Override
   public TcpChannel setLogLevel(Level level) {
+    this.level = level;
     LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
     switch(level) {
       case TRACE:

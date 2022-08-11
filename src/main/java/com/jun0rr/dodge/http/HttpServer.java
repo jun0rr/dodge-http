@@ -373,7 +373,7 @@ public class HttpServer extends Http {
         initHandlers(c);
         c.pipeline().addLast(new HttpRequestNotFoundHandler());
         c.pipeline().addLast(new ReleaseInboundHandler());
-        System.out.printf("------ NEW CONNECTION: %s ------%n", c.id().asShortText());
+        //System.out.printf("------ NEW CONNECTION: %s ------%n", c.id().asShortText());
         //c.pipeline().forEach(e->logger.debug("Pipeline: {} - {}", e.getKey(), e.getValue().getClass()));
       }
     };

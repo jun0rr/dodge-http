@@ -9,13 +9,18 @@ import com.jun0rr.util.crypto.Hash;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 /**
@@ -26,8 +31,11 @@ public class Metrics {
   
   private final Map<String,Metric> map;
   
+  private final Deque<Long> hits;
+  
   public Metrics() {
     this.map = new ConcurrentHashMap<>();
+    this.hits = new ConcurrentLinkedDeque<>();
   }
   
   private String hash(Metric m) {
@@ -93,6 +101,34 @@ public class Metrics {
         .map(m->SortBy.of(m, Metric::name))
         .sorted()
         .map(SortBy::get);
+  }
+  
+  public int hitsCount() {
+    return hits.size();
+  }
+  
+  public Metrics hit() {
+    hits.push(System.currentTimeMillis());
+    hitsDiscardOldest();
+    return this;
+  }
+  
+  protected void hitsDiscardOldest() {
+    long oldest = System.currentTimeMillis() - 600_000L;
+    LongStream.range(0, hits.stream().filter(i->i <= oldest).count())
+        .forEach(i->hits.pollLast());
+  }
+  
+  public int hitsLastDuration(long millis) {
+    long oldest = Instant.now().toEpochMilli() - millis;
+    return (int) hits.stream()
+        .sorted()
+        .filter(i->i <= oldest)
+        .count();
+  }
+  
+  public int hitsLastMin() {
+    return hitsLastDuration(60_000L);
   }
   
   private List<String> toList() {

@@ -26,7 +26,7 @@ public class TestHttpAuthServer2 {
   public void test() {
     try {
       HttpServer server = new HttpServer();
-      server.setLogLevel(Level.INFO);
+      //server.setLogLevel(Level.INFO);
       if(Files.exists(server.getStoragePath())) {
         Files.walk(server.getStoragePath())
             .filter(p->!Files.isDirectory(p))

@@ -44,14 +44,12 @@ public class HttpMetricsPutHandler implements Consumer<ChannelExchange<HttpObjec
   
   @Override
   public void accept(ChannelExchange<HttpObject> x) {
-    logger.debug("accept: {} - {}", x.attributes().get(HttpRequest.class).get().uri(), x.message().getClass());
     if(HttpConstants.isValidHttpContent(x.message())) {
       ByteBuf cont = ((HttpContent)x.message()).content();
       String json = cont.toString(StandardCharsets.UTF_8);
       HttpRequest req = x.attributes().get(HttpRequest.class).get();
       try {
         Metric m = ((Http)x.channel()).gson().fromJson(json, Metric.class);
-        logger.debug("metric: {}", m);
         x.channel().metrics().put(m);
         HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
         res.headers()

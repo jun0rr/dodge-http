@@ -39,6 +39,8 @@ import com.jun0rr.dodge.http.auth.Storage;
 import com.jun0rr.dodge.http.handler.EventInboundHandler;
 import com.jun0rr.dodge.http.handler.EventOutboundHandler;
 import com.jun0rr.dodge.http.handler.HttpContentCache;
+import com.jun0rr.dodge.http.handler.HttpCorsHandler;
+import com.jun0rr.dodge.http.handler.HttpCorsOriginHandler;
 import com.jun0rr.dodge.http.handler.HttpMessageLogger;
 import com.jun0rr.dodge.http.handler.HttpRequestNotFoundHandler;
 import com.jun0rr.dodge.http.handler.HttpRoute;
@@ -73,6 +75,8 @@ public class HttpServer extends Http {
   private static final Logger logger = LoggerFactory.getLogger(HttpServer.class);
   
   private boolean authEnabled = true;
+  
+  private boolean corsEnabled = true;
   
   public HttpServer() {
     super(SERVER_BOOTSTRAP);
@@ -113,6 +117,15 @@ public class HttpServer extends Http {
   
   public HttpServer setAuthenticationEnabled(boolean enabled) {
     this.authEnabled = enabled;
+    return this;
+  }
+  
+  public boolean isHttpCorsEnabled() {
+    return corsEnabled;
+  }
+  
+  public HttpServer setHttpCorsEnabled(boolean enabled) {
+    this.corsEnabled = enabled;
     return this;
   }
   
@@ -328,6 +341,20 @@ public class HttpServer extends Http {
         );
         if(isHttpMessageLoggerEnabled()) {
           c.pipeline().addLast(new HttpMessageLogger());
+        }
+        if(isHttpCorsEnabled()) {
+          c.pipeline().addLast(HttpCorsOriginHandler.class.getSimpleName().concat("#0"), 
+              new EventOutboundHandler(HttpServer.this, attributes(), 
+                  ChannelEvent.Outbound.WRITE, 
+                  ConsumerType.of(HttpResponse.class, new HttpCorsOriginHandler())
+              )
+          );
+          c.pipeline().addLast(HttpCorsHandler.class.getSimpleName().concat("#0"),
+              new EventInboundHandler(HttpServer.this, attributes(), 
+                  ChannelEvent.Inbound.READ, 
+                  ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpCorsHandler.ROUTE, new HttpCorsHandler()))
+              )
+          );
         }
         if(isMetricsEnabled()) {
           c.pipeline().addLast(HttpResponseTimingHandler.class.getSimpleName().concat("#0"), 

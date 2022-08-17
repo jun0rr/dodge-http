@@ -114,7 +114,7 @@ public class Metrics {
   }
   
   protected void hitsDiscardOldest() {
-    long oldest = System.currentTimeMillis() - 600_000L;
+    long oldest = System.currentTimeMillis() - 500_000L;
     LongStream.range(0, hits.stream().filter(i->i <= oldest).count())
         .forEach(i->hits.pollLast());
   }
@@ -123,7 +123,7 @@ public class Metrics {
     long oldest = Instant.now().toEpochMilli() - millis;
     return (int) hits.stream()
         .sorted()
-        .filter(i->i <= oldest)
+        .filter(i->i >= oldest)
         .count();
   }
   

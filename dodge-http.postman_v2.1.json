@@ -1,0 +1,874 @@
+{
+	"info": {
+		"_postman_id": "9183b104-6178-40ce-84ef-d79032c99d29",
+		"name": "dodge-http",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "14742467"
+	},
+	"item": [
+		{
+			"name": "/auth (admin)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"admin@dodgehttp.com\",\r\n    \"password\": [\"a\",\"d\",\"m\",\"i\",\"n\"]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/auth",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth (juno.rr)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"juno.rr@gmail.com\",\r\n    \"password\": [\"3\",\"2\",\"1\",\"3\",\"2\",\"1\",\"5\",\"5\"]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/auth",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth (john.doe)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"john.doe@gmail.com\",\r\n    \"password\": [\"3\",\"2\",\"1\",\"3\",\"2\",\"1\",\"5\",\"5\"]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/auth",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/user",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/user",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/user (admin)",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"admin\",\r\n    \"email\": \"admin@dodgehttp.com\",\r\n    \"birthday\": {\r\n        \"year\": 1984,\r\n        \"month\": 8,\r\n        \"day\": 14\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/auth/user",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/user (john.doe)",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"John Doe\",\r\n    \"email\": \"john.doe@gmail.com\",\r\n    \"birthday\": {\r\n        \"year\": 1984,\r\n        \"month\": 8,\r\n        \"day\": 14\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/auth/user",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/users",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/users/john.doe@gmail.com",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/users/john.doe@gmail.com",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"users",
+						"john.doe@gmail.com"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/users (juno.rr)",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Juno Roesler\",\r\n  \"email\": \"juno.rr@gmail.com\",\r\n  \"password\": [\"3\",\"2\",\"1\",\"3\",\"2\",\"1\",\"5\",\"5\"],\r\n  \"birthday\": {\r\n    \"year\": 1980,\r\n    \"month\": 7,\r\n    \"day\": 7\r\n  },\r\n  \"groups\": [\r\n    {\r\n      \"name\": \"admin\"\r\n    }\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/auth/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/users (john.doe)",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"John Doe\",\r\n  \"email\": \"john.doe@gmail.com\",\r\n  \"password\": [\"3\",\"2\",\"1\",\"3\",\"2\",\"1\",\"5\",\"5\"],\r\n  \"birthday\": {\r\n    \"year\": 1980,\r\n    \"month\": 7,\r\n    \"day\": 7\r\n  },\r\n  \"groups\": [\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    },\r\n    {\r\n      \"name\": \"guest\"\r\n    }\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/auth/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/users/john.doe@gmail.com",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"John Doe\",\r\n  \"email\": \"john.doe@gmail.com\",\r\n  \"birthday\": {\r\n    \"year\": 1980,\r\n    \"month\": 1,\r\n    \"day\": 1\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/auth/users/john.doe@gmail.com",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"users",
+						"john.doe@gmail.com"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/users (john.doe)",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/users/john.doe@gmail.com",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"users",
+						"john.doe@gmail.com"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/users (john.dow)",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/users/john.dow@gmail.com",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"users",
+						"john.dow@gmail.com"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/groups",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/groups",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"groups"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/groups/select-admin",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/groups/select-admin",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"groups",
+						"select-admin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/groups",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"select-admin\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/auth/groups",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"groups"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/groups/bind (john.doe)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/groups/bind/john.doe@gmail.com/select-admin",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"groups",
+						"bind",
+						"john.doe@gmail.com",
+						"select-admin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/groups/bind (john.doe)",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/groups/bind/john.doe@gmail.com/select-admin",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"groups",
+						"bind",
+						"john.doe@gmail.com",
+						"select-admin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/groups/bind (john.dow)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/groups/bind/john.dow@gmail.com/select-admin",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"groups",
+						"bind",
+						"john.dow@gmail.com",
+						"select-admin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/groups (select-admin)",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/groups/select-admin",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"groups",
+						"select-admin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/groups (selectAdmin)",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/groups/selectAdmin",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"groups",
+						"selectAdmin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/roles",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/roles",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"roles"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/roles",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"type\": \"allow\",\r\n    \"route\": {\r\n        \"regex\": \"/?auth/roles/?\",\r\n        \"methods\": [\"PATCH\"]\r\n    },\r\n    \"groups\": [\r\n        {\r\n            \"name\": \"admin\"\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/auth/roles",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"roles"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/roles/allow|deny",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/roles/allow?methods=PATCH&uri=/auth/user/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"roles",
+						"allow"
+					],
+					"query": [
+						{
+							"key": "methods",
+							"value": "PATCH"
+						},
+						{
+							"key": "uri",
+							"value": "/auth/user/"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/roles/allow|deny",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/auth/roles/allow?methods=GET&group=admin&uri=/auth/groups/hello",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"roles",
+						"allow"
+					],
+					"query": [
+						{
+							"key": "methods",
+							"value": "GET"
+						},
+						{
+							"key": "group",
+							"value": "admin"
+						},
+						{
+							"key": "uri",
+							"value": "/auth/groups/hello"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/roles/allow|deny",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"type\": \"allow\",\r\n    \"route\": {\r\n        \"regex\": \"/?auth/user/?\",\r\n        \"methods\": [\r\n            \"PATCH\"\r\n        ]\r\n    },\r\n    \"groups\": [\r\n        {\r\n            \"name\": \"admin\"\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/auth/roles/allow?methods=PATCH&uri=/auth/user/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"auth",
+						"roles",
+						"allow"
+					],
+					"query": [
+						{
+							"key": "methods",
+							"value": "PATCH"
+						},
+						{
+							"key": "uri",
+							"value": "/auth/user/"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/store/foo",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"foo\": \"bar\",\r\n    \"baz\": {\r\n        \"foobar\": 500\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/store/foo",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"store",
+						"foo"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/store/foo",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/store/foo",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"store",
+						"foo"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/store/foo",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/store/foo",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"store",
+						"foo"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/metrics",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"type\": \"counter\",\r\n    \"name\": \"metric_counter\",\r\n    \"help\": \"Some metric Counter\",\r\n    \"value\": 550,\r\n    \"labels\": [\r\n        {\r\n            \"foo\": \"bar\"\r\n        },\r\n        {\r\n            \"baz\": \"foobar\"\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/metrics",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"metrics"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/metrics/metric_counter",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/metrics/metric_counter?foo=bar&baz=foobar",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"metrics",
+						"metric_counter"
+					],
+					"query": [
+						{
+							"key": "foo",
+							"value": "bar"
+						},
+						{
+							"key": "baz",
+							"value": "foobar"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/metrics",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/metric/metric_counter?foo=bar&baz=foobar",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"metric",
+						"metric_counter"
+					],
+					"query": [
+						{
+							"key": "foo",
+							"value": "bar"
+						},
+						{
+							"key": "baz",
+							"value": "foobar"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/metrics",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/metrics",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"metrics"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/shutdown",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/shutdown",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"shutdown"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

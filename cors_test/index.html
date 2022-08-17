@@ -91,6 +91,10 @@
                 req.send(JSON.stringify(metric));
             }
 
+            function fetchPostCors() {
+                
+            }
+
             function getMetric() {
                 console.log("Making CORS: GET http://localhost:8090/metrics/cors_metric ...");
                 let req = new XMLHttpRequest();

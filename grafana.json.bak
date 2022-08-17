@@ -344,11 +344,13 @@
     },
     {
       "datasource": null,
-      "description": "Http Requests Rate / second",
+      "description": "Http Requests Rate / minute",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "fixedColor": "semi-dark-blue",
+            "mode": "fixed",
+            "seriesBy": "last"
           },
           "custom": {
             "axisLabel": "",
@@ -362,7 +364,7 @@
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "smooth",
+            "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
@@ -383,15 +385,11 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "light-green",
+                "color": "green",
                 "value": null
               },
               {
-                "color": "semi-dark-yellow",
-                "value": 50
-              },
-              {
-                "color": "semi-dark-red",
+                "color": "red",
                 "value": 80
               }
             ]
@@ -405,12 +403,13 @@
         "x": 12,
         "y": 5
       },
-      "id": 21,
+      "id": 27,
       "options": {
         "legend": {
           "calcs": [
-            "max",
-            "mean"
+            "last",
+            "mean",
+            "max"
           ],
           "displayMode": "table",
           "placement": "bottom"
@@ -422,13 +421,13 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(rate(dodge_http_response_count[1m]))",
+          "expr": "dodge_http_request_rate",
           "interval": "",
-          "legendFormat": "HttpRequests",
+          "legendFormat": "Hits",
           "refId": "A"
         }
       ],
-      "title": "Http Requests Rate",
+      "title": "Http Request Rate",
       "type": "timeseries"
     },
     {
@@ -790,12 +789,12 @@
     "list": []
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "America/Sao_Paulo",
   "title": "dodge-http",
   "uid": "blPsn_z4k",
-  "version": 13
+  "version": 15
 }

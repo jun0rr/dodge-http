@@ -460,3 +460,49 @@
 	java.lang.String  com.jun0rr.dodge.http.auth.Group#name   ,
 	java.time.Instant com.jun0rr.dodge.http.auth.Group#created,
 }
+0000000000001000071 java.time.Instant{
+	long java.time.Instant#seconds,
+	int  java.time.Instant#nanos  ,
+}
+0000000000001000072 com.jun0rr.dodge.http.auth.User{
+	java.lang.String                    com.jun0rr.dodge.http.auth.User#name    ,
+	java.lang.String                    com.jun0rr.dodge.http.auth.User#email   ,
+	com.jun0rr.dodge.http.auth.Password com.jun0rr.dodge.http.auth.User#password,
+	java.time.LocalDate                 com.jun0rr.dodge.http.auth.User#birthday,
+	java.util.List                      com.jun0rr.dodge.http.auth.User#groups  ,
+	java.time.Instant                   com.jun0rr.dodge.http.auth.User#created ,
+}
+0000000000001000073 com.jun0rr.dodge.http.auth.Password{
+	[B com.jun0rr.dodge.http.auth.Password#salt,
+	[B com.jun0rr.dodge.http.auth.Password#hash,
+}
+0000000000001000074 java.time.LocalDate{
+	int   java.time.LocalDate#year ,
+	short java.time.LocalDate#month,
+	short java.time.LocalDate#day  ,
+}
+0000000000001000075 java.util.ImmutableCollections$List12{
+	java.lang.Object java.util.ImmutableCollections$List12#e0,
+	java.lang.Object java.util.ImmutableCollections$List12#e1,
+}
+0000000000001000078 com.jun0rr.dodge.http.auth.AllowRole{
+	com.jun0rr.dodge.http.handler.HttpRoute com.jun0rr.dodge.http.auth.Role#route ,
+	java.util.List                          com.jun0rr.dodge.http.auth.Role#groups,
+}
+0000000000001000080 com.jun0rr.dodge.http.handler.HttpRoute{
+	java.lang.String com.jun0rr.dodge.http.handler.HttpRoute#regex  ,
+	java.util.List   com.jun0rr.dodge.http.handler.HttpRoute#methods,
+}
+0000000000001000081 java.util.ImmutableCollections$ListN{
+	[Ljava.lang.Object; java.util.ImmutableCollections$ListN#elements,
+}
+0000000000001000082 io.netty.handler.codec.http.HttpMethod{
+	io.netty.util.AsciiString io.netty.handler.codec.http.HttpMethod#name,
+}
+0000000000001000083 io.netty.util.AsciiString{
+	[B               io.netty.util.AsciiString#value ,
+	java.lang.String io.netty.util.AsciiString#string,
+	int              io.netty.util.AsciiString#offset,
+	int              io.netty.util.AsciiString#length,
+	int              io.netty.util.AsciiString#hash  ,
+}

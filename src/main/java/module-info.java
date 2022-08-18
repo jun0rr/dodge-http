@@ -5,8 +5,8 @@
 
 module jun0rr.dodge {
   requires jun0rr.util;
-  requires io.netty.all;
   requires gson;
+  requires io.netty.all;
   //requires mapdb;
   requires jjwt.api;
   requires org.slf4j;

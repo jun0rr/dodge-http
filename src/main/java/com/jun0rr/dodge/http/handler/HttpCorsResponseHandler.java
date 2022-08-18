@@ -16,12 +16,12 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpCorsOriginHandler implements Consumer<ChannelExchange<HttpResponse>> {
+public class HttpCorsResponseHandler implements Consumer<ChannelExchange<HttpResponse>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpCorsOriginHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpCorsResponseHandler.class);
   
-  public static HttpCorsOriginHandler get() {
-    return new HttpCorsOriginHandler();
+  public static HttpCorsResponseHandler get() {
+    return new HttpCorsResponseHandler();
   }
   
   public void accept(ChannelExchange<HttpResponse> x) {
@@ -30,9 +30,9 @@ public class HttpCorsOriginHandler implements Consumer<ChannelExchange<HttpRespo
     if(origin != null
         && !x.message().headers().contains(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN)) {
       x.message().headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-    }
-    if(!x.message().headers().contains(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS)) {
-      x.message().headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, true);
+      if(!x.message().headers().contains(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS)) {
+        x.message().headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, true);
+      }
     }
     x.forwardMessage();
   }

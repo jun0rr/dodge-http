@@ -47,7 +47,7 @@ public class HttpAuthFilter implements Consumer<ChannelExchange<HttpRequest>> {
     String scookie = x.message().headers().get(HttpHeaderNames.COOKIE);
     Set<Cookie> cookies = Collections.EMPTY_SET;
     if(scookie != null && !scookie.isBlank()) {
-      cookies = ServerCookieDecoder.STRICT.decode(scookie);
+      cookies = ServerCookieDecoder.LAX.decode(scookie);
     }
     Optional<User> opt = cookies.stream()
         .filter(c->c.name().equals(HttpLoginHandler.DODGE_TOKEN))

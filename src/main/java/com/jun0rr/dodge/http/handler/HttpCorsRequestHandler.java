@@ -25,14 +25,14 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpCorsHandler implements Consumer<ChannelExchange<HttpRequest>> {
+public class HttpCorsRequestHandler implements Consumer<ChannelExchange<HttpRequest>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpCorsHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpCorsRequestHandler.class);
   
   public static final HttpRoute ROUTE = HttpRoute.of("/?.*", HttpMethod.OPTIONS);
   
-  public static HttpCorsHandler get() {
-    return new HttpCorsHandler();
+  public static HttpCorsRequestHandler get() {
+    return new HttpCorsRequestHandler();
   }
   
   public void accept(ChannelExchange<HttpRequest> x) {

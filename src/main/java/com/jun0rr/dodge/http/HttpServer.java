@@ -39,8 +39,8 @@ import com.jun0rr.dodge.http.auth.Storage;
 import com.jun0rr.dodge.http.handler.EventInboundHandler;
 import com.jun0rr.dodge.http.handler.EventOutboundHandler;
 import com.jun0rr.dodge.http.handler.HttpContentCache;
-import com.jun0rr.dodge.http.handler.HttpCorsHandler;
-import com.jun0rr.dodge.http.handler.HttpCorsOriginHandler;
+import com.jun0rr.dodge.http.handler.HttpCorsRequestHandler;
+import com.jun0rr.dodge.http.handler.HttpCorsResponseHandler;
 import com.jun0rr.dodge.http.handler.HttpMessageLogger;
 import com.jun0rr.dodge.http.handler.HttpRequestNotFoundHandler;
 import com.jun0rr.dodge.http.handler.HttpRoute;
@@ -343,16 +343,16 @@ public class HttpServer extends Http {
           c.pipeline().addLast(new HttpMessageLogger());
         }
         if(isHttpCorsEnabled()) {
-          c.pipeline().addLast(HttpCorsOriginHandler.class.getSimpleName().concat("#0"), 
+          c.pipeline().addLast(HttpCorsResponseHandler.class.getSimpleName().concat("#0"), 
               new EventOutboundHandler(HttpServer.this, attributes(), 
                   ChannelEvent.Outbound.WRITE, 
-                  ConsumerType.of(HttpResponse.class, new HttpCorsOriginHandler())
+                  ConsumerType.of(HttpResponse.class, new HttpCorsResponseHandler())
               )
           );
-          c.pipeline().addLast(HttpCorsHandler.class.getSimpleName().concat("#0"),
+          c.pipeline().addLast(HttpCorsRequestHandler.class.getSimpleName().concat("#0"),
               new EventInboundHandler(HttpServer.this, attributes(), 
                   ChannelEvent.Inbound.READ, 
-                  ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpCorsHandler.ROUTE, new HttpCorsHandler()))
+                  ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpCorsRequestHandler.ROUTE, new HttpCorsRequestHandler()))
               )
           );
         }

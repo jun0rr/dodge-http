@@ -22,7 +22,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.CookieHeaderNames;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.netty.util.ReferenceCountUtil;
@@ -98,12 +98,14 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<HttpObject>> {
           .setExpiration(Date.from(now.plusSeconds(DEFAULT_TOKEN_DURATION.toSeconds())))
           .signWith(((Http)x.channel()).loadPrivateKey())
           .compact();
-      Cookie cookie = new DefaultCookie("dodgeToken", jwt);
+      DefaultCookie cookie = new DefaultCookie("dodgeToken", jwt);
       cookie.setMaxAge(DEFAULT_TOKEN_DURATION.toSeconds());
       cookie.setHttpOnly(true);
+      cookie.setSameSite(CookieHeaderNames.SameSite.None);
+      cookie.setSecure(true);
       res.headers().add(
           HttpHeaderNames.SET_COOKIE, 
-          ServerCookieEncoder.STRICT.encode(cookie)
+          ServerCookieEncoder.LAX.encode(cookie)
       );
     }
     else {

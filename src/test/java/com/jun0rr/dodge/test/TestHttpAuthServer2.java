@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 
 /**
  *
@@ -37,6 +36,7 @@ public class TestHttpAuthServer2 {
       }
       server.setAddress(Host.of("0.0.0.0", 8090))
       //server.setAddress(Host.localhost(8090))
+          //.setSslEnabled(true)
           .start()
           .acceptNext(f->logger.info("HttpServer started and listening on {}", f.channel().localAddress()))
           .acceptOnClose(f->logger.info("HttpServer stopped!"));

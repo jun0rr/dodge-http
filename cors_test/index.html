@@ -50,19 +50,41 @@
     <body>
         
         <div class="row-center">
-            <a href="#" class="btn" onclick="makeCors();">Make CORS</a>
+            <a href="#" class="btn" onclick="fetchAuthenticate();">Fetch CORS</a>
         </div>
         
         <script lang="text/javascript">
 
-            console.log("Script...");
+            function fetchAuthenticate() {
+                let auth = {
+                    "email": "admin@dodgehttp.com",
+                    "password": ["a","d","m","i","n"]
+                };
+                console.log("Fetch Authenticate...");
+                fetch("http://localhost:8090/auth", {
+                    method: "POST",
+                    body: JSON.stringify(auth),
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include",
+                    mode: "cors"
+                })
+                .then(res=>{
+                    if(res.ok) {
+                        console.log("Fetch Response OK: " + res.status);
+                        fetchPutCors();
+                    }
+                    else {
+                        console.log("Fetch Not OK: " + res.status + " - " + res.statusText);
+                    }
+                })
+                .catch(reason=>{
+                    console.error("Fetch Error: " + reason);
+                });
+            }
 
-            function makeCors() {
-                console.log("Making CORS: POST http://localhost:8090/metrics ...");
-                let req = new XMLHttpRequest();
-                req.open("PUT", "http://localhost:8090/metrics");
-                req.setRequestHeader("Content-Type", "application/json");
-                req.withCredentials = true;
+            function fetchPutCors() {
                 let metric = {
                     type: "counter",
                     name: "cors_metric",
@@ -77,40 +99,53 @@
                         }
                     ]
                 };
-                req.onreadystatechange = ()=>{
-                    if(req.readyState === XMLHttpRequest.DONE) {
-                        if(req.status === 201) {
-                            console.log("Request OK!");
-                            getMetric();
-                        }
-                        else {
-                            console.log("Error: " + req.status);
-                        }
+                console.log("Fetch Cors PUT request...");
+                fetch("http://localhost:8090/metrics", {
+                    method: "PUT",
+                    body: JSON.stringify(metric),
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include",
+                    mode: "cors"
+                })
+                .then(res=>{
+                    if(res.ok) {
+                        console.log("Fetch Response OK: " + res.status);
+                        fetchGetCors();
                     }
-                };
-                req.send(JSON.stringify(metric));
+                    else {
+                        console.log("Fetch Not OK: " + res.status + " - " + res.statusText);
+                    }
+                })
+                .catch(reason=>{
+                    console.error("Fetch Error: " + reason);
+                });
             }
 
-            function fetchPostCors() {
-                
-            }
-
-            function getMetric() {
-                console.log("Making CORS: GET http://localhost:8090/metrics/cors_metric ...");
-                let req = new XMLHttpRequest();
-                req.open("GET", "http://localhost:8090/metrics/cors_metric");
-                req.withCredentials = true;
-                req.onreadystatechange = ()=>{
-                    if(req.readyState === XMLHttpRequest.DONE) {
-                        if(req.status === 200) {
-                            console.log("Response: " + req.response);
-                        }
-                        else {
-                            console.log("Error: " + req.status);
-                        }
+            function fetchGetCors() {
+                console.log("Fetch Cors GET request...");
+                fetch("http://localhost:8090/metrics/cors_metric", {
+                    method: "GET",
+                    credentials: "include",
+                    mode: "cors"
+                })
+                .then(res=>{
+                    if(res.ok) {
+                        console.log("Fetch Response OK: " + res.status);
+                        return res.json();
                     }
-                };
-                req.send();
+                    else {
+                        console.log("Fetch Not OK: " + res.status + " - " + res.statusText);
+                    }
+                })
+                .then(json=>{
+                    console.log("Response: " + json);
+                    console.log("ResponseText: " + JSON.stringify(json));
+                })
+                .catch(reason=>{
+                    console.error("Fetch Error: " + reason);
+                });
             }
 
         </script>

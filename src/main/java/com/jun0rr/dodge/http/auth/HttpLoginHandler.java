@@ -102,7 +102,7 @@ public class HttpLoginHandler implements Consumer<ChannelExchange<HttpObject>> {
       cookie.setMaxAge(DEFAULT_TOKEN_DURATION.toSeconds());
       cookie.setHttpOnly(true);
       cookie.setSameSite(CookieHeaderNames.SameSite.None);
-      cookie.setSecure(true);
+      //cookie.setSecure(true);
       res.headers().add(
           HttpHeaderNames.SET_COOKIE, 
           ServerCookieEncoder.LAX.encode(cookie)

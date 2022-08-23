@@ -4,7 +4,6 @@
  */
 package com.jun0rr.dodge.http.auth;
 
-import com.jun0rr.dodge.http.auth.ErrMessage;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
@@ -43,8 +42,10 @@ public class HttpStoreGetHandler implements Consumer<ChannelExchange<HttpRequest
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
     RequestParam par = new UriParam(x.message().uri()).asRequestParam("/store/key");
+    User usr = x.attributes().get(User.class).get();
     try {
-      String json = x.channel().storage().get(par.get("key"));
+      String key = String.format("%s.%s", usr.getEmail(), par.get("key"));
+      String json = x.channel().storage().get(key);
       if(json == null || json.isBlank()) {
         HttpConstants.sendError(x, new ErrMessage(HttpResponseStatus.NOT_FOUND, "Key Not Found: %s", par.get("key")));
       }

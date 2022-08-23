@@ -4,7 +4,6 @@
  */
 package com.jun0rr.dodge.http.auth;
 
-import com.jun0rr.dodge.http.auth.ErrMessage;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
@@ -50,8 +49,10 @@ public class HttpStorePutHandler implements Consumer<ChannelExchange<HttpObject>
       String json = cont.toString(StandardCharsets.UTF_8);
       HttpRequest req = x.attributes().get(HttpRequest.class).get();
       RequestParam par = new UriParam(req.uri()).asRequestParam("/store/key");
+      User usr = x.attributes().get(User.class).get();
       try {
-        x.channel().storage().set(par.get("key"), json);
+        String key = String.format("%s.%s", usr.getEmail(), par.get("key"));
+        x.channel().storage().set(key, json);
         ReferenceCountUtil.safeRelease(x.message());
         HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
         res.headers()

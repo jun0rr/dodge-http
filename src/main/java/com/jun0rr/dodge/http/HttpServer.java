@@ -28,6 +28,8 @@ import com.jun0rr.dodge.http.auth.HttpShutdownHandler;
 import com.jun0rr.dodge.http.auth.HttpStoreDeleteHandler;
 import com.jun0rr.dodge.http.auth.HttpStoreGetHandler;
 import com.jun0rr.dodge.http.auth.HttpStorePutHandler;
+import com.jun0rr.dodge.http.auth.HttpStoreUserGetHandler;
+import com.jun0rr.dodge.http.auth.HttpStoreUsersAllHandler;
 import com.jun0rr.dodge.http.auth.HttpUserGetHandler;
 import com.jun0rr.dodge.http.auth.HttpUserPatchCurrentHandler;
 import com.jun0rr.dodge.http.auth.HttpUsersDeleteHandler;
@@ -262,6 +264,18 @@ public class HttpServer extends Http {
             ConsumerType.of(HttpObject.class, new HttpRouteHandler(HttpRolesPatchHandler.ROUTE, new HttpRolesPatchHandler()))
         )
     );
+    c.pipeline().addLast(HttpStoreUserGetHandler.class.getSimpleName().concat("#0"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpStoreUserGetHandler.ROUTE, new HttpStoreUserGetHandler()))
+        )
+    );
+    c.pipeline().addLast(HttpStoreUsersAllHandler.class.getSimpleName().concat("#0"),
+        new EventInboundHandler(HttpServer.this, attributes(), 
+            ChannelEvent.Inbound.READ, 
+            ConsumerType.of(HttpRequest.class, new HttpRouteHandler(HttpStoreUsersAllHandler.ROUTE, new HttpStoreUsersAllHandler()))
+        )
+    );
     c.pipeline().addLast(HttpStoreGetHandler.class.getSimpleName().concat("#0"),
         new EventInboundHandler(HttpServer.this, attributes(), 
             ChannelEvent.Inbound.READ, 
@@ -313,6 +327,8 @@ public class HttpServer extends Http {
           .set(new AllowRole(HttpStoreGetHandler.ROUTE, Storage.GROUP_AUTH))
           .set(new AllowRole(HttpStoreDeleteHandler.ROUTE, Storage.GROUP_AUTH))
           .set(new AllowRole(HttpStorePutHandler.ROUTE, Storage.GROUP_AUTH))
+          .set(new AllowRole(HttpStoreUserGetHandler.ROUTE, Storage.GROUP_AUTH))
+          .set(new AllowRole(HttpStoreUsersAllHandler.ROUTE, Storage.GROUP_ADMIN))
           .set(new AllowRole(HttpShutdownHandler.ROUTE, Storage.GROUP_ADMIN));
     }
     return new ChannelInitializer<>() {

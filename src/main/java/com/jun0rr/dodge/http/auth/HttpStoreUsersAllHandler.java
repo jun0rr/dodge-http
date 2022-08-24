@@ -36,27 +36,28 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpStoreUserGetHandler implements Consumer<ChannelExchange<HttpRequest>> {
+public class HttpStoreUsersAllHandler implements Consumer<ChannelExchange<HttpRequest>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpStoreUserGetHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpStoreUsersAllHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?store/user/?", HttpMethod.GET);
+  public static final HttpRoute ROUTE = HttpRoute.of(String.format("/?store/users/%s/?", User.REGEX_EMAIL), HttpMethod.GET);
   
-  public static HttpStoreUserGetHandler get() {
-    return new HttpStoreUserGetHandler();
+  public static HttpStoreUsersAllHandler get() {
+    return new HttpStoreUsersAllHandler();
   }
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    User usr = x.attributes().get(User.class).get();
+    RequestParam par = new UriParam(x.message().uri()).asRequestParam("/store/users/email");
     Gson gson = ((Http)x.channel()).gson();
     try {
+      String email = par.get("email");
       List<JsonElement> objs = x.channel().storage().objects()
-          .filter(e->e.getKey().startsWith(usr.getEmail()))
-          .map(e->map2json(e, usr.getEmail(), gson))
+          .filter(e->e.getKey().startsWith(email))
+          .map(e->map2json(e, email, gson))
           .collect(Collectors.toList());
       if(objs.isEmpty()) {
-        HttpConstants.sendError(x, new ErrMessage(HttpResponseStatus.NOT_FOUND, "User store is empty"));
+        HttpConstants.sendError(x, new ErrMessage(HttpResponseStatus.NOT_FOUND, "User store is empty: %s", email));
       }
       else {
         String json = gson.toJson(objs);

@@ -21,7 +21,7 @@ public class TestHttpAuthServer2 {
   
   private static final Logger logger = LoggerFactory.getLogger(TestHttpAuthServer2.class);
   
-  @Test
+  //@Test
   public void test() {
     try {
       HttpServer server = new HttpServer();

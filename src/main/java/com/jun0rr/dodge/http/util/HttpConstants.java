@@ -7,7 +7,6 @@ package com.jun0rr.dodge.http.util;
 import com.jun0rr.dodge.http.Http;
 import com.jun0rr.dodge.http.header.ProxyAuthorizationHeader;
 import com.jun0rr.dodge.http.HttpClient;
-import com.jun0rr.dodge.http.auth.ErrMessage;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.JsonContentHeader;

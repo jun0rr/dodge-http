@@ -2,12 +2,14 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.jun0rr.dodge.http.auth;
+package com.jun0rr.dodge.http.handler;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.jun0rr.dodge.http.Http;
+import com.jun0rr.dodge.http.util.ErrMessage;
+import com.jun0rr.dodge.http.auth.User;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
@@ -36,28 +38,27 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpStoreUsersAllHandler implements Consumer<ChannelExchange<HttpRequest>> {
+public class HttpStoreUserGetHandler implements Consumer<ChannelExchange<HttpRequest>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpStoreUsersAllHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpStoreUserGetHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of(String.format("/?store/users/%s/?", User.REGEX_EMAIL), HttpMethod.GET);
+  public static final HttpRoute ROUTE = HttpRoute.of("/?store/user/?", HttpMethod.GET);
   
-  public static HttpStoreUsersAllHandler get() {
-    return new HttpStoreUsersAllHandler();
+  public static HttpStoreUserGetHandler get() {
+    return new HttpStoreUserGetHandler();
   }
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
-    RequestParam par = new UriParam(x.message().uri()).asRequestParam("/store/users/email");
+    User usr = x.attributes().get(User.class).get();
     Gson gson = ((Http)x.channel()).gson();
     try {
-      String email = par.get("email");
       List<JsonElement> objs = x.channel().storage().objects()
-          .filter(e->e.getKey().startsWith(email))
-          .map(e->map2json(e, email, gson))
+          .filter(e->e.getKey().startsWith(usr.getEmail()))
+          .map(e->map2json(e, usr.getEmail(), gson))
           .collect(Collectors.toList());
       if(objs.isEmpty()) {
-        HttpConstants.sendError(x, new ErrMessage(HttpResponseStatus.NOT_FOUND, "User store is empty: %s", email));
+        HttpConstants.sendError(x, new ErrMessage(HttpResponseStatus.NOT_FOUND, "User store is empty"));
       }
       else {
         String json = gson.toJson(objs);

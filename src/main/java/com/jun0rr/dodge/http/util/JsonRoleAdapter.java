@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.jun0rr.dodge.http.auth;
+package com.jun0rr.dodge.http.util;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -12,6 +12,10 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
+import com.jun0rr.dodge.http.auth.AllowRole;
+import com.jun0rr.dodge.http.auth.DenyRole;
+import com.jun0rr.dodge.http.auth.Group;
+import com.jun0rr.dodge.http.auth.Role;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import java.lang.reflect.Type;
 import java.util.LinkedList;
@@ -38,8 +42,8 @@ public class JsonRoleAdapter implements JsonSerializer<Role>, JsonDeserializer<R
     JsonObject role = new JsonObject();
     String stype = AllowRole.class.isAssignableFrom(t.getClass()) ? ALLOW : DENY;
     role.addProperty(TYPE, stype);
-    role.add(ROUTE, jsc.serialize(t.route));
-    role.add(GROUPS, jsc.serialize(t.groups));
+    role.add(ROUTE, jsc.serialize(t.route()));
+    role.add(GROUPS, jsc.serialize(t.groups()));
     return role;
   }
 

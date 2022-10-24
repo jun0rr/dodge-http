@@ -4,6 +4,7 @@
  */
 package com.jun0rr.dodge.http.auth;
 
+import com.jun0rr.dodge.http.util.ErrMessage;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import io.netty.handler.codec.http.HttpRequest;

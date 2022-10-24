@@ -2,8 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.jun0rr.dodge.http.auth;
+package com.jun0rr.dodge.http.handler;
 
+import com.jun0rr.dodge.http.util.ErrMessage;
+import com.jun0rr.dodge.http.auth.User;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
@@ -29,14 +31,14 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpStoreGetHandler implements Consumer<ChannelExchange<HttpRequest>> {
+public class HttpStoreDeleteHandler implements Consumer<ChannelExchange<HttpRequest>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpStoreGetHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpStoreDeleteHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?store/[a-zA-Z0-9_\\.\\-@]+/?", HttpMethod.GET);
+  public static final HttpRoute ROUTE = HttpRoute.of("/?store/[a-zA-Z0-9_\\.\\-@]+/?", HttpMethod.DELETE);
   
-  public static HttpStoreGetHandler get() {
-    return new HttpStoreGetHandler();
+  public static HttpStoreDeleteHandler get() {
+    return new HttpStoreDeleteHandler();
   }
   
   @Override

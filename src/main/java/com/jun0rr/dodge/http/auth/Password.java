@@ -4,6 +4,7 @@
  */
 package com.jun0rr.dodge.http.auth;
 
+import com.jun0rr.dodge.http.util.JsonIgnore;
 import com.jun0rr.util.crypto.Hash;
 import com.jun0rr.util.match.Match;
 import java.util.Arrays;

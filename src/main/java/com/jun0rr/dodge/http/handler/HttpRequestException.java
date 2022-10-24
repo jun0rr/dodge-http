@@ -4,7 +4,7 @@
  */
 package com.jun0rr.dodge.http.handler;
 
-import com.jun0rr.dodge.http.auth.ErrMessage;
+import com.jun0rr.dodge.http.util.ErrMessage;
 import com.jun0rr.util.match.Match;
 
 /**

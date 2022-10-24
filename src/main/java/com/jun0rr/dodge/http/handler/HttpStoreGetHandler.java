@@ -2,12 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.jun0rr.dodge.http.auth;
+package com.jun0rr.dodge.http.handler;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.jun0rr.dodge.http.Http;
+import com.jun0rr.dodge.http.util.ErrMessage;
+import com.jun0rr.dodge.http.auth.User;
 import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
@@ -25,10 +23,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map.Entry;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,30 +31,27 @@ import org.slf4j.LoggerFactory;
  *
  * @author F6036477
  */
-public class HttpStoreUserGetHandler implements Consumer<ChannelExchange<HttpRequest>> {
+public class HttpStoreGetHandler implements Consumer<ChannelExchange<HttpRequest>> {
   
-  static final Logger logger = LoggerFactory.getLogger(HttpStoreUserGetHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(HttpStoreGetHandler.class);
   
-  public static final HttpRoute ROUTE = HttpRoute.of("/?store/user/?", HttpMethod.GET);
+  public static final HttpRoute ROUTE = HttpRoute.of("/?store/[a-zA-Z0-9_\\.\\-@]+/?", HttpMethod.GET);
   
-  public static HttpStoreUserGetHandler get() {
-    return new HttpStoreUserGetHandler();
+  public static HttpStoreGetHandler get() {
+    return new HttpStoreGetHandler();
   }
   
   @Override
   public void accept(ChannelExchange<HttpRequest> x) {
+    RequestParam par = new UriParam(x.message().uri()).asRequestParam("/store/key");
     User usr = x.attributes().get(User.class).get();
-    Gson gson = ((Http)x.channel()).gson();
     try {
-      List<JsonElement> objs = x.channel().storage().objects()
-          .filter(e->e.getKey().startsWith(usr.getEmail()))
-          .map(e->map2json(e, usr.getEmail(), gson))
-          .collect(Collectors.toList());
-      if(objs.isEmpty()) {
-        HttpConstants.sendError(x, new ErrMessage(HttpResponseStatus.NOT_FOUND, "User store is empty"));
+      String key = String.format("%s.%s", usr.getEmail(), par.get("key"));
+      String json = x.channel().storage().get(key);
+      if(json == null || json.isBlank()) {
+        HttpConstants.sendError(x, new ErrMessage(HttpResponseStatus.NOT_FOUND, "Key Not Found: %s", par.get("key")));
       }
       else {
-        String json = gson.toJson(objs);
         ByteBuf buf = x.context().alloc().buffer(json.length());
         buf.writeCharSequence(json, StandardCharsets.UTF_8);
         HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buf);
@@ -76,14 +68,6 @@ public class HttpStoreUserGetHandler implements Consumer<ChannelExchange<HttpReq
           .put("type", e.getClass())
           .put("cause", e.getCause()));
     }
-  }
-  
-  private JsonObject map2json(Entry<String,Object> entry, String email, Gson gson) {
-    JsonObject obj = new JsonObject();
-    String key = entry.getKey().substring(email.length() + 1);
-    JsonElement elt = gson.fromJson(entry.getValue().toString(), JsonElement.class);
-    obj.add(key, elt);
-    return obj;
   }
   
 }

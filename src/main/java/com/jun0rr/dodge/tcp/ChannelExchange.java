@@ -5,13 +5,9 @@
  */
 package com.jun0rr.dodge.tcp;
 
-import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.util.match.Match;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
-import io.netty.handler.codec.http.HttpResponse;
 import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -133,12 +129,22 @@ public interface ChannelExchange<T> {
     
     @Override
     public FutureEvent write(Object o) {
-      return FutureEvent.of(tcp, context.write(o, promise));
+      if(!promise.isDone()) {
+        return FutureEvent.of(tcp, context.write(o, promise));
+      }
+      else {
+        return FutureEvent.of(tcp, context.write(o));
+      }
     }
   
     @Override
     public FutureEvent writeAndFlush(Object o) {
-      return FutureEvent.of(tcp, context.writeAndFlush(o, promise));
+      if(!promise.isDone()) {
+        return FutureEvent.of(tcp, context.writeAndFlush(o, promise));
+      }
+      else {
+        return FutureEvent.of(tcp, context.writeAndFlush(o));
+      }
     }
     
     @Override

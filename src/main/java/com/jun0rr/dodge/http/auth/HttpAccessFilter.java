@@ -48,10 +48,11 @@ public class HttpAccessFilter implements Consumer<ChannelExchange<HttpRequest>> 
       }
     }
     else {
-      HttpConstants.sendError(x, 
-          new ErrMessage(HttpResponseStatus.NOT_FOUND, "Resource Not Found")
-              .put("uri", x.message().uri())
-              .put("method", x.message().method().name()));
+      x.forwardMessage();
+      //HttpConstants.sendError(x, 
+          //new ErrMessage(HttpResponseStatus.NOT_FOUND, "Resource Not Found")
+              //.put("uri", x.message().uri())
+              //.put("method", x.message().method().name()));
     }
   }
   

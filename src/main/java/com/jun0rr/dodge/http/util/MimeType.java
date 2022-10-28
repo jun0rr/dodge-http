@@ -112,31 +112,31 @@ public enum MimeType {
   
   private MimeType(String ext, String desc, String mime) {
     this.ext = Objects.requireNonNull(ext);
-    this.desc = Objects.requireNonNull(desc);
+    this.name = Objects.requireNonNull(desc);
     this.mime = Objects.requireNonNull(mime);
   }
   
   private final String ext;
   
-  private final String desc;
+  private final String name;
   
   private final String mime;
   
-  public String extension() {
+  public String getExtension() {
     return ext;
   }
   
-  public String description() {
-    return desc;
+  public String getName() {
+    return name;
   }
   
-  public String mimeType() {
+  public String getType() {
     return mime;
   }
   
   @Override
   public String toString() {
-    return String.format("%s[extension=%s, mimeType=%s, description=%s]", name(), extension(), mimeType(), description());
+    return String.format("%s[extension=%s, mimeType=%s, name=%s]", name(), getExtension(), getType(), getName());
   }
   
   public static Optional<MimeType> fromFile(Path path) {
@@ -153,7 +153,7 @@ public enum MimeType {
   
   public static Optional<MimeType> fromExtension(String ext) {
     return List.of(values()).stream()
-        .filter(m->ext.equalsIgnoreCase(m.extension()))
+        .filter(m->ext.equalsIgnoreCase(m.getExtension()))
         .findAny();
   }
   

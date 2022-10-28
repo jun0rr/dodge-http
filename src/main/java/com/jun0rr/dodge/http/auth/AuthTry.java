@@ -121,7 +121,7 @@ public class AuthTry {
         .add(new ConnectionCloseHeaders())
         .add(new DateHeader())
         .add(new ServerHeader());
-    x.writeAndFlush(res).channelClose();
+    x.writeAndFlush(res).close();
   }
 
   @Override

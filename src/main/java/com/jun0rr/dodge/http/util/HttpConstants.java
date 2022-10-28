@@ -198,7 +198,7 @@ public abstract class HttpConstants {
   public static void sendAndCheckConnection(ChannelExchange<?> x, Object o) {
     FutureEvent fe = x.writeAndFlush(o);
     if(isHttpConnectionClose(o)) {
-      fe.channelClose();
+      fe.close();
     }
   }
   

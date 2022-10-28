@@ -40,7 +40,7 @@ public class TestEchoServer {
             ByteBuf msg = x.context().alloc().buffer(x.message().length());
             msg.writeCharSequence(x.message(), StandardCharsets.UTF_8);
             x.writeAndFlush(msg)
-                .acceptNext(f->f.channelClose())
+                .acceptNext(f->f.close())
                 .acceptNext(f->f.shutdownMasterGroup());
           })
           .addHandler(ChannelEvent.Inbound.ACTIVE, ()->x->{
@@ -99,7 +99,7 @@ public class TestEchoServer {
           .acceptNext(f->{
             String msg = "Hello World!";
             logger.info(">> {}", msg);
-            f.channelWrite(msg);
+            f.write(msg);
           })
           .acceptOnClose(f->{
             logger.info("TcpClient Stopped");

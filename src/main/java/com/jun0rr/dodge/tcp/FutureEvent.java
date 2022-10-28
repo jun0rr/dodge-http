@@ -37,15 +37,15 @@ public interface FutureEvent {
     return channel().closeFuture().isDone();
   }
   
-  public default FutureEvent channelClose() {
+  public default FutureEvent close() {
     return applyNext(f->f.channel().close());
   }
   
-  public default FutureEvent channelWrite(Object o) {
+  public default FutureEvent write(Object o) {
     return applyNext(f->f.channel().write(o));
   }
   
-  public default FutureEvent channelWriteAndFlush(Object o) {
+  public default FutureEvent writeAndFlush(Object o) {
     return applyNext(f->f.channel().writeAndFlush(o));
   }
   

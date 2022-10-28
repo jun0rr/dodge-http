@@ -6,6 +6,8 @@ package com.jun0rr.dodge.http.header;
 
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import java.util.Date;
+import java.util.Objects;
 
 /**
  *
@@ -13,9 +15,16 @@ import io.netty.handler.codec.http.HttpHeaderNames;
  */
 public class DateHeader extends DefaultHttpHeaders {
   
-  public DateHeader() {
+  private final Date date;
+  
+  public DateHeader(Date d) {
     super();
-    add(HttpHeaderNames.DATE, new java.util.Date());
+    this.date = Objects.requireNonNull(d);
+    add(HttpHeaderNames.DATE, date);
+  }
+  
+  public DateHeader() {
+    this(new Date());
   }
   
 }

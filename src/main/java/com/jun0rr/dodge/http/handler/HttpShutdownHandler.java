@@ -4,7 +4,6 @@
  */
 package com.jun0rr.dodge.http.handler;
 
-import com.jun0rr.dodge.http.handler.HttpRoute;
 import com.jun0rr.dodge.http.header.ConnectionCloseHeaders;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
@@ -37,7 +36,7 @@ public class HttpShutdownHandler implements Consumer<ChannelExchange<HttpRequest
         .add(new DateHeader())
         .add(new ServerHeader());
     x.writeAndFlush(res)
-        .channelClose()
+        .close()
         .acceptNext(f->f.channel().parent().close())
         .acceptNext(f->x.channel().storage().shutdown())
         .syncUninterruptibly();

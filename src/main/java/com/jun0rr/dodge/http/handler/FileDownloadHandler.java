@@ -5,7 +5,10 @@
 package com.jun0rr.dodge.http.handler;
 
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
+import com.jun0rr.dodge.http.header.ContentRangeHeader;
 import com.jun0rr.dodge.http.header.DateHeader;
+import com.jun0rr.dodge.http.header.Range;
+import com.jun0rr.dodge.http.header.RangeHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.MimeType;
 import com.jun0rr.dodge.tcp.ChannelExchange;
@@ -92,8 +95,13 @@ public class FileDownloadHandler implements Consumer<ChannelExchange<HttpRequest
   }
   
   private boolean isNotModified(ChannelExchange<HttpRequest> x) throws IOException {
+    RangeHeader hdr = RangeHeader.parse(x.message());
+    Range r = hdr.ranges().isEmpty() 
+        ? new Range(0, Files.size(file)) 
+        : hdr.ranges().get(0).total(Files.size(file));
     String etag = etag();
     LocalDateTime lastModified = lastModified();
+    x.attributes().put(Range.class, r);
     x.attributes().put(HttpHeaderNames.ETAG.toString(), etag);
     x.attributes().put(HttpHeaderNames.LAST_MODIFIED.toString(), lastModified);
     String modifiedSince = x.message().headers().get(HttpHeaderNames.IF_MODIFIED_SINCE);
@@ -113,47 +121,59 @@ public class FileDownloadHandler implements Consumer<ChannelExchange<HttpRequest
   }
   
   private void download(ChannelExchange<HttpRequest> x) throws IOException {
-    long size = Files.size(file);
-    HttpResponse res = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+    Range r = x.attributes().get(Range.class).get();
+    String etag = x.attributes().<String>get(HttpHeaderNames.ETAG.toString()).get();
+    String ifrange = x.message().headers().get(HttpHeaderNames.IF_RANGE);
+    if(ifrange != null && !ifrange.equals(etag)) {
+      r = new Range(0, r.total(), r.total());
+    }
+    HttpResponse res = new DefaultHttpResponse(HttpVersion.HTTP_1_1, (r.start() == 0 && r.total() == r.end()) 
+        ? HttpResponseStatus.OK : HttpResponseStatus.PARTIAL_CONTENT);
     addEtagLastModified(x, res.headers()
         .add(HttpHeaderNames.CONTENT_TYPE, MimeType.fromFile(file).orElse(MimeType.BIN).getType())
         .add(HttpHeaderNames.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", file.getFileName().toString()))
-        .add(HttpHeaderNames.CONTENT_LENGTH, size)
+        .add(HttpHeaderNames.CONTENT_LENGTH, (r.end() - r.start()))
+        .add(new ContentRangeHeader(r))
         .add(new ConnectionHeaders(x))
         .add(new DateHeader())
         .add(new ServerHeader()));
     FutureEvent fe = x.write(res);
     try (FileChannel fc = FileChannel.open(file, StandardOpenOption.READ)) {
-      long curSize = 0;
-      int read = 0;
-      while(read != -1 && curSize < size) {
+      long total = r.start();
+      while(total < r.end()) {
         ByteBuf buffer = x.context().alloc().directBuffer(bufferSize);
-        read = buffer.writeBytes(fc, (int)curSize, (int)Math.min(size, buffer.capacity()));
-        curSize += read;
+        int read = buffer.writeBytes(fc, (int)total, (int)Math.min(buffer.writableBytes(), (r.end() - total)));
+        if(read == -1) break;
+        total += read;
         fe = fe.write(buffer);
       }
       fe.writeAndFlush(new DefaultLastHttpContent(Unpooled.EMPTY_BUFFER));
     }
   }
   
-  private String etag() throws IOException {
+  public String etag() throws IOException {
+    long size = Files.size(file);
     Hash hash = Hash.sha1();
     ByteBuffer buf = ByteBuffer.allocateDirect(bufferSize);
     try (FileChannel fc = FileChannel.open(file, StandardOpenOption.READ)) {
-      int read = -1;
       long total = 0;
-      while((read = fc.read(buf)) != -1) {
+      while(total < size) {
+        buf.limit(buf.position() + Math.min(buf.remaining(), (int)(size - total)));
+        int read = fc.read(buf);
+        if(read == -1) break;
+        total += read;
         hash.put(buf.flip());
         buf.compact();
-        total += read;
       }
-      return String.format("\"%s\"", hash.put(
+      String etag = String.format("\"%s\"", hash.put(
           buf.clear().putLong(total).flip()
       ).get());
+      System.out.printf("* size=%d, etag: %s%n", total, etag);
+      return etag;
     }
   }
   
-  private LocalDateTime lastModified() throws IOException {
+  public LocalDateTime lastModified() throws IOException {
     LocalDateTime date = LocalDateTime.ofInstant(Files.getFileAttributeView(file, BasicFileAttributeView.class)
         .readAttributes().lastModifiedTime()
         .toInstant(), ZoneOffset.UTC);

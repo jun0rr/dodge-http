@@ -4,6 +4,7 @@
  */
 package com.jun0rr.dodge.http.handler;
 
+import com.jun0rr.dodge.http.header.Range;
 import com.jun0rr.dodge.http.util.HttpConstants;
 import com.jun0rr.dodge.tcp.ChannelExchange;
 import com.jun0rr.util.Unchecked;
@@ -74,7 +75,7 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
     try {
       FileChannel fc = FileChannel.open(file, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
       x.context().channel().closeFuture().addListener(f->Unchecked.call(()->fc.close()));
-      return new Upload(fc, Range.of(x.attributes().get(HttpRequest.class).get()));
+      return null; //new Upload(fc, Range.of(x.attributes().get(HttpRequest.class).get()));
     }
     catch(IOException e) {
       throw Unchecked.unchecked(e);
@@ -131,8 +132,8 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
     }
     
     public Upload write(ByteBuf buf) {
-      return range(r->r.incrementPos(Unchecked.call(()->
-          buf.readBytes(channel, r.position(), buf.readableBytes())))
+      return range(r->r.incrementStart(Unchecked.call(()->
+          buf.readBytes(channel, r.start(), buf.readableBytes())))
       );
     }
     

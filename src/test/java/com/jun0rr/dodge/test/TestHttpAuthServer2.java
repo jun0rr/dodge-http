@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 /**
  *
@@ -38,7 +39,7 @@ public class TestHttpAuthServer2 {
   public void test() {
     try {
       HttpServer server = new HttpServer();
-      //server.setLogLevel(Level.INFO);
+      server.setLogLevel(Level.INFO);
       if(Files.exists(server.getStoragePath())) {
         Files.walk(server.getStoragePath())
             .filter(p->!Files.isDirectory(p))
@@ -47,14 +48,13 @@ public class TestHttpAuthServer2 {
             .filter(p->!server.getStoragePath().equals(p))
             .forEach(p->Unchecked.call(()->Files.delete(p)));
       }
-      server.addRoute(HttpRoute.of("/?download/.*", HttpMethod.GET), HttpRequest.class, ()->x->{
+      server.addRoute(HttpRoute.of("/?download/.+", HttpMethod.GET), HttpRequest.class, ()->x->{
         UriParam par = new UriParam(x.message().uri());
         StringBuilder sb = new StringBuilder();
         for(int i = 0; i < par.size(); i++) {
           sb.append(par.getParam(i)).append("/");
         }
         if(sb.length() > 0) sb.deleteCharAt(sb.length()-1);
-        System.out.println("** file=" + sb.toString());
         if(sb.toString().isBlank()) {
           HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
           ConnectionHeaders ch = new ConnectionHeaders(x);
@@ -68,7 +68,6 @@ public class TestHttpAuthServer2 {
         new FileDownloadHandler(Paths.get(sb.toString())).accept(x);
       });
       server.setAddress(Host.of("0.0.0.0", 8090))
-      //server.setAddress(Host.localhost(8090))
           //.setSslEnabled(true)
           .start()
           .acceptNext(f->logger.info("HttpServer started and listening on {}", f.channel().localAddress()))

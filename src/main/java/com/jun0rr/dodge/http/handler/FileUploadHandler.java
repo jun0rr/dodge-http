@@ -33,8 +33,8 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
     this(p, DEFAULT_BUFFER_SIZE);
   }
   
-  public FileUploadHandler(Path file, int bufsize) {
-    this.file = new FileUtil(file, bufsize);
+  public FileUploadHandler(Path p, int bufsize) {
+    this.file = new FileUtil(p, bufsize);
   }
   
   @Override

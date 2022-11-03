@@ -6,7 +6,7 @@ package com.jun0rr.dodge.http.header;
 
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpHeaders;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -43,8 +43,8 @@ public class RangeHeader extends DefaultHttpHeaders {
     return ranges;
   }
   
-  public static RangeHeader parse(HttpRequest req) {
-    return parse(req.headers().get(HttpHeaderNames.RANGE));
+  public static RangeHeader parse(HttpHeaders hdr) {
+    return parse(hdr.get(HttpHeaderNames.RANGE));
   }
   
   public static RangeHeader parse(String str) {

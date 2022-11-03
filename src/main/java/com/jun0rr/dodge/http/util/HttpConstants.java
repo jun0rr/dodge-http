@@ -29,6 +29,9 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.AsciiString;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 /**
  *
@@ -37,6 +40,8 @@ import java.nio.charset.StandardCharsets;
 public abstract class HttpConstants {
   
   public static final String USER_AGENT_VALUE = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101 Firefox/78.0";
+  
+  public static final DateTimeFormatter WEB_DATE_FORMATTER = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US);
   
   public static enum Header {
     
@@ -159,6 +164,29 @@ public abstract class HttpConstants {
   
   public static boolean isRequestPut(Object o) {
     return isHttpRequest(o) && ((HttpRequest)o).method() == HttpMethod.PUT;
+  }
+  
+  public static LocalDateTime getDateHeader(HttpHeaders hdr, AsciiString name) {
+    return getDateHeader(hdr, name.toString());
+  }
+  
+  public static LocalDateTime getDateHeader(HttpHeaders hdr, CharSequence name) {
+    String val = hdr.get(name);
+    if(val != null && val.isBlank()) {
+      return LocalDateTime.parse(val, WEB_DATE_FORMATTER);
+    }
+    return null;
+  }
+  
+  public static HttpHeaders setDateHeader(HttpHeaders hdr, AsciiString name, LocalDateTime date) {
+    return setDateHeader(hdr, name.toString(), date);
+  }
+  
+  public static HttpHeaders setDateHeader(HttpHeaders hdr, CharSequence name, LocalDateTime date) {
+    if(date != null) {
+      return hdr.add(name, date.format(WEB_DATE_FORMATTER));
+    }
+    return hdr;
   }
   
   public static HttpHeaders adduserAgentAndProxyAuth(HttpHeaders hds, HttpClient cli) {

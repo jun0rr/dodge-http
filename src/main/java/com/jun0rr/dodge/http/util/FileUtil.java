@@ -5,6 +5,7 @@
 package com.jun0rr.dodge.http.util;
 
 import static com.jun0rr.dodge.http.handler.FileDownloadHandler.WEB_DATE_FORMAT;
+import com.jun0rr.dodge.http.header.ContentRangeHeader;
 import com.jun0rr.dodge.http.header.Range;
 import com.jun0rr.dodge.http.header.RangeHeader;
 import com.jun0rr.util.Unchecked;
@@ -15,6 +16,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -116,8 +118,22 @@ public class FileUtil {
         && !getLastModified().isAfter(modifiedSince);
   }
   
+  public boolean isPreconditionFailed(HttpRequest req) {
+    LocalDateTime unmodifiedSince = HttpConstants.getDateHeader(req.headers(), HttpHeaderNames.IF_UNMODIFIED_SINCE);
+    LocalDateTime lastModified = getLastModified();
+    String ifMatch = req.headers().get(HttpHeaderNames.IF_MATCH);
+    String ifRange = req.headers().get(HttpHeaderNames.IF_RANGE);
+    String weakEtag = getWeakEtag();
+    return (ifMatch != null && !ifMatch.equals(weakEtag))
+        || (unmodifiedSince != null && lastModified.isAfter(unmodifiedSince))
+        || (ifRange != null 
+        && (WEB_DATE_PATTERN.test(ifRange) 
+        && lastModified.isAfter(LocalDateTime.parse(ifRange, WEB_DATE_FORMATTER)) 
+        || !ifRange.equals(weakEtag)));
+  }
+  
   public Range getRange(HttpRequest req) throws IOException {
-    RangeHeader hdr = RangeHeader.parse(req);
+    RangeHeader hdr = RangeHeader.parse(req.headers());
     Range r = hdr.ranges().isEmpty() 
         ? new Range(0, Files.size(file)) 
         : hdr.ranges().get(0).total(Files.size(file));
@@ -130,11 +146,33 @@ public class FileUtil {
         ? r : new Range(0, r.total(), r.total());
   }
   
+  public String getWeakEtag(Range r) {
+    return getWeakEtag(r, LocalDateTime.now());
+  }
+  
+  public String getWeakEtag(Range r, LocalDateTime lastModified) {
+    Objects.requireNonNull(r);
+    Objects.requireNonNull(lastModified);
+    ByteBuffer buf = ByteBuffer.allocate(getFileName().length() + Long.BYTES * 2);
+    buf.put(getFileName().getBytes(StandardCharsets.UTF_8));
+    buf.putLong(r.total());
+    buf.putLong(lastModified.toEpochSecond(ZoneOffset.UTC));
+    return String.format("W/\"%s\"", Hash.sha1().of(buf.flip()));
+  }
+  
+  public String getWeakEtag() {
+    ByteBuffer buf = ByteBuffer.allocate(getFileName().length() + Long.BYTES * 2);
+    buf.put(getFileName().getBytes(StandardCharsets.UTF_8));
+    buf.putLong(getSize());
+    buf.putLong(getLastModified().toEpochSecond(ZoneOffset.UTC));
+    return String.format("W/\"%s\"", Hash.sha1().of(buf.flip()));
+  }
+  
   public String getEtag() throws IOException {
     if(etag == null) {
       Hash hash = Hash.sha1();
       ByteBuffer buf = ByteBuffer.allocateDirect(4096);
-      try (FileChannel fc = FileChannel.open(file, StandardOpenOption.READ)) {
+      try (FileChannel fc = openReadChannel()) {
         long total = 0;
         while(total < getSize()) {
           buf.limit(buf.position() + Math.min(buf.remaining(), (int)(getSize() - total)));
@@ -152,11 +190,11 @@ public class FileUtil {
     return etag;
   }
   
-  public LocalDateTime getLastModified() throws IOException {
+  public LocalDateTime getLastModified() {
     if(lastModified == null) {
-      LocalDateTime date = LocalDateTime.ofInstant(Files.getFileAttributeView(file, BasicFileAttributeView.class)
+      LocalDateTime date = Unchecked.call(()->LocalDateTime.ofInstant(Files.getFileAttributeView(file, BasicFileAttributeView.class)
           .readAttributes().lastModifiedTime()
-          .toInstant(), ZoneOffset.UTC);
+          .toInstant(), ZoneOffset.UTC));
       lastModified = date.minusNanos(date.getNano());
     }
     return lastModified;

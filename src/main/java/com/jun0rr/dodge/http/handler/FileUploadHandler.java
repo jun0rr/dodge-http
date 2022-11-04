@@ -26,7 +26,6 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.ReferenceCountUtil;
-import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -88,8 +87,8 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
       res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NO_CONTENT);
       res.headers()
           .add(HttpHeaderNames.ETAG, file.getWeakEtag(range.range(), lastModified))
+          .add(new DateHeader(HttpHeaderNames.LAST_MODIFIED, lastModified))
           .add(range);
-      HttpConstants.setDateHeader(res.headers(), HttpHeaderNames.LAST_MODIFIED, lastModified);
     }
     ConnectionHeaders ch = new ConnectionHeaders(x);
     res.headers()
@@ -105,7 +104,7 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
     LocalDateTime lastModified = file.getLastModified();
     res.headers()
         .add(HttpHeaderNames.ETAG, file.getWeakEtag())
-        .add(HttpHeaderNames.LAST_MODIFIED, file.getLastModified())
+        .add(new DateHeader(HttpHeaderNames.LAST_MODIFIED, file.getLastModified()))
         .add(new ContentRangeHeader(new Range(0, file.getSize())))
         .add(new DateHeader())
         .add(new ServerHeader());

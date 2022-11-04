@@ -4,8 +4,12 @@
  */
 package com.jun0rr.dodge.http.header;
 
+import com.jun0rr.dodge.http.util.HttpConstants;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.util.AsciiString;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.Objects;
 
@@ -15,16 +19,54 @@ import java.util.Objects;
  */
 public class DateHeader extends DefaultHttpHeaders {
   
-  private final Date date;
+  private final LocalDateTime date;
   
-  public DateHeader(Date d) {
+  public DateHeader(CharSequence name, Date d) {
+    super();
+    this.date = LocalDateTime.ofInstant(Objects.requireNonNull(d).toInstant(), ZoneOffset.UTC);
+    HttpConstants.setDateHeader(this, name, date);
+  }
+  
+  public DateHeader(AsciiString name, Date d) {
+    super();
+    this.date = LocalDateTime.ofInstant(Objects.requireNonNull(d).toInstant(), ZoneOffset.UTC);
+    HttpConstants.setDateHeader(this, name, date);
+  }
+  
+  public DateHeader(CharSequence name, LocalDateTime d) {
     super();
     this.date = Objects.requireNonNull(d);
-    add(HttpHeaderNames.DATE, date);
+    HttpConstants.setDateHeader(this, name, date);
+  }
+  
+  public DateHeader(AsciiString name, LocalDateTime d) {
+    super();
+    this.date = Objects.requireNonNull(d);
+    HttpConstants.setDateHeader(this, name, date);
   }
   
   public DateHeader() {
-    this(new Date());
+    this(HttpHeaderNames.DATE, LocalDateTime.now());
+  }
+  
+  public DateHeader(Date d) {
+    this(HttpHeaderNames.DATE, d);
+  }
+  
+  public DateHeader(LocalDateTime d) {
+    this(HttpHeaderNames.DATE, d);
+  }
+  
+  public DateHeader(CharSequence name) {
+    this(name, LocalDateTime.now());
+  }
+  
+  public DateHeader(AsciiString name) {
+    this(name, LocalDateTime.now());
+  }
+  
+  public LocalDateTime getDate() {
+    return date;
   }
   
 }

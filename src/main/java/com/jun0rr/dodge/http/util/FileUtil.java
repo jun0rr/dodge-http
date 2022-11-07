@@ -39,8 +39,6 @@ public class FileUtil {
       "[a-zA-Z]{3}, [0-9]{2} [a-zA-Z]{3} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT"
   ).asMatchPredicate();
   
-  public static final DateTimeFormatter WEB_DATE_FORMATTER = DateTimeFormatter.ofPattern(WEB_DATE_FORMAT, Locale.US);
-  
   public static final int DEFAULT_BUFFER_SIZE = 4096;
   
   
@@ -99,20 +97,8 @@ public class FileUtil {
     return Unchecked.call(()->FileChannel.open(file, StandardOpenOption.CREATE, StandardOpenOption.WRITE));
   }
   
-  public String formatWebDate(LocalDateTime date) {
-    return WEB_DATE_FORMATTER.format(date);
-  }
-  
-  public static LocalDateTime getDateHeader(HttpHeaders headers, CharSequence name) {
-    String val = headers.get(name);
-    if(val != null) {
-      return LocalDateTime.parse(val, WEB_DATE_FORMATTER);
-    }
-    return null;
-  }
-  
   public boolean isNotModified(HttpRequest req) throws IOException {
-    LocalDateTime modifiedSince = getDateHeader(req.headers(), HttpHeaderNames.IF_MODIFIED_SINCE);
+    LocalDateTime modifiedSince = HttpConstants.getDateHeader(req.headers(), HttpHeaderNames.IF_MODIFIED_SINCE);
     return req.headers().contains(HttpHeaderNames.IF_NONE_MATCH, getEtag(), true)
         || modifiedSince != null 
         && !getLastModified().isAfter(modifiedSince);
@@ -128,7 +114,7 @@ public class FileUtil {
         || (unmodifiedSince != null && lastModified.isAfter(unmodifiedSince))
         || (ifRange != null 
         && (WEB_DATE_PATTERN.test(ifRange) 
-        && lastModified.isAfter(LocalDateTime.parse(ifRange, WEB_DATE_FORMATTER)) 
+        && lastModified.isAfter(HttpConstants.getDateHeader(req.headers(), HttpHeaderNames.IF_RANGE)) 
         || !ifRange.equals(weakEtag)));
   }
   
@@ -141,7 +127,7 @@ public class FileUtil {
     LocalDateTime lastModified = getLastModified();
     String ifrange = req.headers().get(HttpHeaderNames.IF_RANGE);
     return ifrange == null || ((WEB_DATE_PATTERN.test(ifrange) 
-        && !lastModified.isAfter(LocalDateTime.parse(ifrange, WEB_DATE_FORMATTER)))
+        && !lastModified.isAfter(HttpConstants.getDateHeader(req.headers(), HttpHeaderNames.IF_RANGE)))
         || ifrange.equals(etag))
         ? r : new Range(0, r.total(), r.total());
   }

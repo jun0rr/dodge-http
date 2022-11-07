@@ -57,12 +57,11 @@ public class TestHttpAuthServer2 {
         if(sb.length() > 0) sb.deleteCharAt(sb.length()-1);
         if(sb.toString().isBlank()) {
           HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
-          ConnectionHeaders ch = new ConnectionHeaders(x);
           res.headers()
-              .add(ch)
+              .add(new ConnectionHeaders(x))
               .add(new DateHeader())
               .add(new ServerHeader());
-          ch.writeAndHandleConn(x, res);
+          x.writeAndFlush(x);
           return;
         }
         new FileDownloadHandler(Paths.get(sb.toString())).accept(x);

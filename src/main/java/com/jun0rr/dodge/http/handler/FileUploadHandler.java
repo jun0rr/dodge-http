@@ -25,6 +25,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.util.AsciiString;
 import io.netty.util.ReferenceCountUtil;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
@@ -76,9 +77,8 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
   public void head(ChannelExchange<HttpObject> x) {
     HttpRequest req = x.attributes().get(HttpRequest.class).get();
     ContentRangeHeader range = ContentRangeHeader.parse(req.headers());
-    LocalDateTime lastModified = req.headers().contains(HttpHeaderNames.LAST_MODIFIED) 
-        ? FileUtil.getDateHeader(req.headers(), HttpHeaderNames.LAST_MODIFIED) 
-        : LocalDateTime.now();
+    LocalDateTime lastModified = HttpConstants.getDateHeader(req.headers(), HttpHeaderNames.LAST_MODIFIED);
+    lastModified = lastModified != null ? lastModified : LocalDateTime.now();
     HttpResponse res;
     if(range.range().isEmpty()) {
       res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.REQUESTED_RANGE_NOT_SATISFIABLE);
@@ -90,40 +90,34 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
           .add(new DateHeader(HttpHeaderNames.LAST_MODIFIED, lastModified))
           .add(range);
     }
-    ConnectionHeaders ch = new ConnectionHeaders(x);
     res.headers()
-        .add(ch)
+        .add(new ConnectionHeaders(x))
         .add(new DateHeader())
         .add(new ServerHeader());
-    ch.writeAndHandleConn(x, res);
+    x.writeAndFlush(res);
   }
   
   public void preconditionFailed(ChannelExchange<HttpObject> x) {
-    HttpRequest req = x.attributes().get(HttpRequest.class).get();
     HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.PRECONDITION_FAILED);
-    LocalDateTime lastModified = file.getLastModified();
     res.headers()
         .add(HttpHeaderNames.ETAG, file.getWeakEtag())
         .add(new DateHeader(HttpHeaderNames.LAST_MODIFIED, file.getLastModified()))
         .add(new ContentRangeHeader(new Range(0, file.getSize())))
+        .add(new ConnectionHeaders(x))
         .add(new DateHeader())
         .add(new ServerHeader());
-    ConnectionHeaders ch = new ConnectionHeaders(x);
-    res.headers().add(ch);
-    ch.writeAndHandleConn(x, res);
+    x.writeAndFlush(res);
   }
   
   public void put(ChannelExchange<HttpObject> x) {
     HttpRequest req = x.attributes().get(HttpRequest.class).get();
-    Range range = x.attributes().get(Range.class).orElseGet(()->range(x));
+    Upload up = x.attributes().get(Upload.class).orElseGet(()->upload(x));
     if(HttpConstants.isValidHttpContent(x.message())) {
       ByteBuf content = ((HttpContent)x.message()).content();
-      Upload up = x.attributes().get(Upload.class).orElseGet(upload(x));
       x.attributes().put(Upload.class, up.write(content));
       ReferenceCountUtil.safeRelease(content);
     }
     if(HttpConstants.isLastHttpContent(x.message())) {
-      Upload up = x.attributes().remove(Upload.class).get();
       Unchecked.call(()->up.channel().close());
       HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
       res.headers()

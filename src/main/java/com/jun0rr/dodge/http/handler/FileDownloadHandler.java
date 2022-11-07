@@ -74,22 +74,20 @@ public class FileDownloadHandler implements Consumer<ChannelExchange<HttpRequest
   
   private void notFound(ChannelExchange<HttpRequest> x) {
     HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
-    ConnectionHeaders ch = new ConnectionHeaders(x);
     res.headers()
-        .add(ch)
+        .add(new ConnectionHeaders(x))
         .add(new DateHeader())
         .add(new ServerHeader());
-    ch.writeAndHandleConn(x, res);
+    x.writeAndFlush(res);
   }
   
   private void notModified(ChannelExchange<HttpRequest> x) throws IOException {
     HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_MODIFIED);
-    ConnectionHeaders ch = new ConnectionHeaders(x);
     addEtagLastModified(x, res.headers()
-        .add(ch)
+        .add(new ConnectionHeaders(x))
         .add(new DateHeader())
         .add(new ServerHeader()));
-    ch.writeAndHandleConn(x, res);
+    x.writeAndFlush(res);
   }
   
   private void download(ChannelExchange<HttpRequest> x) throws IOException {
@@ -120,7 +118,7 @@ public class FileDownloadHandler implements Consumer<ChannelExchange<HttpRequest
   
   private HttpHeaders addEtagLastModified(ChannelExchange<HttpRequest> x, HttpHeaders hds) throws IOException {
     return hds.add(HttpHeaderNames.ETAG, file.getEtag())
-        .add(HttpHeaderNames.LAST_MODIFIED, file.formatWebDate(file.getLastModified()));
+        .add(new DateHeader(HttpHeaderNames.LAST_MODIFIED, file.getLastModified()));
   }
   
 }

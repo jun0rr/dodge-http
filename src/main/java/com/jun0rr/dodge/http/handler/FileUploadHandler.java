@@ -6,9 +6,11 @@ package com.jun0rr.dodge.http.handler;
 
 import static com.jun0rr.dodge.http.Http.DEFAULT_BUFFER_SIZE;
 import com.jun0rr.dodge.http.header.ConnectionHeaders;
+import com.jun0rr.dodge.http.header.ContentLengthHeader;
 import com.jun0rr.dodge.http.header.ContentRangeHeader;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.Range;
+import com.jun0rr.dodge.http.header.RangeHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.FileUtil;
 import com.jun0rr.dodge.http.util.HttpConstants;
@@ -25,7 +27,6 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.util.AsciiString;
 import io.netty.util.ReferenceCountUtil;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
@@ -103,6 +104,7 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
         .add(HttpHeaderNames.ETAG, file.getWeakEtag())
         .add(new DateHeader(HttpHeaderNames.LAST_MODIFIED, file.getLastModified()))
         .add(new ContentRangeHeader(new Range(0, file.getSize())))
+        .add(new ContentLengthHeader(0))
         .add(new ConnectionHeaders(x))
         .add(new DateHeader())
         .add(new ServerHeader());
@@ -121,34 +123,15 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
       Unchecked.call(()->up.channel().close());
       HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
       res.headers()
-          .add(HttpHeaders.EMPTY_HEADERS)
+          .add(HttpHeaderNames.LOCATION, String.format("/download/%s", file.getFilePath().toString().replace('\\', '/')))
+          .add(HttpHeaderNames.ETAG, file.getWeakEtag())
+          .add(new DateHeader(HttpHeaderNames.LAST_MODIFIED, file.getLastModified()))
+          .add(new ContentLengthHeader(0))
+          .add(new ConnectionHeaders(x))
+          .add(new DateHeader())
+          .add(new ServerHeader());
+      x.writeAndFlush(res);
     }
-  }
-  
-  public Range range(ChannelExchange<HttpObject> x) {
-    HttpRequest req = x.attributes().get(HttpRequest.class).get();
-    Range range = ContentRangeHeader.parse(req.headers()).range();
-    String length = req.headers().get(HttpHeaderNames.CONTENT_LENGTH);
-    if(range.isEmpty()) {
-      if(file.isFileExists()) {
-        range = new Range(0, file.getSize());
-      }
-      else if(length != null) {
-        range = new Range(0, Long.parseLong(length));
-      }
-      else {
-        range = new Range(0, Long.MAX_VALUE);
-      }
-    }
-    x.attributes().put(Range.class, range);
-    return range;
-  }
-  
-  public FileChannel fileChannel(ChannelExchange<HttpObject> x) {
-    FileChannel fc = file.openWriteChannel();
-    x.context().channel().closeFuture().addListener(f->Unchecked.call(()->fc.close()));
-    x.attributes().put(FileChannel.class, fc);
-    return fc;
   }
   
   public Upload upload(ChannelExchange<HttpObject> x) {
@@ -168,7 +151,11 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
         range = new Range(0, Long.MAX_VALUE);
       }
     }
-    return new Upload(fc, range);
+    Upload up = new Upload(fc, range);
+    x.attributes()
+        .put(Range.class, range.clone())
+        .put(Upload.class, up);
+    return up;
   }
   
   

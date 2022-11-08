@@ -28,6 +28,11 @@ public class Range {
     this(start, end, end);
   }
   
+  @Override
+  public Range clone() {
+    return new Range(start, end, total);
+  }
+  
   public long start() {
     return start;
   }

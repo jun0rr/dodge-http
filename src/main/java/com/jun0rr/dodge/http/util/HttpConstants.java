@@ -172,7 +172,7 @@ public abstract class HttpConstants {
   
   public static LocalDateTime getDateHeader(HttpHeaders hdr, CharSequence name) {
     String val = hdr.get(name);
-    if(val != null && val.isBlank()) {
+    if(val != null && !val.isBlank()) {
       return LocalDateTime.parse(val, WEB_DATE_FORMATTER);
     }
     return null;

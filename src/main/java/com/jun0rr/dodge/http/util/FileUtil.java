@@ -106,16 +106,9 @@ public class FileUtil {
   
   public boolean isPreconditionFailed(HttpRequest req) {
     LocalDateTime unmodifiedSince = HttpConstants.getDateHeader(req.headers(), HttpHeaderNames.IF_UNMODIFIED_SINCE);
-    LocalDateTime lastModified = getLastModified();
     String ifMatch = req.headers().get(HttpHeaderNames.IF_MATCH);
-    String ifRange = req.headers().get(HttpHeaderNames.IF_RANGE);
-    String weakEtag = getWeakEtag();
-    return (ifMatch != null && !ifMatch.equals(weakEtag))
-        || (unmodifiedSince != null && lastModified.isAfter(unmodifiedSince))
-        || (ifRange != null 
-        && (WEB_DATE_PATTERN.test(ifRange) 
-        && lastModified.isAfter(HttpConstants.getDateHeader(req.headers(), HttpHeaderNames.IF_RANGE)) 
-        || !ifRange.equals(weakEtag)));
+    return (ifMatch != null && !ifMatch.equals(getWeakEtag()))
+        || (unmodifiedSince != null && getLastModified().isAfter(unmodifiedSince));
   }
   
   public Range getRange(HttpRequest req) throws IOException {
@@ -147,11 +140,7 @@ public class FileUtil {
   }
   
   public String getWeakEtag() {
-    ByteBuffer buf = ByteBuffer.allocate(getFileName().length() + Long.BYTES * 2);
-    buf.put(getFileName().getBytes(StandardCharsets.UTF_8));
-    buf.putLong(getSize());
-    buf.putLong(getLastModified().toEpochSecond(ZoneOffset.UTC));
-    return String.format("W/\"%s\"", Hash.sha1().of(buf.flip()));
+    return getWeakEtag(new Range(0, getSize()), getLastModified());
   }
   
   public String getEtag() throws IOException {

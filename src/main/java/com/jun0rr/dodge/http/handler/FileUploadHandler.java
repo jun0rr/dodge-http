@@ -10,7 +10,6 @@ import com.jun0rr.dodge.http.header.ContentLengthHeader;
 import com.jun0rr.dodge.http.header.ContentRangeHeader;
 import com.jun0rr.dodge.http.header.DateHeader;
 import com.jun0rr.dodge.http.header.Range;
-import com.jun0rr.dodge.http.header.RangeHeader;
 import com.jun0rr.dodge.http.header.ServerHeader;
 import com.jun0rr.dodge.http.util.FileUtil;
 import com.jun0rr.dodge.http.util.HttpConstants;
@@ -20,17 +19,16 @@ import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.ReferenceCountUtil;
+import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
@@ -54,43 +52,36 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
   @Override
   public void accept(ChannelExchange<HttpObject> x) {
     HttpRequest req = x.attributes().get(HttpRequest.class).get();
-    if(HttpMethod.HEAD == req.method()) {
-      head(x);
+    if(HttpConstants.isMethodHead(req)) {
+      if(file.isFileExists()) {
+        noContent(x);
+      }
+      else {
+        notFound(x);
+      }
     }
-    else if(file.isFileExists() && file.isPreconditionFailed(req)) {
+    else if(file.isPreconditionFailed(req) ) {
       preconditionFailed(x);
     }
     else {
       put(x);
     }
-    Upload up = x.attributes().get(Upload.class).orElseGet(()->upload(x));
-    if(HttpConstants.isValidHttpContent(x.message())) {
-      ByteBuf content = ((HttpContent)x.message()).content();
-      x.attributes().put(Upload.class, up.write(content));
-      ReferenceCountUtil.safeRelease(content);
-    }
-    if(HttpConstants.isLastHttpContent(x.message())) {
-      Unchecked.call(()->up.channel().close());
-      x.attributes().remove(Upload.class);
-    }
   }
   
-  public void head(ChannelExchange<HttpObject> x) {
-    HttpRequest req = x.attributes().get(HttpRequest.class).get();
-    ContentRangeHeader range = ContentRangeHeader.parse(req.headers());
-    LocalDateTime lastModified = HttpConstants.getDateHeader(req.headers(), HttpHeaderNames.LAST_MODIFIED);
-    lastModified = lastModified != null ? lastModified : LocalDateTime.now();
-    HttpResponse res;
-    if(range.range().isEmpty()) {
-      res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.REQUESTED_RANGE_NOT_SATISFIABLE);
-    }
-    else {
-      res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NO_CONTENT);
-      res.headers()
-          .add(HttpHeaderNames.ETAG, file.getWeakEtag(range.range(), lastModified))
-          .add(new DateHeader(HttpHeaderNames.LAST_MODIFIED, lastModified))
-          .add(range);
-    }
+  public void noContent(ChannelExchange<HttpObject> x) {
+    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NO_CONTENT);
+    res.headers()
+        .add(HttpHeaderNames.ETAG, Unchecked.call(()->file.getEtag()))
+        .add(new DateHeader(HttpHeaderNames.LAST_MODIFIED, file.getLastModified()))
+        .add(new ContentRangeHeader(new Range(0, file.getSize())))
+        .add(new ConnectionHeaders(x))
+        .add(new DateHeader())
+        .add(new ServerHeader());
+    x.writeAndFlush(res);
+  }
+  
+  public void notFound(ChannelExchange<HttpObject> x) {
+    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
     res.headers()
         .add(new ConnectionHeaders(x))
         .add(new DateHeader())
@@ -99,9 +90,15 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
   }
   
   public void preconditionFailed(ChannelExchange<HttpObject> x) {
-    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.PRECONDITION_FAILED);
+    HttpRequest req = x.attributes().get(HttpRequest.class).get();
+    HttpResponseStatus status = (!req.headers().contains(HttpHeaderNames.IF_MATCH) 
+        && !req.headers().contains(HttpHeaderNames.IF_UNMODIFIED_SINCE) 
+        ? HttpResponseStatus.PRECONDITION_REQUIRED 
+        : HttpResponseStatus.PRECONDITION_FAILED
+    );
+    HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status);
     res.headers()
-        .add(HttpHeaderNames.ETAG, file.getWeakEtag())
+        .add(HttpHeaderNames.ETAG, Unchecked.call(()->file.getEtag()))
         .add(new DateHeader(HttpHeaderNames.LAST_MODIFIED, file.getLastModified()))
         .add(new ContentRangeHeader(new Range(0, file.getSize())))
         .add(new ContentLengthHeader(0))
@@ -112,6 +109,7 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
   }
   
   public void put(ChannelExchange<HttpObject> x) {
+    System.out.printf("* put( %s )%n", x.message().getClass().getSimpleName());
     HttpRequest req = x.attributes().get(HttpRequest.class).get();
     Upload up = x.attributes().get(Upload.class).orElseGet(()->upload(x));
     if(HttpConstants.isValidHttpContent(x.message())) {
@@ -124,7 +122,7 @@ public class FileUploadHandler implements Consumer<ChannelExchange<HttpObject>> 
       HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED);
       res.headers()
           .add(HttpHeaderNames.LOCATION, String.format("/download/%s", file.getFilePath().toString().replace('\\', '/')))
-          .add(HttpHeaderNames.ETAG, file.getWeakEtag())
+          .add(HttpHeaderNames.ETAG, Unchecked.call(()->file.getEtag()))
           .add(new DateHeader(HttpHeaderNames.LAST_MODIFIED, file.getLastModified()))
           .add(new ContentLengthHeader(0))
           .add(new ConnectionHeaders(x))

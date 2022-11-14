@@ -107,8 +107,19 @@ public class FileUtil {
   public boolean isPreconditionFailed(HttpRequest req) {
     LocalDateTime unmodifiedSince = HttpConstants.getDateHeader(req.headers(), HttpHeaderNames.IF_UNMODIFIED_SINCE);
     String ifMatch = req.headers().get(HttpHeaderNames.IF_MATCH);
-    return (ifMatch != null && !ifMatch.equals(getWeakEtag()))
-        || (unmodifiedSince != null && getLastModified().isAfter(unmodifiedSince));
+    System.out.printf("* isPreconditionFailed: isFileExists=%s, ifMatch=%s, ifUnmodifiedSince=%s, [%s].isAfter(%s)=%s%n", 
+        isFileExists(),
+        ifMatch,
+        unmodifiedSince,
+        (isFileExists() ? getLastModified() : "null"),
+        (unmodifiedSince != null ? unmodifiedSince : "null"),
+        (unmodifiedSince != null ? getLastModified().isAfter(unmodifiedSince) : "false")
+    );
+    return  isFileExists() && (
+        (ifMatch == null && unmodifiedSince == null)
+        || (ifMatch != null && !ifMatch.equals(Unchecked.call(()->getEtag())))
+        || (unmodifiedSince != null && getLastModified().isAfter(unmodifiedSince))
+    );
   }
   
   public Range getRange(HttpRequest req) throws IOException {

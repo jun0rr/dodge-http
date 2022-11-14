@@ -68,7 +68,7 @@ public class TestHttpAuthServer2 {
         }
         new FileDownloadHandler(Paths.get(sb.toString())).accept(x);
       });
-      server.addRoute(HttpRoute.of("/?upload/.+", HttpMethod.PUT), HttpObject.class, ()->x->{
+      server.addRoute(HttpRoute.of("/?upload/.+", HttpMethod.PUT, HttpMethod.HEAD), HttpObject.class, ()->x->{
         HttpRequest req = x.attributes().get(HttpRequest.class).get();
         UriParam par = new UriParam(req.uri());
         StringBuilder sb = new StringBuilder();
@@ -87,7 +87,9 @@ public class TestHttpAuthServer2 {
         }
         new FileUploadHandler(Paths.get(sb.toString())).accept(x);
       });
-      server.setAddress(Host.of("0.0.0.0", 8090))
+      server
+          //.setAddress(Host.of("0.0.0.0", 8090))
+          .setAddress(Host.localhost(8090))
           //.setSslEnabled(true)
           .start()
           .acceptNext(f->logger.info("HttpServer started and listening on {}", f.channel().localAddress()))

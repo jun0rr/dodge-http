@@ -138,31 +138,31 @@ public abstract class HttpConstants {
     return ByteBuf.class.isAssignableFrom(o.getClass());
   }
   
-  public static boolean isRequestDelete(Object o) {
+  public static boolean isMethodDelete(Object o) {
     return isHttpRequest(o) && ((HttpRequest)o).method() == HttpMethod.DELETE;
   }
   
-  public static boolean isRequestGet(Object o) {
+  public static boolean isMethodGet(Object o) {
     return isHttpRequest(o) && ((HttpRequest)o).method() == HttpMethod.GET;
   }
   
-  public static boolean isRequestHead(Object o) {
+  public static boolean isMethodHead(Object o) {
     return isHttpRequest(o) && ((HttpRequest)o).method() == HttpMethod.HEAD;
   }
   
-  public static boolean isRequestOptions(Object o) {
+  public static boolean isMethodOptions(Object o) {
     return isHttpRequest(o) && ((HttpRequest)o).method() == HttpMethod.OPTIONS;
   }
   
-  public static boolean isRequestPatch(Object o) {
+  public static boolean isMethodPatch(Object o) {
     return isHttpRequest(o) && ((HttpRequest)o).method() == HttpMethod.PATCH;
   }
   
-  public static boolean isRequestPost(Object o) {
+  public static boolean isMethodPost(Object o) {
     return isHttpRequest(o) && ((HttpRequest)o).method() == HttpMethod.POST;
   }
   
-  public static boolean isRequestPut(Object o) {
+  public static boolean isMethodPut(Object o) {
     return isHttpRequest(o) && ((HttpRequest)o).method() == HttpMethod.PUT;
   }
   

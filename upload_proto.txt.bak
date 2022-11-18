@@ -1,0 +1,66 @@
+
++------------------------------------------+
+| POST                                     |
+| content-range      : bytes 100-200/300   |
+| content-length     : 100                 |
+| x-checksum         : "ABC123..."         |
+| x-filename         : hello.jpg           |
+++-----------------------------------------+
+ |
+ +-> 201 Created
+     location     : /upload/ABC123...
+     etag         : "ABC123..."
+     last-modified: Mon, 14 Nov 2022 17:36:31 GMT
+
+ |
+ +-> 412 Precondition Failed (x-checksum does not match)
+     etag         : "DEF456..."
+
+
++------------------------------------------+
+| HEAD                                     |
+| content-range      : bytes 100-200/300   |
+| content-length     : 100                 |
+| x-filename         : hello.jpg           |
+++-----------------------------------------+
+ |
+ +-> 204 No Content
+     location     : /upload/ABC123...
+     etag          : "ABC123..."
+     last-modified : Mon, 14 Nov 2022 17:36:31 GMT
+     content-range : bytes 100-200/300
+	 
+
++------------------------------------------+
+| PATCH                                    |
+| if-match           : "ABC123..."         |
+| content-range      : bytes 100-200/300   |
+| content-length     : 100                 |
+| x-checksum         : "ABC123..."         |
+++-----------------------------------------+
+ |
+ +-> 204 No Content
+     etag          : "ABC123..."
+     last-modified : Mon, 14 Nov 2022 17:36:31 GMT
+     content-range : bytes 100-200/300
+
+ |
+ +-> 412 Precondition Failed (if-match/x-checksum does not match)
+     etag         : "DEF456..."
+
+
++------------------------------------------+
+| PUT                                      |
+| content-range      : bytes 100-200/300   |
+| content-length     : 100                 |
+| x-checksum         : "ABC123..."         |
+++-----------------------------------------+
+ |
+ +-> 204 No Content
+     etag          : "ABC123..."
+     last-modified : Mon, 14 Nov 2022 17:36:31 GMT
+     content-range : bytes 100-200/300
+
+ |
+ +-> 412 Precondition Failed (x-checksum does not match)
+     etag         : "DEF456..."
